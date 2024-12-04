@@ -52,12 +52,6 @@ override src_dir := $(cwd_dir)/sources
 # include directory
 override inc_dir := $(cwd_dir)/include
 
-# external directory
-#override ext_dir := $(cwd_dir)/external
-
-# tomlplusplus directory
-#override toml_dir := $(ext_dir)/tomlplusplus
-
 
 # -- F I L E S ----------------------------------------------------------------
 
@@ -94,7 +88,6 @@ override defines ?=
 
 # include flags
 override includes := -I$(inc_dir) 
-#-I$(toml_dir)/include
 
 # cxx flags
 override cxxflags := $(std) $(opt) $(debug) $(defines) $(includes) \
@@ -143,9 +136,6 @@ ascii:
 	'  █ ▐▌ ▐▌▗▄▄▞▘▐▌ ▐▌▐▌  ▐▌▐▌ ▐▌▗▄▄▞▘  █  ▐▙▄▄▖▐▌ ▐▌\n' \
 	'\033[0m'
 
-
-#$(toml_dir):
-#	./install_tomlplusplus.sh
 
 all: ascii $(executable) $(compile_db)
 

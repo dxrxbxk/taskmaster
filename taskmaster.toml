@@ -1,0 +1,23 @@
+[programs]
+[nginx]
+cmd = "/usr/local/nginx/sbin/nginx"
+num_procs = 1
+umask = "022"
+working_dir = "/tmp"
+auto_start = true
+auto_restart = false
+exitcodes = [0, 2]
+start_retries = 3
+start_time = 5
+stop_time = 5
+stdout = "/tmp/nginx.stdout"
+stderr = "/tmp/nginx.stderr"
+
+env.STARTED_BY = 'taskmaster'
+env.ANSWER = 42
+
+[php-fpm]
+cmd = "/usr/local/php/sbin/php-fpm"
+num_procs = 1
+umask = "022"
+working_dir = "/tmp"

@@ -1,0 +1,4 @@
+[myexec]
+cmd = ifjfj
+cmd = "/bin/echo -n"
+restart = {1, 2, 3}

@@ -664,16 +664,16 @@ auto main(void) -> int {
 	*/
 
 
-	auto ret = syscall(SYS_pidfd_open, getpid(), 0);
-
-	if (ret == -1)
-		std::cerr << "error: " << std::strerror(errno) << std::endl;
-	else {
-		std::cout << "pidfd: " << ret << std::endl;
-		int c = ::close((int)ret);
-		if (c == -1)
-			std::cerr << "error: " << std::strerror(errno) << std::endl;
-	}
+	//auto ret = syscall(SYS_pidfd_open, getpid(), 0);
+	//
+	//if (ret == -1)
+	//	std::cerr << "error: " << std::strerror(errno) << std::endl;
+	//else {
+	//	std::cout << "pidfd: " << ret << std::endl;
+	//	int c = ::close((int)ret);
+	//	if (c == -1)
+	//		std::cerr << "error: " << std::strerror(errno) << std::endl;
+	//}
 
 	//tsk::process_info info;
 	//

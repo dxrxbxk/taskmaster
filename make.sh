@@ -40,7 +40,7 @@ declare -rg script=${0:a}
 # -- T A R G E T S ------------------------------------------------------------
 
 # project name
-declare -rg project='msh'
+declare -rg project='taskmaster'
 
 # main executable
 declare -rg executable=$cwd_dir'/'$project
@@ -78,12 +78,10 @@ declare -rg deps=(${objs/%.o/.d})
 
 # linux dependencies
 if [[ $os =~ 'Linux' ]]; then
-	declare -rg os_dependencies=('-lasound')
 	declare -rg max_jobs=$(nproc)
 
 # macos dependencies
 elif [[ $os =~ 'Darwin' ]]; then
-	declare -rg os_dependencies=('-framework' 'CoreMIDI' '-framework' 'CoreAudio' '-framework' 'CoreFoundation')
 	declare -rg max_jobs=$(sysctl -n hw.ncpu)
 fi
 
@@ -114,34 +112,12 @@ declare -rg cxxflags=('-std=c++2a' '-O0'
 				)
 
 # linker flags
-declare -rg ldflags=($os_dependencies '-lreadline')
+declare -rg ldflags=()
 				#-fsanitize=address)
 
 
 # -- F U N C T I O N S --------------------------------------------------------
 
-# check we are in the correct repository
-function _repository() {
-
-	# local variables
-	local -r ssh_repo='git@github.com:123Untitled/msh.git'
-	local -r pub_repo='https://github.com/123Untitled/msh.git'
-
-	# check we are in a git repository
-	if [[ ! -d $git_dir ]]; then
-		echo 'please run this script in the' $error$project$reset 'repository.'
-		exit 1
-	fi
-
-	# get the git remote url
-	local -r remote=$(git --git-dir=$git_dir config --get 'remote.origin.url')
-
-	# check we are in the correct repository
-	if [[ $remote != $ssh_repo ]] && [[ $remote != $pub_repo ]]; then
-		echo 'please run this script in the' $error$project$reset 'repository.'
-		exit 1
-	fi
-}
 
 # function to check required tools
 function _check_tools() {
@@ -437,7 +413,6 @@ function _fclean() {
 
 
 _check_tools
-_repository
 
 if [[ $# -eq 0 ]]; then
 	_build

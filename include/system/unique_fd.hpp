@@ -13,9 +13,9 @@
 #include <unistd.h>
 
 
-// -- T A S K M A S T E R  N A M E S P A C E ----------------------------------
+// -- 4 2  N A M E S P A C E  -------------------------------------------------
 
-namespace tm {
+namespace ft {
 
 
 	// -- U N I Q U E  F D ----------------------------------------------------
@@ -28,7 +28,7 @@ namespace tm {
 			// -- private types -----------------------------------------------
 
 			/* self type */
-			using self = tm::unique_fd;
+			using self = ft::unique_fd;
 
 
 			// -- private members ---------------------------------------------

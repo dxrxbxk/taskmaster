@@ -5,6 +5,10 @@
 #include <string>
 
 #include <sys/wait.h>
+#include "system/syscall.hpp"
+
+#include "dispatch.hpp"
+
 
 namespace sys {
 
@@ -37,17 +41,6 @@ namespace sys {
 	template <typename T>
 	auto free(T* ptr) -> void {
 		::free(ptr);
-	}
-
-	/* fork */
-	auto fork(void) -> ::pid_t {
-
-		const ::pid_t pid = ::fork();
-
-		if (pid == -1)
-			throw std::runtime_error("fork failed");
-
-		return pid;
 	}
 
 	/* setsid */
@@ -169,6 +162,10 @@ namespace tsk {
 			auto session_id(void) const noexcept -> const ::pid_t& {
 				return _sid;
 			}
+
+	};
+
+	class contiguous_cstr final {
 
 	};
 
@@ -335,312 +332,7 @@ namespace tsk {
 	};
 
 
-	class pipe final {
 
-
-		private:
-
-			// -- private types -----------------------------------------------
-
-			/* self type */
-			using self = tsk::pipe;
-
-
-			// -- private members ---------------------------------------------
-
-			/* file descriptors */
-			int _fds[2U];
-
-
-			// -- private constants -------------------------------------------
-
-			enum : unsigned int {
-				RD = 0U,
-				WR = 1U
-			};
-
-
-		public:
-
-			// -- public lifecycle --------------------------------------------
-
-			/* default constructor */
-			pipe(void) {
-
-				// create pipe
-				if (::pipe(_fds) == -1)
-					throw std::runtime_error("pipe failed");
-			}
-
-			/* deleted copy constructor */
-			pipe(const self&) = delete;
-
-			/* deleted move constructor */
-			pipe(self&&) = delete;
-
-			/* destructor */
-			~pipe(void) noexcept {
-
-				// close read end
-				if (_fds[RD] != -1)
-					::close(_fds[RD]);
-
-				// close write end
-				if (_fds[WR] != -1)
-					::close(_fds[WR]);
-			}
-
-
-			// -- public assignment operators ---------------------------------
-
-			/* deleted copy assignment operator */
-			auto operator=(const self&) -> self& = delete;
-
-			/* deleted move assignment operator */
-			auto operator=(self&&) -> self& = delete;
-
-
-			// -- public modifiers --------------------------------------------
-
-			/* close read end */
-			auto close_read(void) noexcept -> void {
-
-				// check descriptor
-				if (_fds[RD] == -1)
-					return;
-
-				// close read end
-				::close(_fds[RD]);
-				_fds[RD] = -1;
-			}
-
-			/* close write end */
-			auto close_write(void) noexcept -> void {
-
-				// check descriptor
-				if (_fds[WR] == -1)
-					return;
-
-				// close write end
-				::close(_fds[WR]);
-				_fds[WR] = -1;
-			}
-
-
-			// -- public methods ----------------------------------------------
-
-			/* read */
-			template <typename T>
-			auto read(T& data) -> void {
-				const auto bytes = ::read(_fds[RD], &data, sizeof(T));
-
-				if (bytes == -1)
-					throw std::runtime_error("read failed");
-			}
-
-			/* write */
-			template <typename T>
-			auto write(const T& data) -> void {
-				const auto bytes = ::write(_fds[WR], &data, sizeof(T));
-
-				if (bytes == -1)
-					throw std::runtime_error("write failed");
-			}
-
-	};
-
-
-	class daemon final {
-
-
-		private:
-
-			// -- private types -----------------------------------------------
-
-			/* self type */
-			using self = tsk::daemon;
-
-
-			// -- private classes ---------------------------------------------
-
-			/* initializer */
-			class initializer final {
-
-
-				private:
-
-					// -- private types ---------------------------------------
-
-					/* self type */
-					using self = tsk::daemon::initializer;
-
-
-					// -- private lifecycle -----------------------------------
-
-					/* default constructor */
-					initializer(void) {
-
-						// check if we are root
-						if (::geteuid() != 0)
-							throw std::runtime_error("taskmaster must be run as root");
-					}
-
-					/* deleted copy constructor */
-					initializer(const self&) = delete;
-
-					/* deleted move constructor */
-					initializer(self&&) = delete;
-
-					/* destructor */
-					~initializer(void) noexcept = default;
-
-
-					// -- private assignment operators ------------------------
-
-					/* deleted copy assignment operator */
-					auto operator=(const self&) -> self& = delete;
-
-					/* deleted move assignment operator */
-					auto operator=(self&&) -> self& = delete;
-
-
-				public:
-
-					// -- public static methods -------------------------------
-
-					/* shared */
-					static auto shared(void) -> self& {
-						static self instance;
-						return instance;
-					}
-
-			}; // class initializer
-
-
-			// -- private members ---------------------------------------------
-
-			/* process info */
-			tsk::process_info _info;
-
-			/* arguments */
-			tsk::exec_args _args;
-
-
-
-		public:
-
-			// -- public lifecycle --------------------------------------------
-
-			/* default constructor */
-			daemon(void)
-			: _info{nullptr}, _args{} {
-
-				// initialize
-				initializer::shared();
-			}
-
-			/* command constructor */
-			daemon(const std::vector<std::string>& args)
-			: _args{} {
-
-				// initialize
-				initializer::shared();
-
-				for (const auto& arg : args)
-					_args.push(arg);
-			}
-
-			/* copy constructor */
-			daemon(const self&) = default;
-
-			/* move constructor */
-			daemon(self&&) noexcept = default;
-
-			/* destructor */
-			~daemon(void) noexcept = default;
-
-
-			// -- public assignment operators ---------------------------------
-
-			/* copy assignment operator */
-			auto operator=(const self&) -> self& = default;
-
-			/* move assignment operator */
-			auto operator=(self&&) noexcept -> self& = default;
-
-
-
-			// -- public methods ----------------------------------------------
-
-			/* run */
-			auto run(void) -> void {
-
-				tsk::pipe pipe;
-				auto pid = sys::fork();
-
-				if (pid > 0) {
-
-					// -- parent ----------------------------------------------
-
-					// close write end
-					pipe.close_write();
-
-					::pid_t daemon_pid = 0;
-
-					pipe.read(daemon_pid);
-					pipe.close_read();
-
-					::waitpid(pid, nullptr, 0);
-
-					std::cout << "daemon pid: " << daemon_pid << std::endl;
-				}
-				else {
-
-					// -- intermediate ----------------------------------------
-
-					// new session
-					sys::setsid();
-
-					// close read end
-					pipe.close_read();
-
-					pid = sys::fork();
-
-					if (pid > 0) {
-
-						// -- second parent -----------------------------------
-
-						// write daemon pid
-						pipe.write(pid);
-						pipe.close_write();
-
-						// exit
-						return;
-
-					}
-					else {
-
-						// -- child -------------------------------------------
-
-						// close write end
-						pipe.close_write();
-					}
-
-				}
-
-			}
-
-
-			// -- public accessors --------------------------------------------
-
-			/* is running */
-			auto is_running(void) const -> bool {
-				// done
-				return true;
-			}
-
-
-	};
 
 
 }
@@ -649,7 +341,252 @@ namespace tsk {
 #include <errno.h>
 #include <cstring>
 
+#include "dispatch.hpp"
+#include "process/wstatus.hpp"
+
+#include "fcntl.h"
+
+
+namespace ft {
+
+
+
+	class process_id final {
+
+
+		private:
+
+			// -- private types -----------------------------------------------
+
+			/* self type */
+			using self = ft::process_id;
+
+
+			// -- private members ---------------------------------------------
+
+			/* pid */
+			::pid_t _pid;
+
+
+		public:
+
+			// -- public lifecycle --------------------------------------------
+
+			/* default constructor */
+			process_id(void) noexcept
+			: _pid{0} {
+			}
+
+			/* pid constructor */
+			process_id(const ::pid_t& pid) noexcept
+			: _pid{pid} {
+			}
+
+			/* copy constructor */
+			process_id(const self&) noexcept = default;
+
+			/* move constructor */
+			process_id(self&&) noexcept = default;
+
+			/* destructor */
+			~process_id(void) noexcept = default;
+
+
+			// -- public assignment operators ---------------------------------
+
+			/* copy assignment operator */
+			auto operator=(const self&) noexcept -> self& = default;
+
+			/* move assignment operator */
+			auto operator=(self&&) noexcept -> self& = default;
+
+
+			// -- public convertion operators ---------------------------------
+
+			/* pid_t conversion operator */
+			operator const ::pid_t&(void) const noexcept {
+				return _pid;
+			}
+
+
+			// -- public methods ----------------------------------------------
+
+			/* open */
+			auto open(void) const -> ft::unique_fd {
+
+				// open pidfd with syscall
+				return ft::unique_fd{static_cast<int>(
+							ft::syscall(SYS_pidfd_open, _pid, 0))
+				};
+			}
+
+			/* wait */
+			auto wait(const int& options = 0) const -> sm::wstatus {
+
+				int status;
+
+				const auto state = ::waitpid(_pid, &status, options);
+
+				if (state == -1)
+					throw std::runtime_error("waitpid failed");
+
+				// WNOHANG
+				// return immediately if no child has exited.
+
+				// WUNTRACED
+				// also return if a child has stopped (but not traced via ptrace(2)).
+				// Status for traced children which have stopped is provided even if this option is not specified.
+
+				// WCONTINUED (since Linux 2.6.10)
+				// also return if a stopped child has been resumed by delivery of SIGCONT.
+
+				return sm::wstatus{status};
+			}
+
+			/* wait child */
+			auto wait_child(const int& options = 0) const -> void {
+
+				::waitpid(-_pid, nullptr, options);
+			}
+
+			// < -1
+			// meaning wait for any child process whose process group ID is equal to the absolute value of pid.
+
+			// -1
+			// meaning wait for any child process.
+
+			// 0
+			// meaning wait for any child process whose process group ID is equal to that of the calling process at the time of the call to waitpid().
+
+			// > 0
+			// meaning wait for the child whose process ID is equal to the value of pid.
+
+
+			// waitpid():
+			// on success, returns the process ID of the child whose state has changed;
+			// if WNOHANG was specified and one or more child(ren) specified by pid exist, but
+			// have not yet changed state, then 0 is returned.  On failure, -1 is returned.
+
+
+
+	}; // class pid
+
+} // namespace ft
+
+
+class process_event final : public sys::io_event {
+
+
+	private:
+
+		/* unique fd */
+		ft::unique_fd _fd;
+
+
+	public:
+
+		process_event(const ft::process_id& pid)
+		: _fd{pid.open()} {
+		}
+
+		auto fd(void) const noexcept -> int override {
+			return static_cast<int>(_fd);
+		}
+
+		auto on_event(const ::uint32_t& events) -> void override {
+
+			if (events & EPOLLIN) {
+
+			}
+		}
+
+};
+
+
+class reader final : public sys::io_event {
+
+	private:
+
+
+	public:
+
+		reader(void) noexcept = default;
+
+
+		auto fd(void) const noexcept -> int override {
+			return STDIN_FILENO;
+		}
+
+		auto on_event(const ::uint32_t& events) -> void override {
+
+			if (events & EPOLLIN) {
+
+				char buffer[1024];
+				const auto bytes = ::read(STDIN_FILENO, buffer, sizeof(buffer));
+
+				if (bytes == -1)
+					throw std::runtime_error("read failed");
+
+				buffer[bytes] = '\0';
+
+				std::cout << "read: " << buffer << std::endl;
+			}
+		}
+};
+
+
+
+
+#include <termios.h>
+
 auto main(void) -> int {
+
+	try {
+
+		sm::wstatus status{};
+
+
+
+		// get terminal attributes
+		struct termios term;
+		if (::tcgetattr(STDIN_FILENO, &term) == -1)
+			throw std::runtime_error("tcgetattr failed");
+
+		struct termios raw = term;
+
+		// disable canonical mode
+		raw.c_lflag &= static_cast<::tcflag_t>(~ICANON);
+
+		// disable echo
+		raw.c_lflag &= static_cast<::tcflag_t>(~ECHO);
+
+		// set new attributes
+		if (::tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1)
+			throw std::runtime_error("tcsetattr failed");
+
+
+		reader r{};
+
+		sys::dispatch d;
+
+		d.add(r, EPOLLIN);
+
+		d.wait();
+
+		d.del(r);
+
+
+		// restore terminal attributes
+		if (::tcsetattr(STDIN_FILENO, TCSAFLUSH, &term) == -1)
+			throw std::runtime_error("tcsetattr failed");
+	}
+
+
+	catch (const std::exception& e) {
+		std::cerr << "error: " << e.what() << std::endl;
+	}
+
+	return 0;
 
 	/*
 	try {

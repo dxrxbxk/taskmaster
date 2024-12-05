@@ -7,15 +7,15 @@
 /*                                                                           */
 /* ************************************************************************* */
 
-#ifndef TASKMASTER_DISPATCH_HPP
-#define TASKMASTER_DISPATCH_HPP
+#ifndef TASKMASTER_TYPES_HPP
+#define TASKMASTER_TYPES_HPP
 
 #include <stdint.h>
 
 
-// -- S E R V I C E  M A N A G E R --------------------------------------------
+// -- 4 2  N A M E S P A C E  -------------------------------------------------
 
-namespace sm {
+namespace ft {
 
 	using u8   = ::uint8_t;
 	using u16  = ::uint16_t;
@@ -32,7 +32,6 @@ namespace sm {
 
 	using umax = ::uintmax_t;
 	using imax = ::intmax_t;
-
 
 } // namespace sm
 

@@ -60,19 +60,28 @@ namespace sys {
 			// -- public interface --------------------------------------------
 
 			/* fd */
-			virtual auto fd(void) const noexcept -> const int& = 0;
+			virtual auto fd(void) const noexcept -> int = 0;
 
-			/* in */
-			virtual auto in(void) -> void = 0;
+			/* on event */
+			virtual auto on_event(const ::uint32_t&) -> void = 0;
 
-			/* out */
-			virtual auto out(void) -> void = 0;
 
-			/* error */
-			virtual auto error(void) -> void = 0;
 
-			/* hangup */
-			virtual auto hangup(void) -> void = 0;
+// EPOLLIN
+// EPOLLPRI
+// EPOLLOUT
+// EPOLLRDNORM
+// EPOLLRDBAND
+// EPOLLWRNORM
+// EPOLLWRBAND
+// EPOLLMSG
+// EPOLLERR
+// EPOLLHUP
+// EPOLLRDHUP
+// EPOLLEXCLUSIVE
+// EPOLLWAKEUP
+// EPOLLONESHOT
+// EPOLLET
 
 
 	}; // class io_event
@@ -95,7 +104,7 @@ namespace sys {
 			// -- private members ---------------------------------------------
 
 			/* file descriptor */
-			tm::unique_fd _fd;
+			ft::unique_fd _fd;
 
 			/* events */
 			std::vector<struct ::epoll_event> _events;
@@ -113,13 +122,73 @@ namespace sys {
 					throw std::runtime_error("kqueue failed");
 			}
 
+			/* deleted copy constructor */
+			dispatch(const self&) = delete;
+
+			/* move constructor */
+			dispatch(self&&) noexcept = default;
+
+			/* destructor */
+			~dispatch(void) noexcept = default;
+
+
+			// -- public assignment operators ---------------------------------
+
+			/* deleted copy assignment operator */
+			auto operator=(const self&) -> self& = delete;
+
+			/* move assignment operator */
+			auto operator=(self&&) noexcept -> self& = default;
+
+
+			// -- public methods ----------------------------------------------
+
+			/* add */
+			auto add(sys::io_event& io, const ::uint32_t& events) -> void {
+
+				// create event
+				struct ::epoll_event ev {
+					.events = events,
+					.data = {
+						.ptr = &io
+					}
+				};
+
+				// add event
+				if (::epoll_ctl(_fd, EPOLL_CTL_ADD, io.fd(), &ev) == -1)
+					throw std::runtime_error("kevent failed");
+
+				// add event to list
+				_events.resize(_events.size() + 1U);
+			}
+
+			/* del */
+			auto del(sys::io_event& io) -> void {
+
+				// delete event
+				if (::epoll_ctl(_fd, EPOLL_CTL_DEL, io.fd(), nullptr) == -1)
+					throw std::runtime_error("kevent failed");
+
+				// remove event from list
+				_events.pop_back();
+			}
+
+			/* del (noexcept) */
+			auto del_noexcept(sys::io_event& io) noexcept -> void {
+
+				// delete event
+				static_cast<void>(::epoll_ctl(_fd, EPOLL_CTL_DEL, io.fd(), nullptr));
+			}
+
 
 			/* wait */
 			auto wait(void) -> void {
 
 				// wait for events
-				const auto state = ::epoll_wait(_fd, _events.data(), _events.size(), -1);
-
+				const auto state = ::epoll_wait(_fd,
+												_events.data(),
+												static_cast<int>(_events.size()),
+												-1);
 
 				// check for error
 				if (state == -1) {
@@ -131,21 +200,20 @@ namespace sys {
 					throw std::runtime_error("kevent failed");
 				}
 
-				// iterate over events
-				for (sm::umax i = 0U; i < static_cast<sm::umax>(state); ++i) {
+				// loop over events
+				for (ft::umax i = 0U; i < static_cast<ft::umax>(state); ++i) {
 
 					// get event
 					const auto& event = _events[i];
 
 					// get user data
-					auto& data = *(reinterpret_cast<sys::io_event*>(event.data.ptr));
+					auto& data = *(reinterpret_cast<sys::io_event*>(_events[i].data.ptr));
+
+					// trigger event
+					data.on_event(event.events);
 				}
 
 			}
-
-
-
-
 
 	};
 

@@ -646,9 +646,12 @@ namespace tsk {
 }
 
 #include <sys/syscall.h>
+#include <errno.h>
+#include <cstring>
 
 auto main(void) -> int {
 
+	/*
 	try {
 
 		tsk::daemon daemon{};
@@ -658,8 +661,19 @@ auto main(void) -> int {
 	catch (const std::exception& e) {
 		std::cerr << "error: " << e.what() << std::endl;
 	}
+	*/
 
-	syscall(SYS_pidfd_open, 0, 0);
+
+	auto ret = syscall(SYS_pidfd_open, getpid(), 0);
+
+	if (ret == -1)
+		std::cerr << "error: " << std::strerror(errno) << std::endl;
+	else {
+		std::cout << "pidfd: " << ret << std::endl;
+		int c = ::close((int)ret);
+		if (c == -1)
+			std::cerr << "error: " << std::strerror(errno) << std::endl;
+	}
 
 	//tsk::process_info info;
 	//

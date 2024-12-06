@@ -1,15 +1,7 @@
-/* ************************************************************************* */
-/*                                                                           */
-/*            ▗▄▄▄▖▗▄▖  ▗▄▄▖▗▖ ▗▖▗▖  ▗▖ ▗▄▖  ▗▄▄▖▗▄▄▄▖▗▄▄▄▖▗▄▄▖              */
-/*              █ ▐▌ ▐▌▐▌   ▐▌▗▞▘▐▛▚▞▜▌▐▌ ▐▌▐▌     █  ▐▌   ▐▌ ▐▌             */
-/*              █ ▐▛▀▜▌ ▝▀▚▖▐▛▚▖ ▐▌  ▐▌▐▛▀▜▌ ▝▀▚▖  █  ▐▛▀▀▘▐▛▀▚▖             */
-/*              █ ▐▌ ▐▌▗▄▄▞▘▐▌ ▐▌▐▌  ▐▌▐▌ ▐▌▗▄▄▞▘  █  ▐▙▄▄▖▐▌ ▐▌             */
-/*                                                                           */
-/* ************************************************************************* */
+#ifndef daemon_hpp
+#define daemon_hpp
 
-#ifndef TASKMASTER_CORE_DAEMON_HPP
-#define TASKMASTER_CORE_DAEMON_HPP
-
+#include "process/process_id.hpp"
 #include "system/fork.hpp"
 #include "system/pipe.hpp"
 
@@ -17,9 +9,9 @@
 #include <sys/wait.h>
 
 
-// -- 4 2  N A M E S P A C E  -------------------------------------------------
+// -- S M  N A M E S P A C E --------------------------------------------------
 
-namespace ft {
+namespace sm {
 
 
 	// -- D A E M O N ---------------------------------------------------------
@@ -32,17 +24,13 @@ namespace ft {
 			// -- private types -----------------------------------------------
 
 			/* self type */
-			using self = ft::daemon;
+			using self = sm::daemon;
 
 
 			// -- private members ---------------------------------------------
 
 			/* process id */
-			::pid_t _pid;
-
-			/* arguments */
-			//tsk::exec_args _args;
-
+			sm::process_id _pid;
 
 
 		public:
@@ -51,16 +39,8 @@ namespace ft {
 
 			/* default constructor */
 			daemon(void)
-			: _pid{-1}/*, _args{}*/ {
+			: _pid{} {
 			}
-
-			/* command constructor */
-			//daemon(const std::vector<std::string>& args)
-			//: _args{} {
-			//
-			//	for (const auto& arg : args)
-			//		_args.push(arg);
-			//}
 
 			/* copy constructor */
 			daemon(const self&) = default;
@@ -155,8 +135,8 @@ namespace ft {
 			}
 
 
-	};
+	}; // class daemon
 
-} // namespace ft
+} // namespace sm
 
-#endif // TASKMASTER_CORE_DAEMON_HPP
+#endif // daemon_hpp

@@ -17,7 +17,7 @@
 #include <cstring>
 
 #include "dispatch.hpp"
-#include "process/wstatus.hpp"
+#include "process/wait_status.hpp"
 #include "process/process_id.hpp"
 
 #include "fcntl.h"
@@ -178,7 +178,7 @@ auto main(void) -> int {
 	try {
 
 
-		sm::wstatus status{};
+		sm::wait_status status{};
 
 
 

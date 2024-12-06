@@ -22,12 +22,6 @@ echo $warning \
 	$reset
 
 
-# -- O P E R A T I N G  S Y S T E M -------------------------------------------
-
-# get operating system
-declare -rg os=$(uname -s)
-
-
 # -- T H I S  S C R I P T -----------------------------------------------------
 
 # get script absolute directory path
@@ -57,9 +51,6 @@ declare -rg src_dir=$cwd_dir'/sources'
 # include directory
 declare -rg inc_dir=$cwd_dir'/include'
 
-# git directory
-declare -rg git_dir=$cwd_dir'/.git'
-
 
 # -- F I L E S ----------------------------------------------------------------
 
@@ -74,56 +65,13 @@ declare -rg deps=(${objs/%.o/.d})
 
 
 
-# -- O S  D E P E N D E N C I E S ---------------------------------------------
-
-# linux dependencies
-if [[ $os =~ 'Linux' ]]; then
-	declare -rg max_jobs=$(nproc)
-
-# macos dependencies
-elif [[ $os =~ 'Darwin' ]]; then
-	declare -rg max_jobs=$(sysctl -n hw.ncpu)
-fi
-
-
-# -- C O M P I L E R  S E T T I N G S -----------------------------------------
-
-# compiler
-declare -rg cxx='clang++'
-
-# cxx flags
-declare -rg cxxflags=('-std=c++2a' '-O0'
-					  '-g3' #'-fsanitize=address' '-gdwarf-4'
-					  '-DENGINE_VL_DEBUG'
-					  '-Wall' '-Wextra' '-Werror' '-Wpedantic' '-Weffc++'
-					  '-ferror-limit=1'
-					  '-fno-rtti' '-Winline'
-					  '-Wno-unused' '-Wno-unused-variable' '-Wno-unused-parameter'
-					  '-Wno-unused-function' '-Wno-unused-private-field' '-Wno-unused-local-typedef'
-					  #'-Wconversion' '-Wsign-conversion' '-Wfloat-conversion' '-Wnarrowing'
-					  '-fdiagnostics-color=always'
-					  '-fno-diagnostics-show-note-include-stack'
-					  '-fdiagnostics-show-location=once'
-					  '-fdiagnostics-show-template-tree'
-					  #'-Wshadow'
-					  '-Wno-gnu-anonymous-struct'
-					  '-Wno-nested-anon-types'
-					  '-I'$inc_dir
-				)
-
-# linker flags
-declare -rg ldflags=()
-				#-fsanitize=address)
-
-
-# -- F U N C T I O N S --------------------------------------------------------
-
+# -- T O O L S ----------------------------------------------------------------
 
 # function to check required tools
 function _check_tools() {
 
 	# required tools
-	local -r required=('uname' 'git' 'rm' 'mkdir' 'wait' 'clang++')
+	local -r required=('rm' 'nproc' 'wait' 'clang++')
 	
 	# optional tools
 	local -r optional=('ccache')
@@ -147,6 +95,50 @@ function _check_tools() {
 		fi
 	done
 }
+
+# check tools
+_check_tools
+
+
+
+# -- C O M P I L E R  S E T T I N G S -----------------------------------------
+
+# compiler
+if ! command -v 'ccache' > '/dev/null'; then
+	declare -rg cxx='clang++'
+else
+	declare -rg cxx=('ccache' 'clang++')
+fi
+
+# cxx flags
+declare -rg cxxflags=('-std=c++2a' '-O0'
+					  '-g3' #'-fsanitize=address' '-gdwarf-4'
+					  '-DENGINE_VL_DEBUG'
+					  '-Wall' '-Wextra' '-Werror' '-Wpedantic' '-Weffc++'
+					  '-ferror-limit=1'
+					  '-fno-rtti' '-Winline'
+					  '-Wno-unused' '-Wno-unused-variable' '-Wno-unused-parameter'
+					  '-Wno-unused-function' '-Wno-unused-private-field' '-Wno-unused-local-typedef'
+					  '-Wconversion' '-Wsign-conversion' '-Wfloat-conversion' '-Wnarrowing'
+					  '-fdiagnostics-color=always'
+					  '-fno-diagnostics-show-note-include-stack'
+					  '-fdiagnostics-show-location=once'
+					  '-fdiagnostics-show-template-tree'
+					  '-Wshadow'
+					  '-Wno-gnu-anonymous-struct'
+					  '-Wno-nested-anon-types'
+					  '-I'$inc_dir
+				)
+
+# linker flags
+declare -rg ldflags=(
+				#-fsanitize=address
+			)
+
+
+# -- F U N C T I O N S --------------------------------------------------------
+
+
 
 
 # -- C O M P I L E  D A T A B A S E -------------------------------------------
@@ -247,11 +239,7 @@ function _handle_compilation {
 	# $3 dependency file
 
 	# compile source file
-	if command -v ccache > '/dev/null'; then
-		ccache $cxx $cxxflags -MT $2 -MMD -MF $3 -c $1 -o $2
-	else
-		$cxx $cxxflags -MT $2 -MMD -MF $3 -c $1 -o $2
-	fi
+	$cxx $cxxflags -MT $2 -MMD -MF $3 -c $1 -o $2
 
 	# check if compilation failed
 	if [[ $? -ne 0 ]]; then
@@ -279,6 +267,9 @@ function _wait_processes {
 
 
 function _compile {
+
+	# maximum number of jobs
+	local -r max_jobs=$('nproc' '--all')
 
 	# number of compiled files
 	local count=0
@@ -411,9 +402,7 @@ function _fclean() {
 
 # -- M A I N ------------------------------------------------------------------
 
-
-_check_tools
-
+# check if no arguments
 if [[ $# -eq 0 ]]; then
 	_build
 	exit
@@ -421,13 +410,6 @@ fi
 
 # handle arguments
 case $1 in
-
-	# run
-	run | launch)
-		_build
-		echo
-		cd $cwd_dir'/test' && $executable
-		;;
 
 	# clean
 	clean | clear | rm)
@@ -439,8 +421,14 @@ case $1 in
 		_fclean
 		;;
 
+	# re
+	re | rebuild | remake)
+		_fclean
+		_build
+		;;
+
 	# unknown (usage)
 	*)
-		echo 'usage: '$script_name' [clean|fclean]'
+		echo 'usage: '$script' [clean|fclean|re]'
 		;;
 esac

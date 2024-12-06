@@ -5,7 +5,7 @@
 #include <sys/wait.h>
 #include "system/syscall.hpp"
 #include "system/unique_fd.hpp"
-#include "process/wstatus.hpp"
+#include "process/wait_status.hpp"
 
 
 // -- S M  N A M E S P A C E --------------------------------------------------
@@ -73,7 +73,7 @@ namespace sm {
 			auto open(void) const -> ft::unique_fd;
 
 			/* wait */
-			auto wait(const int& = 0) const -> sm::wstatus;
+			auto wait(const int& = 0) const -> sm::wait_status;
 
 			/* kill */
 			auto kill(const int& = SIGKILL) const -> void;

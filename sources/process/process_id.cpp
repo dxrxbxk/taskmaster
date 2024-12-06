@@ -36,7 +36,7 @@ auto sm::process_id::open(void) const -> ft::unique_fd {
 }
 
 /* wait */
-auto sm::process_id::wait(const int& options) const -> sm::wstatus {
+auto sm::process_id::wait(const int& options) const -> sm::wait_status {
 
 	int status;
 
@@ -74,7 +74,7 @@ auto sm::process_id::wait(const int& options) const -> sm::wstatus {
 	// if WNOHANG was specified and one or more child(ren) specified by pid exist, but
 	// have not yet changed state, then 0 is returned.  On failure, -1 is returned.
 
-	return sm::wstatus{status};
+	return sm::wait_status{status};
 }
 
 /* kill */

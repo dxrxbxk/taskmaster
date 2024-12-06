@@ -5,9 +5,10 @@
 override script := $(CURDIR)/make.sh
 
 
+
 # -- S P E C I A L  T A R G E T S ---------------------------------------------
 
-.PHONY: all clean fclean
+.PHONY: all rm clean fclean re
 
 
 # -- T A R G E T S ------------------------------------------------------------
@@ -15,8 +16,14 @@ override script := $(CURDIR)/make.sh
 all:
 	@$(script)
 
+rm:
+	@$(script) rm
+
 clean:
 	@$(script) clean
 
 fclean:
 	@$(script) fclean
+
+re:
+	@$(script) re

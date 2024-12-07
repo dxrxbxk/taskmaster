@@ -1,4 +1,5 @@
 #include "process/process_id.hpp"
+#include <iostream>
 
 
 // -- P R O C E S S  I D  -----------------------------------------------------
@@ -27,10 +28,10 @@ sm::process_id::operator const ::pid_t&(void) const noexcept {
 // -- public methods ----------------------------------------------------------
 
 /* open */
-auto sm::process_id::open(void) const -> ft::unique_fd {
+auto sm::process_id::open(void) const -> sm::unique_fd {
 
 	// open pidfd with syscall
-	return ft::unique_fd{static_cast<int>(
+	return sm::unique_fd{static_cast<int>(
 				ft::syscall(SYS_pidfd_open, _pid, 0))
 	};
 }
@@ -40,10 +41,15 @@ auto sm::process_id::wait(const int& options) const -> sm::wait_status {
 
 	int status;
 
+	std::cout << "pid: " << _pid << std::endl;
+
 	const auto state = ::waitpid(_pid, &status, options);
 
-	if (state == -1)
+	if (state == -1) {
+		if (errno == ECHILD)
+			return sm::wait_status{0};
 		throw std::runtime_error("waitpid failed");
+	}
 
 	// WNOHANG
 	// return immediately if no child has exited.

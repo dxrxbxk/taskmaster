@@ -128,7 +128,7 @@ declare -rg cxxflags=('-std=c++2a' '-O0'
 				)
 
 # linker flags
-declare -rg ldflags=(
+declare -rg ldflags=( -lreadline
 				#-fsanitize=address
 			)
 

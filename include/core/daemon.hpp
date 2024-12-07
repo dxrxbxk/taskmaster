@@ -4,9 +4,12 @@
 #include "process/process_id.hpp"
 #include "system/fork.hpp"
 #include "system/pipe.hpp"
+#include "system/setsid.hpp"
 
 #include <sys/types.h>
 #include <sys/wait.h>
+
+#include <iostream>
 
 
 // -- S M  N A M E S P A C E --------------------------------------------------
@@ -65,11 +68,26 @@ namespace sm {
 			// -- public methods ----------------------------------------------
 
 			/* run */
-			auto run(void) -> void {
+			auto run(char** argv) -> sm::process_id {
 
+				{
+					auto pid = sm::fork();
+
+					if (pid > 0) {
+						return sm::process_id{pid};
+					}
+					else {
+
+						// dup2 to /dev/null
+
+
+						::execvp(argv[0], argv);
+						exit(EXIT_SUCCESS);
+					}
+				}
+
+				/*
 				ft::pipe pipe;
-
-
 
 				auto pid = ft::fork();
 
@@ -87,14 +105,16 @@ namespace sm {
 
 					::waitpid(pid, nullptr, 0);
 
-					//std::cout << "daemon pid: " << daemon_pid << std::endl;
+					std::cout << "daemon pid: " << daemon_pid << std::endl;
+
+					return sm::process_id{daemon_pid};
 				}
 				else {
 
 					// -- intermediate ----------------------------------------
 
 					// new session
-					//sys::setsid();
+					sm::setsid();
 
 					// close read end
 					pipe.close_read();
@@ -110,7 +130,7 @@ namespace sm {
 						pipe.close_write();
 
 						// exit
-						return;
+						exit(EXIT_SUCCESS);
 
 					}
 					else {
@@ -119,9 +139,14 @@ namespace sm {
 
 						// close write end
 						pipe.close_write();
+
+						::execvp(argv[0], argv);
+
+						exit(EXIT_SUCCESS);
 					}
 
 				}
+				*/
 
 			}
 
@@ -132,6 +157,11 @@ namespace sm {
 			auto is_running(void) const -> bool {
 				// done
 				return true;
+			}
+
+			/* process id */
+			auto process_id(void) const -> const sm::process_id& {
+				return _pid;
 			}
 
 

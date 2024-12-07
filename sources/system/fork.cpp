@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 
-auto ft::fork(void) -> ::pid_t {
+auto sm::fork(void) -> ::pid_t {
 
 	// fork process
 	const ::pid_t pid = ::fork();

@@ -1,12 +1,12 @@
-#ifndef TASKMASTER_SYSTEM_FORK_HPP
-#define TASKMASTER_SYSTEM_FORK_HPP
+#ifndef fork_hpp
+#define fork_hpp
 
 #include <sys/types.h>
 
 
-// -- 4 2  N A M E S P A C E  -------------------------------------------------
+// -- S M  N A M E S P A C E --------------------------------------------------
 
-namespace ft {
+namespace sm {
 
 	/* fork */
 	auto fork(void) -> ::pid_t;

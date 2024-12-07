@@ -33,7 +33,7 @@ namespace sm {
 			// -- private members ---------------------------------------------
 
 			/* file descriptor */
-			ft::unique_fd _fd;
+			sm::unique_fd _fd;
 
 			/* events */
 			std::vector<struct ::epoll_event> _events;

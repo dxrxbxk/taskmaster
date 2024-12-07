@@ -1,21 +1,10 @@
-/* ************************************************************************* */
-/*                                                                           */
-/*            ▗▄▄▄▖▗▄▖  ▗▄▄▖▗▖ ▗▖▗▖  ▗▖ ▗▄▖  ▗▄▄▖▗▄▄▄▖▗▄▄▄▖▗▄▄▖              */
-/*              █ ▐▌ ▐▌▐▌   ▐▌▗▞▘▐▛▚▞▜▌▐▌ ▐▌▐▌     █  ▐▌   ▐▌ ▐▌             */
-/*              █ ▐▛▀▜▌ ▝▀▚▖▐▛▚▖ ▐▌  ▐▌▐▛▀▜▌ ▝▀▚▖  █  ▐▛▀▀▘▐▛▀▚▖             */
-/*              █ ▐▌ ▐▌▗▄▄▞▘▐▌ ▐▌▐▌  ▐▌▐▌ ▐▌▗▄▄▞▘  █  ▐▙▄▄▖▐▌ ▐▌             */
-/*                                                                           */
-/* ************************************************************************* */
-
-#ifndef TASKMASTER_SYSTEM_UNIQUE_FD_HPP
-#define TASKMASTER_SYSTEM_UNIQUE_FD_HPP
-
-#include <unistd.h>
+#ifndef unique_fd_hpp
+#define unique_fd_hpp
 
 
-// -- 4 2  N A M E S P A C E  -------------------------------------------------
+// -- S M  N A M E S P A C E  -------------------------------------------------
 
-namespace ft {
+namespace sm {
 
 
 	// -- U N I Q U E  F D ----------------------------------------------------
@@ -28,7 +17,7 @@ namespace ft {
 			// -- private types -----------------------------------------------
 
 			/* self type */
-			using self = ft::unique_fd;
+			using self = sm::unique_fd;
 
 
 			// -- private members ---------------------------------------------
@@ -88,6 +77,6 @@ namespace ft {
 
 	}; // class unique_fd
 
-} // namespace tm
+} // namespace sm
 
-#endif // TASKMASTER_SYSTEM_UNIQUE_FD_HPP
+#endif // unique_fd_hpp

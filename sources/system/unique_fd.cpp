@@ -1,23 +1,23 @@
 #include "system/unique_fd.hpp"
+#include <unistd.h>
 
 
 // -- U N I Q U E  F D --------------------------------------------------------
 
-
 // -- public lifecycle --------------------------------------------------------
 
 /* default constructor */
-ft::unique_fd::unique_fd(void) noexcept
+sm::unique_fd::unique_fd(void) noexcept
 : _fd{-1} {
 }
 
 /* int constructor */
-ft::unique_fd::unique_fd(const int& fd) noexcept
+sm::unique_fd::unique_fd(const int& fd) noexcept
 : _fd{fd} {
 }
 
 /* move constructor */
-ft::unique_fd::unique_fd(self&& other) noexcept
+sm::unique_fd::unique_fd(self&& other) noexcept
 : _fd{other._fd} {
 
 	// invalidate other
@@ -25,7 +25,7 @@ ft::unique_fd::unique_fd(self&& other) noexcept
 }
 
 /* destructor */
-ft::unique_fd::~unique_fd(void) noexcept {
+sm::unique_fd::~unique_fd(void) noexcept {
 
 	if (_fd == -1)
 		return;
@@ -38,7 +38,7 @@ ft::unique_fd::~unique_fd(void) noexcept {
 // -- public assignment operators ---------------------------------------------
 
 /* move assignment operator */
-auto ft::unique_fd::operator=(self&& other) noexcept -> self& {
+auto sm::unique_fd::operator=(self&& other) noexcept -> self& {
 
 	// check for self assignment
 	if (this == &other)
@@ -61,12 +61,12 @@ auto ft::unique_fd::operator=(self&& other) noexcept -> self& {
 // -- public conversion operators ---------------------------------------------
 
 /* int conversion operator */
-ft::unique_fd::operator const int&(void) const noexcept {
+sm::unique_fd::operator const int&(void) const noexcept {
 	return _fd;
 }
 
 /* bool conversion operator */
-ft::unique_fd::operator bool(void) const noexcept {
+sm::unique_fd::operator bool(void) const noexcept {
 	return _fd != -1;
 }
 
@@ -74,7 +74,7 @@ ft::unique_fd::operator bool(void) const noexcept {
 // -- public operators --------------------------------------------------------
 
 /* not operator */
-auto ft::unique_fd::operator!(void) const noexcept -> bool {
+auto sm::unique_fd::operator!(void) const noexcept -> bool {
 	return _fd == -1;
 }
 
@@ -82,7 +82,7 @@ auto ft::unique_fd::operator!(void) const noexcept -> bool {
 // -- public methods ----------------------------------------------------------
 
 /* close */
-auto ft::unique_fd::close(void) noexcept -> void {
+auto sm::unique_fd::close(void) noexcept -> void {
 
 	// check file descriptor
 	if (_fd == -1)

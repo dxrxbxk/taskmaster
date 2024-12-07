@@ -5,15 +5,17 @@
 #include "system/unique_fd.hpp"
 #include "process/process_id.hpp"
 
+#include <iostream>
+
 
 // -- S M  N A M E S P A C E --------------------------------------------------
 
 namespace sm {
 
 
-	// -- P R O C E S S  E V E N T --------------------------------------------
+	// -- P R O C E S S -------------------------------------------------------
 
-	class process_event final : public sm::io_event {
+	class process final : public sm::io_event {
 
 
 		private:
@@ -21,13 +23,16 @@ namespace sm {
 			// -- private types -----------------------------------------------
 
 			/* self type */
-			using self = sm::process_event;
+			using self = sm::process;
 
 
 			// -- private members ---------------------------------------------
 
+			/* process id */
+			sm::process_id _pid;
+
 			/* unique fd */
-			ft::unique_fd _fd;
+			sm::unique_fd _fd;
 
 
 		public:
@@ -35,21 +40,21 @@ namespace sm {
 			// -- public lifecycle --------------------------------------------
 
 			/* default constructor */
-			process_event(void) noexcept = default;
+			process(void) noexcept = default;
 
 			/* pid constructor */
-			process_event(const sm::process_id& pid)
-			: _fd{pid.open()} {
+			process(const sm::process_id& pid)
+			: _pid{pid}, _fd{pid.open()} {
 			}
 
 			/* deleted copy constructor */
-			process_event(const self&) = delete;
+			process(const self&) = delete;
 
 			/* move constructor */
-			process_event(self&&) noexcept = default;
+			process(self&&) noexcept = default;
 
 			/* destructor */
-			~process_event(void) noexcept = default;
+			~process(void) noexcept = default;
 
 
 			// -- public assignment operators ---------------------------------
@@ -71,6 +76,34 @@ namespace sm {
 			/* on event */
 			auto on_event(const ::uint32_t& events) -> void override {
 
+				std::cout << "process on event: " << events << std::endl;
+				std::cout << "pid: " << _pid << std::endl;
+
+				int pidfd = _fd;
+				::pid_t pid = _pid;
+
+				siginfo_t info;
+				const auto status = ::waitid(P_PIDFD, (__id_t)pidfd, &info, WEXITED);
+
+				if (status == -1) {
+					if (errno == ECHILD) {
+						std::cerr << "Process already collected or does not exist." << std::endl;
+					} else {
+						perror("waitid");
+						throw std::runtime_error("waitid failed");
+					}
+					exit(EXIT_FAILURE);
+				}
+
+
+				if (info.si_code == CLD_EXITED) {
+					printf("Process exited normally with status %d\n", info.si_status);
+				} else if (info.si_code == CLD_KILLED || info.si_code == CLD_DUMPED) {
+					printf("Process was terminated by signal %d\n", info.si_status);
+				}
+
+				exit(EXIT_SUCCESS);
+				//_pid.wait();
 				//if (events & EPOLLIN) {
 				//
 				//}

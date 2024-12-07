@@ -70,7 +70,7 @@ namespace sm {
 			// -- public methods ----------------------------------------------
 
 			/* open */
-			auto open(void) const -> ft::unique_fd;
+			auto open(void) const -> sm::unique_fd;
 
 			/* wait */
 			auto wait(const int& = 0) const -> sm::wait_status;

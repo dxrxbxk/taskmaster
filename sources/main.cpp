@@ -13,6 +13,9 @@
 
 #include <iostream>
 
+#include <readline/readline.h>
+
+
 
 namespace sm {
 
@@ -214,6 +217,56 @@ auto list_processes(void) -> void {
 
 }
 
+#include "process/process_event.hpp"
+
+namespace sm {
+
+
+	class process_manager final {
+
+
+		private:
+
+			// -- private types -----------------------------------------------
+
+			/* self type */
+			using self = sm::process_manager;
+
+
+			// -- private members ---------------------------------------------
+
+			/* processes */
+			std::vector<sm::process> _processes;
+
+
+		public:
+
+			// -- public lifecycle --------------------------------------------
+
+			/* default constructor */
+			process_manager(void) = default;
+
+
+			// -- public modifiers --------------------------------------------
+
+			/* add */
+			auto add(const sm::process_id& id) -> sm::process& {
+				_processes.emplace_back(id);
+				return _processes.back();
+			}
+
+			/* add */
+			auto add(sm::process&& pro) -> sm::process& {
+				_processes.push_back(static_cast<sm::process&&>(pro));
+				return _processes.back();
+			}
+
+
+
+	}; // class process_manager
+
+} // namespace sm
+
 
 auto main(void) -> int {
 
@@ -224,29 +277,40 @@ auto main(void) -> int {
 
 		//termios_test<true>();
 		//return 0;
-		//
 
 		//sm::wait_status status{};
 
-		sm::readline rl{};
-
-
+		//sm::readline rl{};
+		//
 		sm::dispatch d;
+		//
+		//d.add(rl, EPOLLIN);
+		//
 
-		d.add(rl, EPOLLIN);
+		sm::process_manager pm{};
+
+		char program[] = "./program";
+		char* argv[] = {program, nullptr};
+
+		sm::daemon daemon;
+		sm::process_id id = daemon.run(argv);
+
+		auto& last = pm.add(id);
+
+		d.add(last, EPOLLIN);
 
 		while (sm::running::state()) {
 			d.wait();
 		}
 
-		//sm::daemon daemon;
-		//daemon.run();
+		//d.add
 	}
 
 	catch (const std::exception& e) {
 		std::cerr << "error: " << e.what() << std::endl;
 		return EXIT_FAILURE;
 	}
+
 
 	return EXIT_SUCCESS;
 }

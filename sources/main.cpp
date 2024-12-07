@@ -1,4 +1,5 @@
 #include "system/syscall.hpp"
+#include "reader.hpp"
 #include "system/write.hpp"
 #include "dispatch.hpp"
 #include "memory/malloc.hpp"
@@ -7,6 +8,7 @@
 #include "core/daemon.hpp"
 #include "terminal.hpp"
 #include "escape.hpp"
+#include "running.hpp"
 
 #include <iostream>
 
@@ -14,8 +16,22 @@
 namespace sm {
 
 
-	template <unsigned int N>
-	class reader final {
+
+	// ╭───────────────────────────────────────╮
+	// │ ls -la 'file.txt'         fiefjwoeijf │
+	// ╰───────────────────────────────────────╯
+
+
+
+	class box final {
+
+
+		public:
+
+			// -- public types ------------------------------------------------
+
+			/* size type */
+			using size_type = unsigned short;
 
 
 		private:
@@ -23,108 +39,25 @@ namespace sm {
 			// -- private types -----------------------------------------------
 
 			/* self type */
-			using self = sm::reader<N>;
+			using self = sm::box;
 
 
 			// -- private members ---------------------------------------------
 
-			/* buffer */
-			char _buffer[N];
-
-			/* size */
-			sm::usize _size;
+			/* box */
+			std::string _box;
 
 
-		public:
-
-			// -- public lifecycle --------------------------------------------
-
-			/* default constructor */
-			reader(void) noexcept
-			: /* _buffer{} uninitialized */ _size{0U} {
-			}
-
-			/* copy constructor */
-			reader(const self&) noexcept = default;
-
-			/* move constructor */
-			reader(self&&) noexcept = default;
-
-			/* destructor */
-			~reader(void) noexcept = default;
-
-
-			// -- public assignment operators ---------------------------------
-
-			/* copy assignment operator */
-			auto operator=(const self&) noexcept -> self& = default;
-
-			/* move assignment operator */
-			auto operator=(self&&) noexcept -> self& = default;
-
-
-			// -- public accessors --------------------------------------------
-
-			/* data */
-			auto data(void) noexcept -> char* {
-				return _buffer;
-			}
-
-			/* data */
-			auto data(void) const noexcept -> const char* {
-				return _buffer;
-			}
-
-			/* size */
-			auto size(void) const noexcept -> const sm::usize& {
-				return _size;
-			}
-
-			/* operator[] */
-			auto operator[](const sm::isize& i) noexcept -> char& {
-				return _buffer[i];
-			}
-
-			/* operator[] */
-			auto operator[](const sm::isize& i) const noexcept -> const char& {
-				return _buffer[i];
-			}
-
-
-			// -- public methods ----------------------------------------------
-
-			/* read */
-			auto read(const int& fd) -> void {
-
-				const auto bytes = ::read(fd, _buffer, N);
-
-				if (bytes == -1)
-					throw std::runtime_error("read failed");
-
-				_size = static_cast<sm::usize>(bytes);
-			}
-
-	}; // class reader
-
-			// ╭───────────────────────────────────────╮
-			// │ ls -la 'file.txt'         fiefjwoeijf │
-			// ╰───────────────────────────────────────╯
-
-
-	class box final : public sm::terminal::observer {
-
-
-		private:
-
-			std::string _lines[3U];
+			// -- private constants -------------------------------------------
 
 			/* symbol enum */
-			enum {
+			enum : unsigned {
 				LINE_H, LINE_V,
 				CORNER_TL, CORNER_TR, CORNER_BL, CORNER_BR,
 				BORDER_MAX
 			};
 
+			/* symbols */
 			static constexpr const char* _symbols[BORDER_MAX] = {
 				"\xe2\x94\x80",
 				"\xe2\x94\x82",
@@ -135,14 +68,92 @@ namespace sm {
 			};
 
 
-
 		public:
 
-			// -- public overrides --------------------------------------------
+			// -- public lifecycle --------------------------------------------
 
-			/* on resize */
-			auto on_resize(const unsigned short& rows,
-						   const unsigned short& cols) noexcept -> void override {
+			/* default constructor */
+			box(void) noexcept(noexcept(std::string{})) = default;
+
+			/* copy constructor */
+			box(const self&) = default;
+
+			/* move constructor */
+			box(self&&) noexcept = default;
+
+			/* destructor */
+			~box(void) noexcept = default;
+
+
+			// -- public assignment operators ---------------------------------
+
+			/* copy assignment operator */
+			auto operator=(const self&) -> self& = default;
+
+			/* move assignment operator */
+			auto operator=(self&&) noexcept -> self& = default;
+
+
+			// -- public modifiers --------------------------------------------
+
+			/* set */
+			auto set(const unsigned short& x,
+					 const unsigned short& y,
+					 const unsigned short& w,
+					 const unsigned short& h) -> void {
+
+				// avoid namespace pollution
+				using esc = sm::escape;
+
+				if (w == 0U || h == 0U)
+					return;
+
+				// clear previous box
+				_box.clear();
+
+				// append top left corner
+				_box.append(_symbols[CORNER_TL], 3U);
+
+				// append top box
+				for (size_type i = 1U; i < w - 1U; ++i)
+					_box.append(_symbols[LINE_H], 3U);
+
+				// append top right corner
+				_box.append(_symbols[CORNER_TR], 3U);
+
+				// append move position bottom left corner
+				_box.append(esc::move_position(x, y + h - 1));
+
+				// append bottom left corner
+				_box.append(_symbols[CORNER_BL], 3U);
+
+				// append bottom box
+				for (size_type i = 1U; i < w - 1U; ++i)
+					_box.append(_symbols[LINE_H], 3U);
+
+				// append bottom right corner
+				_box.append(_symbols[CORNER_BR], 3U);
+
+
+				size_type y_pos = y + h - 1U;
+
+				// append left vertical box
+				for (size_type i = y + 1U; i < y_pos; ++i) {
+					// append move position left box
+					_box.append(esc::move_position(x, i));
+					// append left vertical box
+					_box.append(_symbols[LINE_V], 3U);
+				}
+
+				size_type x_pos = x + w - 1U;
+
+				// append right vertical box
+				for (size_type i = y + 1U; i < y_pos; ++i) {
+					// append move position right box
+					_box.append(esc::move_position(x_pos, i));
+					// append right vertical box
+					_box.append(_symbols[LINE_V], 3U);
+				}
 
 			}
 
@@ -163,11 +174,17 @@ namespace sm {
 
 			// -- private members ---------------------------------------------
 
+			/* prompt */
+			std::string _prompt;
+
 			/* buffer */
 			std::string _buffer;
 
 			/* input */
 			std::string _input;
+
+			/* input position */
+			sm::usize _input_pos;
 
 			/* position */
 			sm::usize _cursor_pos;
@@ -184,37 +201,24 @@ namespace sm {
 			/* render */
 			auto _render(void) -> void {
 
+				_debug();
+
 				_buffer.clear();
 				// erase line
 				_buffer.append("\r\x1b[2K");
+				_buffer.append(_prompt);
 
-				_buffer.append(_input);
+				// input offset
+				const char* ptr = _input.data() + _offset;
 
-				// get substring from offset to offset + term_width
-				//const auto substr = _input.substr(_offset, _term_width);
+				// size of substring
+				const sm::usize size = _input.size() > _term_width ? _term_width : _input.size();
 
-				// prompt
-				//_buffer.append(substr);
-				// move to cursor position
+				_buffer.append(ptr, size);
 
-				//const auto esc = sm::escape::move_left
+				_buffer.append("\r", 1U);
+				_buffer.append(sm::escape::move_right(static_cast<unsigned short>(_cursor_pos + 13U)));
 
-				//_buffer.append(sm::escape::move_left((unsigned short)(_input.size() - _cursor_pos)));
-
-
-				/*
-				| width term |
-		  jfhelfeifeifjeijfij<
-		 |offset|
-		 */
-
-
-				if (_cursor_pos - _offset >= _term_width) {
-					_buffer.append(sm::escape::disable_cursor());
-				}
-				else {
-					_buffer.append(sm::escape::enable_cursor());
-				}
 
 				::write(STDOUT_FILENO, _buffer.data(), _buffer.size());
 			}
@@ -224,46 +228,84 @@ namespace sm {
 			/* insert */
 			auto _insert(const char& c) -> void {
 
-				_input.insert(_cursor_pos, 1U, c);
-				if (_cursor_pos < _term_width) {
-					++_cursor_pos;
-				}
-				//++_cursor_pos;
+				_input.insert(_input_pos, 1U, c);
 
-				//if (_cursor_pos >= _term_width) {
-				//	_offset = _cursor_pos - _term_width;
-				//}
+				++_input_pos;
+
+				if (_cursor_pos < _term_width)
+					++_cursor_pos;
+				else
+					++_offset;
 
 				_render();
 			}
 
+
 			/* move left */
 			auto _move_left(void) -> void {
 
-				if (_cursor_pos == 0U)
-					return;
+				_input_pos -= (_input_pos > 0U);
 
-				--_cursor_pos;
+				if (_cursor_pos == 0U) {
+
+					_offset -= (_offset != 0U);
+				}
+
+				else {
+					--_cursor_pos;
+				}
+
 				_render();
 			}
 
 			/* move right */
 			auto _move_right(void) -> void {
 
-				if (_cursor_pos == _input.size())
+				if (_input_pos >= _input.size()) {
 					return;
+				}
 
-				++_cursor_pos;
+				++_input_pos;
+
+				if (_cursor_pos < _term_width - 1) {
+					// Le curseur peut encore avancer dans la fenêtre visible
+					++_cursor_pos;
+				} else {
+					// Le curseur est au bord droit, il faut scroller
+					++_offset;
+				}
 				_render();
+				return;
+
+				//_input_pos += (_input_pos < _input.size());
+				//
+				//if (_cursor_pos < _term_width) {
+				//	++_cursor_pos;
+				//}
+				//else {
+				//
+				//	if (_input_pos < _input.size())
+				//		++_offset;
+				//}
+				//
+				//_render();
 			}
 
 			/* delete */
 			auto _delete(void) -> void {
 
-				if (_cursor_pos == 0U)
+				if (_input_pos == 0U)
 					return;
 
-				_input.erase(--_cursor_pos, 1U);
+				_input.erase(--_input_pos, 1U);
+
+				if (_cursor_pos == 0U) {
+					_offset -= (_offset != 0U);
+				}
+				else {
+					--_cursor_pos;
+				}
+
 				_render();
 			}
 
@@ -274,18 +316,39 @@ namespace sm {
 
 				_input.clear();
 				_cursor_pos = 0U;
+				_input_pos = 0U;
+				_offset = 0U;
 			}
 
+			auto _debug(void) -> void {
+
+				// move home
+				::write(STDOUT_FILENO, "\x1b[H", 3U);
+				// clear screen
+				::write(STDOUT_FILENO, "\x1b[2J", 4U);
+
+				std::cout << "input size: " << _input.size() << "\r\n";
+				std::cout << "input  pos: " << _input_pos << "\r\n";
+				std::cout << "cursor pos: " << _cursor_pos << "\r\n";
+				std::cout << "    offset: " << _offset << "\r\n";
+
+				// move to bottom of terminal
+				::write(STDOUT_FILENO, "\x1b[999B", 6U);
+			}
 
 
 		public:
 
 			input_event(void)
-			: _buffer{}, _input{}, _cursor_pos{0U}, _offset{0U},
-			  _term_width{sm::terminal::width()} {
+			: _prompt{}, _buffer{}, _input{}, _input_pos{0U}, _cursor_pos{0U}, _offset{0U},
+			  _term_width{sm::terminal::width() - 1U - 13U} {
+			  //_term_width{10U} {
 
 				// set terminal to raw mode
 				sm::terminal::raw();
+
+				_prompt.append("\x1b[32mtaskmaster > \x1b[0m");
+				//_box.set
 			}
 
 			~input_event(void) noexcept {
@@ -302,7 +365,8 @@ namespace sm {
 			auto on_resize(const unsigned short&,
 						   const unsigned short& cols) noexcept -> void override {
 
-				_term_width = cols;
+				_term_width = cols - 1U - 13U;
+				//_term_width = 10U;
 
 				// compute new offset
 				_offset = _cursor_pos > _term_width ? _cursor_pos - _term_width : 0U;
@@ -321,7 +385,7 @@ namespace sm {
 					if (reader.size() == 1U) {
 
 						if (reader[0U] == 'q') {
-							exit(0);
+							sm::running::stop();
 						}
 
 						// delete
@@ -365,7 +429,145 @@ template <bool>
 auto termios_test(void) -> void;
 
 
+#include <stdio.h>
+#include <dirent.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+
+namespace sm {
+
+
+	class unique_dir final {
+
+
+		private:
+
+			// -- private types -----------------------------------------------
+
+			/* self type */
+			using self = sm::unique_dir;
+
+
+			// -- private members ---------------------------------------------
+
+			/* directory */
+			::DIR* _dir;
+
+
+		public:
+
+			// -- public lifecycle --------------------------------------------
+
+			/* default constructor */
+			unique_dir(void) noexcept
+			: _dir{nullptr} {
+			}
+
+			/* path constructor */
+			template <unsigned int N>
+			unique_dir(const char (&path)[N])
+			: _dir{::opendir(path)} {
+
+				if (_dir == nullptr)
+					throw std::runtime_error("opendir failed");
+			}
+
+			/* deleted copy constructor */
+			unique_dir(const self&) = delete;
+
+			/* move constructor */
+			unique_dir(self&& other) noexcept
+			: _dir{other._dir} {
+				other._dir = nullptr;
+			}
+
+			/* destructor */
+			~unique_dir(void) noexcept {
+
+				if (_dir == nullptr)
+					return;
+
+				::closedir(_dir);
+			}
+
+
+			// -- public assignment operators ---------------------------------
+
+			/* deleted copy assignment operator */
+			auto operator=(const self&) -> self& = delete;
+
+			/* move assignment operator */
+			auto operator=(self&& other) noexcept -> self& {
+
+				if (this == &other)
+					return *this;
+
+				if (_dir != nullptr)
+					::closedir(_dir);
+
+				_dir = other._dir;
+				other._dir = nullptr;
+
+				return *this;
+			}
+
+
+			// -- public methods ----------------------------------------------
+
+			/* read */
+			auto read(void) -> ::dirent* {
+				return ::readdir(_dir);
+			}
+
+
+	}; // class directory
+
+} // namespace sm
+
+
+auto list_processes(void) -> void {
+
+	struct ::dirent* entry;
+
+	sm::unique_dir proc{"/proc"};
+
+	while ((entry = proc.read()) != nullptr) {
+
+		// Vérifier si le nom du répertoire est un nombre (PID)
+		if (not isdigit(entry->d_name[0])) {
+			continue;
+		}
+
+		char path[256];
+		char name[256];
+		snprintf(path, sizeof(path), "/proc/%s/status", entry->d_name);
+
+		FILE *status_file = fopen(path, "r");
+		if (status_file == NULL) {
+			continue;
+		}
+
+		while (fgets(name, sizeof(name), status_file)) {
+			if (strncmp(name, "Name:", 5) == 0) {
+				// Extraire le nom du processus
+				char process_name[256];
+				sscanf(name, "Name:\t%255s", process_name);
+				printf("%-10s %-30s\n", entry->d_name, process_name);
+				break;
+			}
+		}
+		fclose(status_file);
+	}
+
+}
+
+
 auto main(void) -> int {
+
+	list_processes();
+	return 0;
 
 	try {
 
@@ -375,6 +577,7 @@ auto main(void) -> int {
 
 		//sm::wait_status status{};
 
+		//sm::readline rl{};
 
 		sm::input_event ie{};
 
@@ -382,7 +585,7 @@ auto main(void) -> int {
 
 		d.add(ie, EPOLLIN);
 
-		while (true) {
+		while (sm::running::state()) {
 			d.wait();
 		}
 

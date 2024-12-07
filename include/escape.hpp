@@ -3,6 +3,7 @@
 
 #include <string_view>
 #include <string>
+#include <limits>
 
 
 // -- S M  N A M E S P A C E --------------------------------------------------
@@ -60,6 +61,20 @@ namespace sm {
 			/* move right */
 			static auto move_right(const unsigned short& distance = 1U) -> std::string {
 				return std::string{self::_move_direction(distance, 'C')};
+			}
+
+
+			/* move position */
+			static auto move_position(unsigned short x,
+									  unsigned short y) -> std::string {
+
+				constexpr auto max = std::numeric_limits<unsigned short>::max();
+
+				// bounds check
+				x += (x != max);
+				y += (y != max);
+
+				return std::string{"\x1b[" + std::to_string(y) + ";" + std::to_string(x) + "H"};
 			}
 
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env -S zsh --no-rcs --no-globalrcs --errexit --pipefail
+#!/usr/bin/env -S zsh --no-rcs --no-globalrcs --pipefail
 
 
 # -- C O L O R S --------------------------------------------------------------
@@ -13,13 +13,12 @@ declare -rg   reset='\x1b[0m'
 
 # -- L O G O ------------------------------------------------------------------
 
-echo $warning \
-	'   ▁▁▁▁▁▁▁▁  ▁▁▁▁▁▁▁▁  ▁▁▁▁ ▁▁▁  ▁▁▁▁▁▁▁▁ \n' \
-	'  ╱        ╲╱        ╲╱    ╱   ╲╱        ╲\n' \
-	' ╱         ╱         ╱         ╱         ╱\n' \
-	'╱         ╱         ╱        ▁╱       ▁▁╱ \n' \
-	'╲▁▁╱▁▁╱▁▁╱╲▁▁▁╱▁▁▁▁╱╲▁▁▁▁╱▁▁▁╱╲▁▁▁▁▁▁▁▁╱  \n' \
-	$reset
+echo $success'\n' \
+'▗▄▄▄▖▗▄▖  ▗▄▄▖▗▖ ▗▖▗▖  ▗▖ ▗▄▖  ▗▄▄▖▗▄▄▄▖▗▄▄▄▖▗▄▄▖ \n' \
+'  █ ▐▌ ▐▌▐▌   ▐▌▗▞▘▐▛▚▞▜▌▐▌ ▐▌▐▌     █  ▐▌   ▐▌ ▐▌\n' \
+'  █ ▐▛▀▜▌ ▝▀▚▖▐▛▚▖ ▐▌  ▐▌▐▛▀▜▌ ▝▀▚▖  █  ▐▛▀▀▘▐▛▀▚▖\n' \
+'  █ ▐▌ ▐▌▗▄▄▞▘▐▌ ▐▌▐▌  ▐▌▐▌ ▐▌▗▄▄▞▘  █  ▐▙▄▄▖▐▌ ▐▌\n' \
+$reset
 
 
 # -- T H I S  S C R I P T -----------------------------------------------------
@@ -125,8 +124,6 @@ declare -rg cxxflags=('-std=c++2a' '-O0'
 					  '-fdiagnostics-show-location=once'
 					  '-fdiagnostics-show-template-tree'
 					  '-Wshadow'
-					  '-Wno-gnu-anonymous-struct'
-					  '-Wno-nested-anon-types'
 					  '-I'$inc_dir
 				)
 
@@ -134,10 +131,6 @@ declare -rg cxxflags=('-std=c++2a' '-O0'
 declare -rg ldflags=(
 				#-fsanitize=address
 			)
-
-
-# -- F U N C T I O N S --------------------------------------------------------
-
 
 
 
@@ -186,7 +179,7 @@ function _generate_compile_db() {
 	fi
 
 	# print success
-	print $success'[+]'$reset ${compile_db:t}
+	print $success'[✓]'$reset ${compile_db:t}
 }
 
 
@@ -247,7 +240,7 @@ function _handle_compilation {
 		exit 1
 	fi
 
-	echo -n '\r\x1b[2K'$info'[✓]'$reset ${1:t}
+	echo -n '\r\x1b[2K'$success'[ ]'$reset ${1:t}
 	exit 0
 }
 
@@ -307,7 +300,7 @@ function _compile {
 	_wait_processes $pids
 
 	if [[ $count -ne 0 ]]; then
-		echo '\r\x1b[2K'$success'[+]'$reset $count 'cxx compiled.'
+		echo '\r\x1b[2K'$success'[✓]'$reset $count 'files compiled'
 	fi
 }
 
@@ -318,7 +311,7 @@ function _link {
 
 	# link object files
 	if $cxx $objs '-o' $executable $ldflags; then
-		echo $success'[+]'$reset 'linked' ${executable:t}
+		echo $success'[✓]'$reset 'executable linked'
 	else
 		echo $error'[x]'$reset 'linking failed'
 		exit 1
@@ -337,12 +330,12 @@ function _handle_link {
 		# check if object file is newer than target
 		if [[ $obj -nt $executable ]]; then
 			_link
-			return
+			break
 		fi
 	done
 
 	# no link required
-	echo $success'[>]'$reset ${executable:t} 'is up to date'
+	echo $success'[✓]'$reset ${executable:t} 'is up to date'
 }
 
 
@@ -412,12 +405,12 @@ fi
 case $1 in
 
 	# clean
-	clean | clear | rm)
+	clean | clear)
 		_clean
 		;;
 
 	# fclean
-	fclean | purge)
+	fclean | purge | rm)
 		_fclean
 		;;
 

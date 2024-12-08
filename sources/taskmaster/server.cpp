@@ -17,6 +17,12 @@ sm::server::server(const ::in_port_t& port)
 
 	// listen on the socket
 	_socket.listen(SOMAXCONN);
+
+	// set non-blocking
+	//_socket.non_blocking();
+
+	// set reuse address
+	//_socket.reuse_address();
 }
 
 

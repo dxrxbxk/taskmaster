@@ -167,10 +167,40 @@ namespace sm {
 } // namespace sm
 
 
+#include "common/signal.hpp"
+
 auto main(void) -> int {
 
 
 	try {
+
+		std::cout << "main pid: " << ::getpid() << std::endl;
+		std::cout << "main ppid: " << ::getppid() << std::endl;
+		std::cout << "main sid: " << ::getsid(0) << std::endl;
+
+		auto pid = sm::fork();
+
+		if (pid != 0) {
+			std::cout << "child pid: " << pid << std::endl;
+			return 0;
+		}
+		else {
+
+			std::cout << "child pid: " << ::getpid() << std::endl;
+			std::cout << "child ppid: " << ::getppid() << std::endl;
+			std::cout << "child sid: " << ::getsid(0) << std::endl;
+
+			// new session
+			sm::setsid();
+
+			std::cout << "after new session pid: " << ::getpid() << std::endl;
+			std::cout << "after new session ppid: " << ::getppid() << std::endl;
+			std::cout << "after new session sid: " << ::getsid(0) << std::endl;
+
+		}
+
+		return 0;
+
 
 		sm::controller c{};
 
@@ -179,6 +209,7 @@ auto main(void) -> int {
 	}
 
 	catch (const std::exception& e) {
+		perror("error");
 		std::cerr << "error: " << e.what() << std::endl;
 		return EXIT_FAILURE;
 	}

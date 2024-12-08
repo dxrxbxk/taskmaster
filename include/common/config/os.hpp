@@ -1,5 +1,5 @@
-#ifndef __os__
-#define __os__
+#ifndef os_hpp
+#define os_hpp
 
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -13,4 +13,4 @@
 #endif
 
 
-#endif // __os__
+#endif // os_hpp

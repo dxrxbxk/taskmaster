@@ -54,6 +54,31 @@ namespace sm {
 			};
 
 
+			// -- private static methods --------------------------------------
+
+			/* mkdir */
+			template <unsigned N>
+			static auto _mkdir(const char (&path)[N]) -> void {
+
+				// create directory
+				if (::mkdir(path, 0755) == -1)
+					throw std::runtime_error("mkdir failed");
+			}
+
+			/* stat */
+			template <unsigned N>
+			static auto _stat(const char (&path)[N]) -> struct ::stat {
+
+				struct ::stat st;
+
+				// check if directory exists
+				if (::stat(path, &st) == -1) {
+					throw std::runtime_error("stat failed");
+				}
+			}
+
+
+
 			// -- private lifecycle -------------------------------------------
 
 			/* default constructor */

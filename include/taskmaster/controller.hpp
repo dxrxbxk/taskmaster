@@ -4,6 +4,7 @@
 #include "taskmaster/server.hpp"
 #include "taskmaster/client_manager.hpp"
 #include "common/dispatch.hpp"
+#include "common/signal.hpp"
 #include <unistd.h>
 
 
@@ -31,7 +32,7 @@ namespace sm {
 			sm::server _server;
 
 			/* dispatcher */
-			sm::monitor<self> _dispatch;
+			sm::monitor<self> _monitor;
 
 			/* clients */
 			sm::client_manager _clients;
@@ -45,29 +46,35 @@ namespace sm {
 			// -- public lifecycle --------------------------------------------
 
 			/* default constructor */
-			controller(void) = default;
+			controller(void)
+			: _server{},
+			  _monitor{},
+			  _clients{},
+			  _running{true} {
+
+				// subscribe to signals
+				_monitor.subscribe(sm::signal::shared(), sm::event{EPOLLIN});
+			}
 
 
 			auto run(void) -> void {
-
-				_running = true;
 
 				// daemonize
 
 				// create server
 				_server = sm::server{::in_port_t{4242}};
 
-				_dispatch.subscribe(_server, sm::event{EPOLLIN});
+				_monitor.subscribe(_server, sm::event{EPOLLIN});
 
 				// poll
 				while (_running == true) {
 
 					// wait for events
-					_dispatch.wait(*this);
+					_monitor.wait(*this);
 					//::write(STDOUT_FILENO, ".", 1);
 				}
 
-				_dispatch.unsubscribe(_server);
+				_monitor.unsubscribe(_server);
 			}
 
 
@@ -80,7 +87,7 @@ namespace sm {
 
 			/* monitor */
 			auto monitor(void) noexcept -> sm::monitor<self>& {
-				return _dispatch;
+				return _monitor;
 			}
 
 			/* stop */

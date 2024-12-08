@@ -71,10 +71,19 @@ namespace sm {
 
 					char buffer[1024U];
 
-					const auto bytes = ::recv(_socket, buffer, sizeof(buffer), 0);
+					unsigned attempts = 0U;
 
-					if (bytes == -1) {
-						throw std::runtime_error("recv failed");
+					for (unsigned i = 0U; i < 3U; ++i) {
+
+						const auto bytes = ::recv(_socket, buffer, sizeof(buffer), 0);
+
+						if (bytes == -1) {
+							if (errno == EAGAIN || errno == EWOULDBLOCK) {
+								::write(STDOUT_FILENO, "server is busy\n", 15U);
+								continue;
+							}
+							throw std::runtime_error("recv failed");
+						}
 					}
 				}
 			}

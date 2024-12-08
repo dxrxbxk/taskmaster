@@ -10,6 +10,26 @@ declare -rg    info='\x1b[34m'
 declare -rg     dim='\x1b[90m'
 declare -rg   reset='\x1b[0m'
 
+# print success message
+function _success() {
+	echo $success'[>]'$reset $@
+}
+
+# print error message
+function _error() {
+	echo $error'[x]'$reset $@
+}
+
+# print warning message
+function _warning() {
+	echo $warning'[!]'$reset $@
+}
+
+# print info message
+function _info() {
+	echo $info'[>]'$reset $@
+}
+
 
 # -- L O G O ------------------------------------------------------------------
 
@@ -134,7 +154,8 @@ fi
 
 # cxx flags
 declare -rg cxxflags=('-std=c++2a' '-O0'
-					  '-g3' #'-fsanitize=address' '-gdwarf-4'
+					  '-g3' '-gdwarf-4'
+					  #'-fsanitize=address'
 					  '-DENGINE_VL_DEBUG'
 					  '-Wall' '-Wextra' '-Werror' '-Wpedantic' '-Weffc++'
 					  '-ferror-limit=1'
@@ -460,6 +481,63 @@ function _launch_test() {
 	tmux attach-session -t 'taskmaster'
 }
 
+# kill
+function _kill() {
+
+	# get taskmaster pids
+	local -r pids=($(ps -C 'taskmaster' -o pid=))
+
+	# check if no taskmaster process
+	if [[ ${#pids[@]} -eq 0 ]]; then
+		_info 'no taskmaster process to kill.'
+		return
+	fi
+
+	# check if multiple taskmaster processes
+	if [[ ${#pids[@]} -gt 1 ]]; then
+		_warning 'multiple taskmaster processes found.'
+		return
+	fi
+
+
+	# default signal
+	local sig=''
+
+	# check if no arguments
+	if [[ $# -eq 0 ]]; then
+
+		if ! command -v 'fzy' > '/dev/null'; then
+			_error 'fzy not found.'
+			return
+		fi
+
+		local -r sigs=($(kill -l))
+
+		IFS=$'\n '
+
+		sig=$(fzy <<< $sigs)
+
+		if [[ -z $sig ]]; then
+			_error 'no signal selected.'
+			return
+		fi
+	fi
+
+	# check if there is argument
+	if [[ $# -eq 1 ]]; then
+		sig=$1
+	fi
+
+	# kill taskmaster process
+	if ! kill -s $sig $pids; then
+		_error 'failed to kill taskmaster process.'
+		return
+	fi
+
+	# print success message
+	_success 'taskmaster process killed ('$pids').'
+}
+
 
 # -- M A I N ------------------------------------------------------------------
 
@@ -473,12 +551,12 @@ fi
 case $1 in
 
 	# clean
-	clean | fclean | rm)
+	'clean' | 'fclean' | 'rm')
 		_clean
 		;;
 
 	# re
-	re | rebuild | remake)
+	're' | 'rebuild' | 'remake')
 		_clean
 		_build
 		;;
@@ -486,6 +564,12 @@ case $1 in
 	# test
 	'test')
 		_launch_test
+		;;
+	
+	# kill
+	'kill')
+		shift
+		_kill $@
 		;;
 
 	# unknown (usage)

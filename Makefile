@@ -8,7 +8,7 @@ override script := $(CURDIR)/make.sh
 
 # -- S P E C I A L  T A R G E T S ---------------------------------------------
 
-.PHONY: all rm clean fclean re
+.PHONY: all rm clean fclean re test
 
 
 # -- T A R G E T S ------------------------------------------------------------
@@ -27,3 +27,6 @@ fclean:
 
 re:
 	@$(script) re
+
+test:
+	@$(script) 'test'

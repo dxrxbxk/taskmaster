@@ -32,14 +32,17 @@ declare -rg script=${0:a}
 
 # -- T A R G E T S ------------------------------------------------------------
 
-# project name
-declare -rg project='taskmaster'
-
 # main executable
-declare -rg executable=$cwd_dir'/'$project
+declare -rg taskmaster=$cwd_dir'/taskmaster'
+
+# remote executable
+declare -rg taskcontrol=$cwd_dir'/taskcontrol'
 
 # compile commands database
 declare -rg compile_db=$cwd_dir'/compile_commands.json'
+
+# log file
+declare -rg logfile='/var/log/taskmaster/taskmaster.log'
 
 
 # -- D I R E C T O R I E S ----------------------------------------------------
@@ -60,7 +63,27 @@ declare -rg srcs=($src_dir'/'**'/'*'.cpp'(.N))
 declare -rg objs=(${srcs/%.cpp/.o})
 
 # dependency files
-declare -rg deps=(${objs/%.o/.d})
+declare -rg deps=(${srcs/%.cpp/.d})
+
+
+# master source files
+declare -rg master_srcs=($src_dir'/taskmaster/'**'/'*'.cpp'(.N))
+
+# control source files
+declare -rg control_srcs=($src_dir'/taskcontrol/'**'/'*'.cpp'(.N))
+
+# common source files
+declare -rg common_srcs=($src_dir'/common/'**'/'*'.cpp'(.N))
+
+
+# master object files
+declare -rg master_objs=(${master_srcs/%.cpp/.o})
+
+# control object files
+declare -rg control_objs=(${control_srcs/%.cpp/.o})
+
+# common object files
+declare -rg common_objs=(${common_srcs/%.cpp/.o})
 
 
 
@@ -318,35 +341,62 @@ function _compile {
 
 # -- L I N K  F U N C T I O N S -----------------------------------------------
 
-function _link {
+function _link_master {
 
 	# link object files
-	if $cxx $objs '-o' $executable $ldflags; then
-		echo $success'[✓]'$reset 'executable linked'
+	if $cxx $master_objs $common_objs '-o' $taskmaster $ldflags; then
+		echo $success'[✓]'$reset 'linked' ${taskmaster:t}
 	else
 		echo $error'[x]'$reset 'linking failed'
 		exit 1
 	fi
 }
 
-function _handle_link {
+function _link_control {
 
-	if [[ ! -f $executable ]]; then
-		_link
+	# link object files
+	if $cxx $control_objs $common_objs '-o' $taskcontrol $ldflags; then
+		echo $success'[✓]'$reset 'linked' ${taskcontrol:t}
+	else
+		echo $error'[x]'$reset 'linking failed'
+		exit 1
+	fi
+}
+
+function _link {
+
+	# check if taskmaster is missing
+	if [[ ! -f $taskmaster ]]; then
+		_link_master
 	fi
 
-	# loop over object files
-	for obj in $objs; do
+	# check if taskcontrol is missing
+	if [[ ! -f $taskcontrol ]]; then
+		_link_control
+	fi
+
+	# loop over taskmaster object files
+	for obj in $master_objs $common_objs; do
 
 		# check if object file is newer than target
-		if [[ $obj -nt $executable ]]; then
-			_link
+		if [[ $obj -nt $taskmaster ]]; then
+			_link_master
+			break
+		fi
+	done
+
+	# loop over taskcontrol object files
+	for obj in $control_objs $common_objs; do
+
+		# check if object file is newer than target
+		if [[ $obj -nt $taskcontrol ]]; then
+			_link_control
 			break
 		fi
 	done
 
 	# no link required
-	echo $success'[✓]'$reset ${executable:t} 'is up to date'
+	#echo $success'[✓]'$reset ${executable:t} 'is up to date'
 }
 
 
@@ -359,22 +409,19 @@ function _build() {
 
 	# build
 	_compile
-	_handle_link
+	_link
 }
 
 
 # clean
 function _clean() {
 
-	# check if ccache is available
-	if command -v 'ccache' > '/dev/null'; then
-
-		# clean ccache
-		ccache --clear
-	fi
-
 	# remove all build files
-	local -r deleted=($(rm -vrf $objs $deps $executable $compile_db '.cache'))
+	local -r deleted=($(rm -vrf $objs $deps \
+								$taskmaster \
+								$taskcontrol \
+								$compile_db \
+								'.cache'))
 
 	# get count of deleted files
 	local -r count=${#deleted[@]}
@@ -387,6 +434,30 @@ function _clean() {
 
 	# nothing to clean
 	echo $info'[>]'$reset 'nothing to clean.'
+}
+
+
+function _launch_test() {
+
+	_build
+
+	#local first_cmd='ls'
+	#local second_cmd='ps'
+
+	# create new tmux session
+	tmux new-session -d -s 'taskmaster'
+
+	# split window
+	tmux split-window -h -t 'taskmaster'
+
+	# send first command
+	tmux send-keys -t 'taskmaster:0.0' "$taskmaster" C-m
+
+	# send second command
+	tmux send-keys -t 'taskmaster:0.1' "sleep 1 && $taskcontrol" C-m
+
+	# attach to session
+	tmux attach-session -t 'taskmaster'
 }
 
 
@@ -410,6 +481,11 @@ case $1 in
 	re | rebuild | remake)
 		_clean
 		_build
+		;;
+
+	# test
+	'test')
+		_launch_test
 		;;
 
 	# unknown (usage)

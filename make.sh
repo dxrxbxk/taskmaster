@@ -230,6 +230,7 @@ function _handle_compilation {
 	# $1 source file
 	# $2 object file
 	# $3 dependency file
+	# $4 character to print
 
 	# compile source file
 	$cxx $cxxflags -MT $2 -MMD -MF $3 -c $1 -o $2
@@ -240,7 +241,7 @@ function _handle_compilation {
 		exit 1
 	fi
 
-	echo -n '\r\x1b[2K'$success'[ ]'$reset ${1:t}
+	echo -n '\r\x1b[2K'$success'['$4']'$reset ${1:t}
 	exit 0
 }
 
@@ -270,6 +271,12 @@ function _compile {
 	# array of pids
 	local pids=()
 
+	# array of characters
+	local -r chars=('|' '/' '-' '\')
+
+	# iterator
+	local -i i=1
+
 	# loop over source files
 	for src in $srcs; do
 
@@ -291,7 +298,11 @@ function _compile {
 
 		count=$((count + 1))
 
-		_handle_compilation $src $obj $dep &
+		_handle_compilation $src $obj $dep ${chars[$i]} &
+
+		# increment iterator
+		i=$((i + 1))
+		[[ $i -eq 5 ]] && i=1
 
 		pids+=($!)
 	done
@@ -355,26 +366,12 @@ function _build() {
 # clean
 function _clean() {
 
-	# remove all intermediate files
-	local -r deleted=($(rm -vf $objs $deps))
+	# check if ccache is available
+	if command -v 'ccache' > '/dev/null'; then
 
-	# get count of deleted files
-	local -r count=${#deleted[@]}
-
-	# check if files were deleted
-	if [[ $count -ne 0 ]]; then
-		echo $info'[x]'$reset $count 'files deleted.'
-		return
+		# clean ccache
+		ccache --clear
 	fi
-
-	# nothing to clean
-	echo $info'[>]'$reset 'nothing to clean.'
-}
-
-
-
-# fclean
-function _fclean() {
 
 	# remove all build files
 	local -r deleted=($(rm -vrf $objs $deps $executable $compile_db '.cache'))
@@ -405,23 +402,18 @@ fi
 case $1 in
 
 	# clean
-	clean | clear)
+	clean | fclean | rm)
 		_clean
-		;;
-
-	# fclean
-	fclean | purge | rm)
-		_fclean
 		;;
 
 	# re
 	re | rebuild | remake)
-		_fclean
+		_clean
 		_build
 		;;
 
 	# unknown (usage)
 	*)
-		echo 'usage: '$script' [clean|fclean|re]'
+		echo 'usage:' './'${script:t} '[clean|fclean|rm|re]'
 		;;
 esac

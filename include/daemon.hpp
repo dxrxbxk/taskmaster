@@ -2,9 +2,9 @@
 #define daemon_hpp
 
 #include "process/process_id.hpp"
-#include "system/fork.hpp"
-#include "system/pipe.hpp"
-#include "system/setsid.hpp"
+#include "fork.hpp"
+#include "pipe.hpp"
+#include "setsid.hpp"
 
 #include <sys/types.h>
 #include <sys/wait.h>

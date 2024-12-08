@@ -20,7 +20,9 @@ namespace sm {
 			using self = sm::unique_fd;
 
 
-			// -- private members ---------------------------------------------
+		protected:
+
+			// -- protected members -------------------------------------------
 
 			/* file descriptor */
 			int _fd;
@@ -73,7 +75,7 @@ namespace sm {
 			// -- public methods ----------------------------------------------
 
 			/* close */
-			auto close(void) noexcept -> void;
+			auto close(void) -> void;
 
 	}; // class unique_fd
 

@@ -1,5 +1,7 @@
-#include "system/unique_fd.hpp"
+#include "unique_fd.hpp"
+
 #include <unistd.h>
+#include <stdexcept>
 
 
 // -- U N I Q U E  F D --------------------------------------------------------
@@ -82,14 +84,11 @@ auto sm::unique_fd::operator!(void) const noexcept -> bool {
 // -- public methods ----------------------------------------------------------
 
 /* close */
-auto sm::unique_fd::close(void) noexcept -> void {
-
-	// check file descriptor
-	if (_fd == -1)
-		return;
+auto sm::unique_fd::close(void) -> void {
 
 	// close file descriptor
-	static_cast<void>(::close(_fd));
+	if (::close(_fd) == -1)
+		throw std::runtime_error("close failed");
 
 	// invalidate file descriptor
 	_fd = -1;

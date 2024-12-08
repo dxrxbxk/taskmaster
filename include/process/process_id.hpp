@@ -3,8 +3,9 @@
 
 #include <sys/syscall.h>
 #include <sys/wait.h>
-#include "system/syscall.hpp"
-#include "system/unique_fd.hpp"
+
+#include "syscall.hpp"
+#include "unique_fd.hpp"
 #include "process/wait_status.hpp"
 
 

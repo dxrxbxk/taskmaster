@@ -17,7 +17,7 @@ Taskmaster is a process manager inspired by [Supervisor](http://supervisord.org/
 ## Installation
 
 1. Clone the repository:
-   ```bash
-   git clone <repository_url>
+   ```zsh
+   git clone 'https://github.com/123Untitled/taskmaster.git'
    cd taskmaster
    ```

@@ -1,6 +1,7 @@
 #ifndef client_hpp
 #define client_hpp
 
+#include "common/diagnostics/exception.hpp"
 #include "common/network/socket.hpp"
 #include "common/network/addr.hpp"
 #include "taskcontrol/readline.hpp"
@@ -67,7 +68,7 @@ namespace sm {
 						break;
 
 					if (::send(_socket, rl.line().data(), rl.line().size(), 0) == -1)
-						throw std::runtime_error("send failed");
+						throw sm::system_error("send");
 
 					char buffer[1024U];
 
@@ -82,7 +83,7 @@ namespace sm {
 								::write(STDOUT_FILENO, "server is busy\n", 15U);
 								continue;
 							}
-							throw std::runtime_error("recv failed");
+							throw sm::system_error("recv");
 						}
 					}
 				}

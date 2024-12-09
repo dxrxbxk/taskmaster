@@ -1,11 +1,12 @@
 #ifndef memory_malloc
 #define memory_malloc
 
+#include "common/diagnostics/exception.hpp"
+
 #include <stdlib.h>
-#include <stdexcept>
 
 
-// -- S E R V I C E  M A N A G E R --------------------------------------------
+// -- S M  N A M E S P A C E --------------------------------------------------
 
 namespace sm {
 
@@ -17,7 +18,7 @@ namespace sm {
 		T* ptr = static_cast<T*>(::malloc(size * sizeof(T)));
 
 		if (ptr == nullptr)
-			throw std::bad_alloc();
+			throw sm::system_error{"malloc"};
 
 		return ptr;
 	}
@@ -29,7 +30,7 @@ namespace sm {
 		T* new_ptr = static_cast<T*>(::realloc(ptr, size * sizeof(T)));
 
 		if (new_ptr == nullptr)
-			throw std::bad_alloc();
+			throw sm::system_error{"realloc"};
 
 		return new_ptr;
 	}

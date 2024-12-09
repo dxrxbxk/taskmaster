@@ -1,11 +1,12 @@
 #ifndef system_setsid
 #define system_setsid
 
+#include "common/diagnostics/exception.hpp"
+
 #include <unistd.h>
-#include <stdexcept>
 
 
-// -- S E R V I C E  M A N A G E R --------------------------------------------
+// -- S M  N A M E S P A C E --------------------------------------------------
 
 namespace sm {
 
@@ -16,7 +17,7 @@ namespace sm {
 		const auto sid = ::setsid();
 
 		if (sid == -1)
-			throw std::runtime_error("setsid failed");
+			throw sm::system_error("setsid");
 
 		return sid;
 	}

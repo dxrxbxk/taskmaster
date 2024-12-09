@@ -2,9 +2,9 @@
 #define dispatch_hpp
 
 #include "common/types.hpp"
+#include "common/diagnostics/exception.hpp"
 #include "common/resources/unique_fd.hpp"
 
-#include <stdexcept>
 #include <vector>
 
 #include <sys/epoll.h>
@@ -199,7 +199,7 @@ namespace sm {
 			: _fd{::epoll_create1(0)} {
 
 				if (_fd == -1)
-					throw std::runtime_error("epoll_create1 failed");
+					throw sm::system_error("epoll_create1");
 			}
 
 			/* deleted copy constructor */
@@ -236,7 +236,7 @@ namespace sm {
 
 				// add event
 				if (::epoll_ctl(_fd, EPOLL_CTL_ADD, listener.fd(), &ev) == -1)
-					throw std::runtime_error("epoll_ctl failed");
+					throw sm::system_error("epoll_ctl");
 
 				// add event to list
 				_events.resize(_events.size() + 1U);
@@ -267,7 +267,7 @@ namespace sm {
 					if (errno == EINTR || errno == EAGAIN)
 						return;
 
-					throw std::runtime_error("epoll_wait failed");
+					throw sm::system_error("epoll_wait");
 				}
 
 				// loop over events

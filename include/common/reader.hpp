@@ -1,10 +1,11 @@
 #ifndef reader_hpp
 #define reader_hpp
 
+#include "common/types.hpp"
+#include "common/diagnostics/exception.hpp"
+
 #include <unistd.h>
 #include <sys/socket.h>
-#include <stdexcept>
-#include "common/types.hpp"
 
 
 // -- S M  N A M E S P A C E --------------------------------------------------
@@ -93,9 +94,9 @@ namespace sm {
 
 				const auto bytes = ::read(fd, _buffer, N);
 
-				if (bytes == -1) {
-					throw std::runtime_error("read failed");
-				}
+				if (bytes == -1)
+					throw sm::system_error("read");
+
 
 				_size = static_cast<sm::usize>(bytes);
 			}
@@ -106,7 +107,7 @@ namespace sm {
 				const auto bytes = ::recv(fd, _buffer, N, 0);
 
 				if (bytes == -1)
-					throw std::runtime_error("recv failed");
+					throw sm::system_error("recv");
 
 				_size = static_cast<sm::usize>(bytes);
 			}

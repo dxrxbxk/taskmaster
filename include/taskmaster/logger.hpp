@@ -2,11 +2,12 @@
 #define logger_hpp
 
 #include "common/resources/unique_fd.hpp"
+#include "common/diagnostics/exception.hpp"
+
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <limits.h>
 #include <unistd.h>
-#include <stdexcept>
 #include <fcntl.h>
 
 #include <sys/sendfile.h>
@@ -62,7 +63,7 @@ namespace sm {
 
 				// create directory
 				if (::mkdir(path, 0755) == -1)
-					throw std::runtime_error("mkdir failed");
+					throw sm::system_error("mkdir");
 			}
 
 			/* stat */
@@ -73,7 +74,7 @@ namespace sm {
 
 				// check if directory exists
 				if (::stat(path, &st) == -1) {
-					throw std::runtime_error("stat failed");
+					throw sm::system_error("stat");
 				}
 			}
 
@@ -86,59 +87,61 @@ namespace sm {
 			: _fd{-1} {
 
 				// create directories
-				for (const auto& dir : _dirs) {
+				//for (const auto& dir : _dirs) {
+				//
+				//	struct ::stat st;
+				//
+				//	// check if directory exists
+				//	if (::stat(dir, &st) == -1) {
+				//
+				//		if (errno != ENOENT) {
+				//			//perror("stat");
+				//			return;
+				//		}
+				//
+				//		// create directory
+				//		if (::mkdir(dir, 0755) == -1) {
+				//			//perror("mkdir");
+				//			return;
+				//		}
+				//	}
+				//
+				//	// check if directory
+				//	if (!S_ISDIR(st.st_mode)) {
+				//		//perror("stat");
+				//		return;
+				//	}
+				//}
+				//
+				//// open file
+				//_fd = ::open(_path, O_CREAT | O_WRONLY, 0644);
+				//
+				//// check error
+				//if (_fd == -1) {
+				//	//perror("open");
+				//	return;
+				//}
+				//
+				//// remove file
+				//if (::unlink(_path) == -1) {
+				//	//perror("unlink");
+				//	return;
+				//}
+				//
+				//// get process id
+				//auto pid = ::getpid();
+				//
+				////snprintf(_proc_path, PATH_MAX, "/proc/%d/fd/%d", pid, _fd);
+				//
+				//// create symlink
+				//if (::symlink(_proc_path, _path) == -1) {
+				//	//perror("symlink");
+				//	return;
+				//}
+				//
+				//::write(_fd, "hello, world!\n", 14);
 
-					struct ::stat st;
-
-					// check if directory exists
-					if (::stat(dir, &st) == -1) {
-
-						if (errno != ENOENT) {
-							perror("stat");
-							return;
-						}
-
-						// create directory
-						if (::mkdir(dir, 0755) == -1) {
-							perror("mkdir");
-							return;
-						}
-					}
-
-					// check if directory
-					if (!S_ISDIR(st.st_mode)) {
-						perror("stat");
-						return;
-					}
-				}
-
-				// open file
-				_fd = ::open(_path, O_CREAT | O_WRONLY, 0644);
-
-				// check error
-				if (_fd == -1) {
-					perror("open");
-					return;
-				}
-
-				// remove file
-				if (::unlink(_path) == -1) {
-					perror("unlink");
-					return;
-				}
-
-				// get process id
-				auto pid = ::getpid();
-
-				snprintf(_proc_path, PATH_MAX, "/proc/%d/fd/%d", pid, _fd);
-
-				// create symlink
-				if (::symlink(_proc_path, _path) == -1) {
-					perror("symlink");
-					return;
-				}
-
-				::write(_fd, "hello, world!\n", 14);
+				// ---------------------------------
 
 				// get process path
 				//__builtin_memcpy(_proc_path, "/proc/", 6U);
@@ -159,56 +162,56 @@ namespace sm {
 
 				//__builtin_memcpy(ptr, "/fd/1", 5U);
 
-				printf("proc path: %s\n", _proc_path);
+				//printf("proc path: %s\n", _proc_path);
 
 
 			}
 
 			~logger(void) noexcept {
 
-				if (_fd == -1)
-					return;
-
-				// remove symlink
-				if (::unlink(_path) == -1)
-					perror("unlink");
-
-				// open proc file
-				const int src = ::open(_proc_path, O_RDONLY);
-
-				if (src == -1) {
-					perror("src open");
-					return;
-				}
-
-				// open log file
-				const int dst = ::open(_path, O_WRONLY | O_CREAT, 0644);
-
-				if (dst == -1) {
-					perror("dst open");
-					return;
-				}
-
-				// copy proc contents into file
-				struct ::stat st;
-
-				if (::fstat(src, &st) == -1) {
-					perror("fstat");
-					return;
-				}
-
-				printf("st_size: %ld\n", st.st_size);
-
-				const auto bytes = ::sendfile(dst, src, nullptr, (size_t)st.st_size);
-
-				if (bytes == -1) {
-					perror("sendfile");
-					return;
-				}
-
-				// close file
-				static_cast<void>(::close(src));
-				static_cast<void>(::close(dst));
+				//if (_fd == -1)
+				//	return;
+				//
+				//// remove symlink
+				//if (::unlink(_path) == -1)
+				//	perror("unlink");
+				//
+				//// open proc file
+				//const int src = ::open(_proc_path, O_RDONLY);
+				//
+				//if (src == -1) {
+				//	perror("src open");
+				//	return;
+				//}
+				//
+				//// open log file
+				//const int dst = ::open(_path, O_WRONLY | O_CREAT, 0644);
+				//
+				//if (dst == -1) {
+				//	perror("dst open");
+				//	return;
+				//}
+				//
+				//// copy proc contents into file
+				//struct ::stat st;
+				//
+				//if (::fstat(src, &st) == -1) {
+				//	perror("fstat");
+				//	return;
+				//}
+				//
+				//printf("st_size: %ld\n", st.st_size);
+				//
+				//const auto bytes = ::sendfile(dst, src, nullptr, (size_t)st.st_size);
+				//
+				//if (bytes == -1) {
+				//	perror("sendfile");
+				//	return;
+				//}
+				//
+				//// close file
+				//static_cast<void>(::close(src));
+				//static_cast<void>(::close(dst));
 			}
 
 
@@ -249,7 +252,7 @@ namespace sm {
 
 				// check error
 				if (_fd == -1)
-					throw std::runtime_error("inotify_init failed");
+					throw sm::system_error("inotify_init");
 
 			}
 
@@ -260,7 +263,7 @@ namespace sm {
 
 				// check error
 				if (wd == -1)
-					throw std::runtime_error("inotify_add_watch failed");
+					throw sm::system_error("inotify_add_watch");
 
 				return wd;
 			}

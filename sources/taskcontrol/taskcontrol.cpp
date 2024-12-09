@@ -1,4 +1,5 @@
 #include "taskcontrol/client.hpp"
+#include "common/diagnostics/exception.hpp"
 #include <iostream>
 
 
@@ -11,8 +12,8 @@ auto main(int ac, char** av) -> int {
 		client.run();
 	}
 
-	catch (const std::exception& e) {
-		std::cerr << "error: " << e.what() << std::endl;
+	catch (const sm::exception& e) {
+		std::cerr << e.what() << std::endl;
 		return EXIT_FAILURE;
 	}
 

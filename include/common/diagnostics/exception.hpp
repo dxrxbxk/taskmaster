@@ -9,71 +9,208 @@
 
 namespace sm {
 
-	class exception {
-		public:
-			exception() noexcept = default;
-			exception(exception&&) noexcept = default;
-			exception(const exception&) noexcept = default;
-			exception& operator=(exception&&) noexcept = default;
-			exception& operator=(const exception&) noexcept = default;
-			virtual ~exception() noexcept = default;
-			virtual const char* what() const noexcept = 0;
-	};
 
-	class errno_error : public exception {
+	// -- E X C E P T I O N ---------------------------------------------------
+
+	class exception {
+
+
 		public:
-			template <size_t N>
-			errno_error(const char (&where)[N]) noexcept {
+
+			// -- public lifecycle --------------------------------------------
+
+			/* default constructor */
+			exception(void) noexcept = default;
+
+			/* copy constructor */
+			exception(const exception&) noexcept = default;
+
+			/* move constructor */
+			exception(exception&&) noexcept = default;
+
+			/* destructor */
+			virtual ~exception(void) noexcept = default;
+
+
+			// -- public assignment operators ---------------------------------
+
+			/* copy assignment operator */
+			auto operator=(const exception&) noexcept -> exception& = default;
+
+			/* move assignment operator */
+			auto operator=(exception&&) noexcept -> exception& = default;
+
+
+			// -- public interface --------------------------------------------
+
+			/* what */
+			virtual auto what(void) const noexcept -> const char* = 0;
+
+	}; // class exception
+
+
+	// -- S Y S T E M  E R R O R ----------------------------------------------
+
+	class system_error : public sm::exception {
+
+
+		private:
+
+			// -- private types -----------------------------------------------
+
+			/* self type */
+			using self = sm::system_error;
+
+
+			// -- private members ---------------------------------------------
+
+			/* buffer */
+			char _buffer[4096];
+
+
+		public:
+
+			// -- public lifecycle --------------------------------------------
+
+			/* default constructor */
+			system_error(void) noexcept
+			: sm::system_error{"unknown location"} {
+			}
+
+			/* where constructor */
+			template <unsigned N>
+			system_error(const char (&where)[N]) noexcept
+			/* : _buffer{} uninitialized */ {
+
+				// buffer size
 				constexpr auto buffer_size = sizeof(_buffer);
 
-				const char* err_str = strerror(errno);
-				if (err_str == nullptr) {
-					err_str = "Unknown error";
-				}
+				// get errno string error
+				const char* err_str = ::strerror(errno);
 
-				size_t w_len = N - (where[N - 1] == '\0' ? 1 : 0);
+				// check error
+				if (err_str == nullptr)
+					err_str = "unknown error";
 
+				// where length
+				size_t w_len = N - (where[N - 1U] == '\0' ? 1U : 0U);
+
+				// error length
 				size_t err_len = strlen(err_str);
-				if(err_len + w_len + 3 > buffer_size) {
-					err_len = buffer_size - w_len - 3;
-				}
 
-				char *ptr = _buffer;
+				// check out of bounds
+				if(err_len + w_len + 3U > buffer_size)
+					err_len = buffer_size - w_len - 3U;
 
+				// offset pointer
+				char* ptr = _buffer;
+
+				// copy where
 				memcpy(ptr, where, w_len);
 				ptr += w_len;
+
+				// copy separator
 				memcpy(ptr, ": ", 2);
 				ptr += 2;
 
+				// copy error
 				memcpy(ptr, err_str, err_len);
 				ptr += err_len;
+
+				// null terminate
 				*ptr = '\0';
 			}
 
-			errno_error() noexcept : errno_error("Unknown location") {
-			}
+			/* copy constructor */
+			system_error(const self&) noexcept = default;
 
-			const char* what() const noexcept override {
+			/* move constructor */
+			system_error(self&&) noexcept = default;
+
+			/* destructor */
+			~system_error(void) noexcept = default;
+
+
+			// -- public assignment operators ---------------------------------
+
+			/* copy assignment operator */
+			auto operator=(const self&) noexcept -> self& = default;
+
+			/* move assignment operator */
+			auto operator=(self&&) noexcept -> self& = default;
+
+
+			// -- public overrides --------------------------------------------
+
+			/* what */
+			auto what(void) const noexcept -> const char* override {
 				return _buffer;
 			}
-		private:
-			char _buffer[4096];
-	};
 
-	class runtime_error : public exception {
+	}; // class system_error
+
+
+	// -- R U N T I M E  E R R O R --------------------------------------------
+
+	class runtime_error : public sm::exception {
+
+
+		private:
+
+			// -- private types -----------------------------------------------
+
+			/* self type */
+			using self = sm::runtime_error;
+
+
+			// -- private members ---------------------------------------------
+
+			/* what */
+			const char* _what;
+
+
 		public:
-			runtime_error(const char* what) noexcept {
-				_buffer = what;
+
+			// -- public lifecycle --------------------------------------------
+
+			/* default constructor */
+			runtime_error(void) noexcept
+			: _what{"unknown error"} {
 			}
 
-			const char* what() const noexcept override {
-				return _buffer;
+			/* what constructor */
+			runtime_error(const char* what) noexcept
+			: _what{what != nullptr ? what : "unknown error"} {
 			}
-		private:
-			const char* _buffer;
-	};
+
+			/* copy constructor */
+			runtime_error(const self&) noexcept = default;
+
+			/* move constructor */
+			runtime_error(self&&) noexcept = default;
+
+			/* destructor */
+			~runtime_error(void) noexcept = default;
+
+
+			// -- public assignment operators ---------------------------------
+
+			/* copy assignment operator */
+			auto operator=(const self&) noexcept -> self& = default;
+
+			/* move assignment operator */
+			auto operator=(self&&) noexcept -> self& = default;
+
+
+			// -- public overrides --------------------------------------------
+
+			/* what */
+			auto what(void) const noexcept -> const char* override {
+				return _what;
+			}
+
+	}; // class runtime_error
 
 } // namespace sm
 
 #endif // exception_hpp
-

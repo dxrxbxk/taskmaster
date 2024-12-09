@@ -1,6 +1,7 @@
 #include "taskcontrol/terminal.hpp"
+#include "common/diagnostics/exception.hpp"
+
 #include <signal.h>
-#include <stdexcept>
 #include <unistd.h>
 
 #include <iostream>
@@ -13,11 +14,11 @@
 /* get */
 auto sm::terminal::_get(void) -> struct ::termios {
 
-	struct termios term;
+	struct ::termios term;
 
 	// get terminal attributes
 	if (::tcgetattr(STDIN_FILENO, &term) == -1)
-		throw std::runtime_error("tcgetattr failed");
+		throw sm::system_error("tcgetattr");
 
 	return term;
 }
@@ -27,7 +28,7 @@ auto sm::terminal::_set(const struct ::termios& term) -> void {
 
 	// set terminal attributes
 	if (::tcsetattr(STDIN_FILENO, TCSANOW, &term) == -1)
-		throw std::runtime_error("tcsetattr failed");
+		throw sm::system_error("tcsetattr");
 }
 
 /* setup raw */
@@ -102,11 +103,11 @@ sm::terminal::terminal(void)
 
 	// add resize handler
 	if (::signal(SIGWINCH, self::_resize_handler) == SIG_ERR)
-		throw std::runtime_error("signal failed");
+		throw sm::system_error("signal sigwinch");
 
 	// get terminal size
 	if (::ioctl(STDIN_FILENO, TIOCGWINSZ, &_size) == -1)
-		throw std::runtime_error("ioctl failed");
+		throw sm::system_error("ioctl tiocgwinsz");
 }
 
 /* destructor */

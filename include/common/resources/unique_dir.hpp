@@ -1,8 +1,9 @@
 #ifndef unique_dir_hpp
 #define unique_dir_hpp
 
+#include "common/diagnostics/exception.hpp"
+
 #include <dirent.h>
-#include <stdexcept>
 
 
 // -- S M  N A M E S P A C E --------------------------------------------------
@@ -44,7 +45,7 @@ namespace sm {
 			: _dir{::opendir(path)} {
 
 				if (_dir == nullptr)
-					throw std::runtime_error("opendir failed");
+					throw sm::system_error("opendir");
 			}
 
 			/* deleted copy constructor */

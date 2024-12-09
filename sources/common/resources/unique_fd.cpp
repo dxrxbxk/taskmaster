@@ -1,7 +1,7 @@
 #include "common/resources/unique_fd.hpp"
+#include "common/diagnostics/exception.hpp"
 
 #include <unistd.h>
-#include <stdexcept>
 
 
 // -- U N I Q U E  F D --------------------------------------------------------
@@ -88,7 +88,7 @@ auto sm::unique_fd::close(void) -> void {
 
 	// close file descriptor
 	if (::close(_fd) == -1)
-		throw std::runtime_error("close failed");
+		throw sm::system_error("close");
 
 	// invalidate file descriptor
 	_fd = -1;

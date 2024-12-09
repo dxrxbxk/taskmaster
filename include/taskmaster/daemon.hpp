@@ -1,10 +1,12 @@
 #ifndef daemon_hpp
 #define daemon_hpp
 
+
 #include "process/process_id.hpp"
 
 #include "common/system/fork.hpp"
 #include "common/system/setsid.hpp"
+#include "common/diagnostics/exception.hpp"
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -33,7 +35,7 @@ namespace sm {
 
 		// check for root
 		if (::getuid() != 0)
-			throw std::runtime_error("daemonize: must be root");
+			throw sm::system_error("daemonize: must be root");
 
 		// fork
 		auto pid = sm::fork();

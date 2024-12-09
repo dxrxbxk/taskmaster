@@ -1,4 +1,5 @@
 #include "taskmaster/process/process_id.hpp"
+#include "common/diagnostics/exception.hpp"
 #include <iostream>
 
 
@@ -48,7 +49,7 @@ auto sm::process_id::wait(const int& options) const -> sm::wait_status {
 	if (state == -1) {
 		if (errno == ECHILD)
 			return sm::wait_status{0};
-		throw std::runtime_error("waitpid failed");
+		throw sm::system_error("waitpid");
 	}
 
 	// WNOHANG
@@ -87,7 +88,7 @@ auto sm::process_id::wait(const int& options) const -> sm::wait_status {
 auto sm::process_id::kill(const int& signal) const -> void {
 
 	if (::kill(_pid, signal) == -1)
-		throw std::runtime_error("kill failed");
+		throw sm::system_error("kill");
 }
 
 

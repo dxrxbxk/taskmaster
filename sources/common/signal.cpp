@@ -1,6 +1,7 @@
 #include "common/signal.hpp"
+#include "common/diagnostics/exception.hpp"
 #include "taskmaster/controller.hpp"
-#include <stdexcept>
+
 #include <unistd.h>
 #include <sys/mman.h>
 
@@ -22,7 +23,7 @@ auto sm::signal::_handler(const int sig) noexcept -> void {
 auto sm::signal::_record(const int& sig) -> void {
 
 	if (::signal(sig, self::_handler) == SIG_ERR)
-		throw std::runtime_error("Failed to record signal");
+		throw sm::system_error("signal");
 }
 
 
@@ -36,7 +37,7 @@ sm::signal::signal(void)
 
 	// create pipe
 	if (::pipe(ptr) == -1)
-		throw std::runtime_error("Failed to create pipe");
+		throw sm::system_error("pipe");
 
 
 	self::_record<
@@ -139,7 +140,7 @@ auto sm::signal::on_event(sm::controller& control, const sm::event& events) -> v
 	int sig;
 
 	if (::read(fd(), &sig, sizeof(sig)) == -1)
-		throw std::runtime_error("failed to read signal");
+		throw sm::system_error("read");
 
 	switch (sig) {
 

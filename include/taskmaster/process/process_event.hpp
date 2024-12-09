@@ -2,7 +2,9 @@
 #define process_event_hpp
 
 #include "io_event.hpp"
+
 #include "common/resources/unique_fd.hpp"
+#include "common/diagnostics/exception.hpp"
 #include "taskmaster/process/process_id.hpp"
 
 #include <iostream>
@@ -89,8 +91,7 @@ namespace sm {
 					if (errno == ECHILD) {
 						std::cerr << "Process already collected or does not exist." << std::endl;
 					} else {
-						perror("waitid");
-						throw std::runtime_error("waitid failed");
+						throw sm::system_error("waitid");
 					}
 					exit(EXIT_FAILURE);
 				}

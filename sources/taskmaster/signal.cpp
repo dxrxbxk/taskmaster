@@ -1,9 +1,10 @@
-#include "common/signal.hpp"
+#include "taskmaster/signal.hpp"
+#include "taskmaster/log/logger.hpp"
+#include "common/running.hpp"
 #include "common/diagnostics/exception.hpp"
-#include "taskmaster/controller.hpp"
 
 #include <unistd.h>
-#include <sys/mman.h>
+#include <signal.h>
 
 
 // -- S I G N A L -------------------------------------------------------------
@@ -32,6 +33,9 @@ auto sm::signal::_record(const int& sig) -> void {
 /* default constructor */
 sm::signal::signal(void)
 : _pipe{} {
+
+	// check for dangerous cast
+	static_assert(sizeof(sm::unique_fd) == sizeof(int));
 
 	int* ptr = reinterpret_cast<int*>(_pipe);
 
@@ -132,7 +136,7 @@ auto sm::signal::fd(void) const noexcept -> int {
 
 
 /* on event */
-auto sm::signal::on_event(sm::controller& control, const sm::event& events) -> void {
+auto sm::signal::on_event(const sm::event& events) -> void {
 
 	if (events.is_in() != true)
 		return;
@@ -145,48 +149,58 @@ auto sm::signal::on_event(sm::controller& control, const sm::event& events) -> v
 	switch (sig) {
 
 		case SIGINT:
-			::write(STDOUT_FILENO, "SIGINT\n", 7);
+			sm::logger::signal("SIGINT");
 			break;
+
 		case SIGILL:
-			::write(STDOUT_FILENO, "SIGILL\n", 7);
+			sm::logger::signal("SIGILL");
 			break;
+
 		case SIGSTOP:
-			::write(STDOUT_FILENO, "SIGSTOP\n", 8);
+			sm::logger::signal("SIGSTOP");
 			break;
+
 		case SIGABRT:
-			::write(STDOUT_FILENO, "SIGABRT\n", 8);
+			sm::logger::signal("SIGABRT");
 			break;
+
 		case SIGFPE:
-			::write(STDOUT_FILENO, "SIGFPE\n", 7);
+			sm::logger::signal("SIGFPE");
 			break;
+
 		case SIGSEGV:
-			::write(STDOUT_FILENO, "SIGSEGV\n", 8);
+			sm::logger::signal("SIGSEGV");
 			break;
+
 		case SIGTERM:
-			::write(STDOUT_FILENO, "SIGTERM\n", 8);
+			sm::logger::signal("SIGTERM");
 			break;
+
 		case SIGHUP:
-			::write(STDOUT_FILENO, "SIGHUP\n", 7);
+			sm::logger::signal("SIGHUP");
 			break;
+
 		case SIGQUIT:
-			::write(STDOUT_FILENO, "SIGQUIT\n", 8);
+			sm::logger::signal("SIGQUIT");
 			break;
+
 		case SIGTRAP:
-			::write(STDOUT_FILENO, "SIGTRAP\n", 8);
+			sm::logger::signal("SIGTRAP");
 			break;
+
 		case SIGPIPE:
-			::write(STDOUT_FILENO, "SIGPIPE\n", 8);
+			sm::logger::signal("SIGPIPE");
 			break;
+
 		case SIGALRM:
-			::write(STDOUT_FILENO, "SIGALRM\n", 8);
+			sm::logger::signal("SIGALRM");
 			break;
+
 		default:
-			::write(STDOUT_FILENO, "SIGNAL\n", 7);
+			sm::logger::signal("UNKNOWN");
 			break;
 	}
 
-	control.stop();
+	// stop running
+	sm::running::stop();
 }
-
-
-

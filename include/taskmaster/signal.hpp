@@ -1,7 +1,6 @@
 #ifndef signal_hpp
 #define signal_hpp
 
-#include <signal.h>
 #include "common/dispatch.hpp"
 #include "common/resources/unique_fd.hpp"
 
@@ -11,15 +10,9 @@
 namespace sm {
 
 
-	// -- forward declarations ------------------------------------------------
-
-	/* controller */
-	class controller;
-
-
 	// -- S I G N A L ---------------------------------------------------------
 
-	class signal final : public sm::listener<sm::controller> {
+	class signal final : public sm::listener {
 
 
 		private:
@@ -89,7 +82,7 @@ namespace sm {
 			auto fd(void) const noexcept -> int override;
 
 			/* on event */
-			auto on_event(sm::controller&, const sm::event&) -> void override;
+			auto on_event(const sm::event&) -> void override;
 
 	}; // class signal
 

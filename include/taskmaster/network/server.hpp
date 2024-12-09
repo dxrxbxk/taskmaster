@@ -1,8 +1,10 @@
-#ifndef client_hpp
-#define client_hpp
+#ifndef server_hpp
+#define server_hpp
 
-#include "common/network/socket.hpp"
+#include "io_event.hpp"
 #include "common/dispatch.hpp"
+#include "common/network/socket.hpp"
+#include "common/network/addr.hpp"
 
 
 // -- S M  N A M E S P A C E --------------------------------------------------
@@ -10,15 +12,9 @@
 namespace sm {
 
 
-	// -- forward declarations ------------------------------------------------
+	// -- S E R V E R ---------------------------------------------------------
 
-	/* controller */
-	class controller;
-
-
-	// -- C L I E N T ---------------------------------------------------------
-
-	class client final : public sm::listener<sm::controller> {
+	class server final : public sm::listener {
 
 
 		private:
@@ -26,7 +22,7 @@ namespace sm {
 			// -- private types -----------------------------------------------
 
 			/* self type */
-			using self = sm::client;
+			using self = sm::server;
 
 
 			// -- private members ---------------------------------------------
@@ -40,19 +36,19 @@ namespace sm {
 			// -- public lifecycle --------------------------------------------
 
 			/* default constructor */
-			client(void) noexcept = default;
+			server(void) noexcept = default;
 
-			/* socket constructor */
-			client(sm::socket&&) noexcept;
+			/* port constructor */
+			server(const ::in_port_t&);
 
 			/* deleted copy constructor */
-			client(const self&) = delete;
+			server(const self&) = delete;
 
 			/* move constructor */
-			client(self&&) noexcept = default;
+			server(self&&) noexcept = default;
 
 			/* destructor */
-			~client(void) noexcept = default;
+			~server(void) noexcept = default;
 
 
 			// -- public assignment operators ---------------------------------
@@ -70,10 +66,10 @@ namespace sm {
 			auto fd(void) const noexcept -> int override;
 
 			/* on event */
-			auto on_event(sm::controller&, const sm::event&) -> void override;
+			auto on_event(const sm::event&) -> void override;
 
-	}; // class client
+	}; // class server
 
 } // namespace sm
 
-#endif // client_hpp
+#endif // server_hpp

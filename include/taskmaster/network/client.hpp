@@ -1,10 +1,8 @@
-#ifndef server_hpp
-#define server_hpp
+#ifndef client_hpp
+#define client_hpp
 
-#include "io_event.hpp"
-#include "common/dispatch.hpp"
 #include "common/network/socket.hpp"
-#include "common/network/addr.hpp"
+#include "common/dispatch.hpp"
 
 
 // -- S M  N A M E S P A C E --------------------------------------------------
@@ -12,15 +10,9 @@
 namespace sm {
 
 
-	// -- forward declarations ------------------------------------------------
+	// -- C L I E N T ---------------------------------------------------------
 
-	/* controller */
-	class controller;
-
-
-	// -- S E R V E R ---------------------------------------------------------
-
-	class server final : public sm::listener<sm::controller> {
+	class client final : public sm::listener {
 
 
 		private:
@@ -28,7 +20,7 @@ namespace sm {
 			// -- private types -----------------------------------------------
 
 			/* self type */
-			using self = sm::server;
+			using self = sm::client;
 
 
 			// -- private members ---------------------------------------------
@@ -37,24 +29,30 @@ namespace sm {
 			sm::socket _socket;
 
 
+			// -- private methods ---------------------------------------------
+
+			/* disconnect */
+			auto _disconnect(void) -> void;
+
+
 		public:
 
 			// -- public lifecycle --------------------------------------------
 
 			/* default constructor */
-			server(void) noexcept = default;
+			client(void) noexcept = default;
 
-			/* port constructor */
-			server(const ::in_port_t&);
+			/* socket constructor */
+			client(sm::socket&&) noexcept;
 
 			/* deleted copy constructor */
-			server(const self&) = delete;
+			client(const self&) = delete;
 
 			/* move constructor */
-			server(self&&) noexcept = default;
+			client(self&&) noexcept = default;
 
 			/* destructor */
-			~server(void) noexcept = default;
+			~client(void) noexcept = default;
 
 
 			// -- public assignment operators ---------------------------------
@@ -72,11 +70,10 @@ namespace sm {
 			auto fd(void) const noexcept -> int override;
 
 			/* on event */
-			auto on_event(sm::controller&,
-						  const sm::event&) -> void override;
+			auto on_event(const sm::event&) -> void override;
 
-	}; // class server
+	}; // class client
 
 } // namespace sm
 
-#endif // server_hpp
+#endif // client_hpp

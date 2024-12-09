@@ -28,4 +28,5 @@ namespace sm {
 
 } // namespace sm
 
+
 #endif // write_hpp

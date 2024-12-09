@@ -152,6 +152,51 @@ namespace sm {
 
 	}; // class terminal
 
+}
+
+#include <iostream>
+#include <unistd.h>
+#include "common/diagnostics/exception.hpp"
+namespace sm {
+
+	template <bool raw>
+		auto termios_test(void) -> void {
+
+			if constexpr (raw == true) {
+				sm::terminal::raw();
+			}
+			else {
+				sm::terminal::restore();
+			}
+
+
+			std::cout << "\x1b[33mpress 'q' to quit\r\n\x1b[0m";
+
+			while (true) {
+
+				char buffer[32U];
+
+				const auto readed = ::read(STDIN_FILENO, buffer, sizeof(buffer));
+
+				if (readed == -1)
+					throw sm::system_error("read");
+
+				for (::ssize_t i = 0; i < readed; ++i) {
+
+					if (buffer[i] == 'q')
+						return;
+
+					if (std::isprint(buffer[i]))
+						std::cout << "\x1b[32m" << buffer[i] << "\x1b[0m";
+					else
+						std::cout << "\x1b[31m'\\x" << std::hex << static_cast<int>(buffer[i])
+							<< std::dec << "'\x1b[0m ";
+				}
+
+				std::cout << std::flush;
+			}
+		}
+
 } // namespace sm
 
 #endif // terminal_hpp

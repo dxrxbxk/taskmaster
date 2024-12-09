@@ -472,7 +472,7 @@ function _launch_test() {
 	tmux split-window -h -t 'taskmaster'
 
 	# send first command
-	tmux send-keys -t 'taskmaster:0.0' "$taskmaster" C-m
+	tmux send-keys -t 'taskmaster:0.0' "$taskmaster && clear && tail --follow $logfile" C-m
 
 	# send second command
 	tmux send-keys -t 'taskmaster:0.1' "sleep 1 && $taskcontrol" C-m
@@ -538,6 +538,18 @@ function _kill() {
 	_success 'taskmaster process killed ('$pids').'
 }
 
+# log
+function _log() {
+
+	# check if log file exists
+	if [[ ! -f $logfile ]]; then
+		_error 'log file not found.'
+		return
+	fi
+
+	clear && tail --follow $logfile
+}
+
 
 # -- M A I N ------------------------------------------------------------------
 
@@ -570,6 +582,11 @@ case $1 in
 	'kill')
 		shift
 		_kill $@
+		;;
+
+	# log
+	'log')
+		_log
 		;;
 
 	# unknown (usage)

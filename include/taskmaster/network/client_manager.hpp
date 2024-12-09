@@ -1,7 +1,7 @@
 #ifndef client_manager_hpp
 #define client_manager_hpp
 
-#include "taskmaster/client.hpp"
+#include "taskmaster/network/client.hpp"
 #include <unordered_map>
 
 

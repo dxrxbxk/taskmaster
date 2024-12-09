@@ -126,7 +126,6 @@ namespace sm {
 
 	// -- L I S T E N E R -----------------------------------------------------
 
-	template <typename T>
 	class listener {
 
 
@@ -162,14 +161,13 @@ namespace sm {
 			virtual auto fd(void) const noexcept -> int = 0;
 
 			/* on event */
-			virtual auto on_event(T&, const sm::event&) -> void = 0;
+			virtual auto on_event(const sm::event&) -> void = 0;
 
 	}; // class event
 
 
 	// -- M O N I T O R -------------------------------------------------------
 
-	template <typename T>
 	class monitor final {
 
 
@@ -178,7 +176,7 @@ namespace sm {
 			// -- private types -----------------------------------------------
 
 			/* self type */
-			using self = sm::monitor<T>;
+			using self = sm::monitor;
 
 
 			// -- private members ---------------------------------------------
@@ -224,7 +222,7 @@ namespace sm {
 			// -- public methods ----------------------------------------------
 
 			/* subscribe */
-			auto subscribe(sm::listener<T>& listener, const sm::event& events) -> void {
+			auto subscribe(sm::listener& listener, const sm::event& events) -> void {
 
 				// create event
 				struct ::epoll_event ev {
@@ -243,7 +241,7 @@ namespace sm {
 			}
 
 			/* unsubscribe */
-			auto unsubscribe(sm::listener<T>& listener) noexcept -> void {
+			auto unsubscribe(sm::listener& listener) noexcept -> void {
 
 				// delete event
 				static_cast<void>(::epoll_ctl(_fd, EPOLL_CTL_DEL, listener.fd(), nullptr));
@@ -252,7 +250,7 @@ namespace sm {
 
 
 			/* wait */
-			auto wait(T& data) -> void {
+			auto wait(void) -> void {
 
 				// wait for events
 				const auto state = ::epoll_wait(_fd,
@@ -277,10 +275,10 @@ namespace sm {
 					const sm::event ev = sm::event{_events[i].events};
 
 					// get user data
-					auto& listener = *(reinterpret_cast<sm::listener<T>*>(_events[i].data.ptr));
+					auto& listener = *(reinterpret_cast<sm::listener*>(_events[i].data.ptr));
 
 					// trigger event
-					listener.on_event(data, ev);
+					listener.on_event(ev);
 				}
 
 			}

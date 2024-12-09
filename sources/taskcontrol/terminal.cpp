@@ -156,3 +156,7 @@ auto sm::terminal::width(void) noexcept -> unsigned short {
 auto sm::terminal::height(void) noexcept -> unsigned short {
 	return _shared()._size.ws_row;
 }
+
+
+
+

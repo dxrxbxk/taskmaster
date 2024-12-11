@@ -4,49 +4,54 @@
 #include <string.h>
 #include <errno.h>
 
+#include <stdexcept>
 
 // -- S M  N A M E S P A C E --------------------------------------------------
 
 namespace sm {
 
 
+	/* alias to std::exception */
+	using exception = std::exception;
+
+
 	// -- E X C E P T I O N ---------------------------------------------------
 
-	class exception {
-
-
-		public:
-
-			// -- public lifecycle --------------------------------------------
-
-			/* default constructor */
-			exception(void) noexcept = default;
-
-			/* copy constructor */
-			exception(const exception&) noexcept = default;
-
-			/* move constructor */
-			exception(exception&&) noexcept = default;
-
-			/* destructor */
-			virtual ~exception(void) noexcept = default;
-
-
-			// -- public assignment operators ---------------------------------
-
-			/* copy assignment operator */
-			auto operator=(const exception&) noexcept -> exception& = default;
-
-			/* move assignment operator */
-			auto operator=(exception&&) noexcept -> exception& = default;
-
-
-			// -- public interface --------------------------------------------
-
-			/* what */
-			virtual auto what(void) const noexcept -> const char* = 0;
-
-	}; // class exception
+	//class exception {
+	//
+	//
+	//	public:
+	//
+	//		// -- public lifecycle --------------------------------------------
+	//
+	//		/* default constructor */
+	//		exception(void) noexcept = default;
+	//
+	//		/* copy constructor */
+	//		exception(const exception&) noexcept = default;
+	//
+	//		/* move constructor */
+	//		exception(exception&&) noexcept = default;
+	//
+	//		/* destructor */
+	//		virtual ~exception(void) noexcept = default;
+	//
+	//
+	//		// -- public assignment operators ---------------------------------
+	//
+	//		/* copy assignment operator */
+	//		auto operator=(const exception&) noexcept -> exception& = default;
+	//
+	//		/* move assignment operator */
+	//		auto operator=(exception&&) noexcept -> exception& = default;
+	//
+	//
+	//		// -- public interface --------------------------------------------
+	//
+	//		/* what */
+	//		virtual auto what(void) const noexcept -> const char* = 0;
+	//
+	//}; // class exception
 
 
 	// -- S Y S T E M  E R R O R ----------------------------------------------

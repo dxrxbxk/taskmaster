@@ -1,10 +1,15 @@
+#include "taskmaster/taskmaster.hpp"
 #include "taskmaster/signal.hpp"
 #include "taskmaster/log/logger.hpp"
 #include "common/running.hpp"
 #include "common/diagnostics/exception.hpp"
 
+
 #include <unistd.h>
 #include <signal.h>
+
+
+#include <iostream>
 
 
 // -- S I G N A L -------------------------------------------------------------
@@ -63,12 +68,107 @@ sm::signal::signal(void)
 		SIGTRAP,
 		// killed
 		//SIGKILL,
+		// stop (tty)
+		SIGTSTP,
+		// continue if stopped
+		SIGCONT,
 		// broken pipe
 		SIGPIPE,
 		// alarm clock
 		SIGALRM
 			>();
 }
+
+
+
+// -- public static methods ---------------------------------------------------
+
+/* shared */
+auto sm::signal::shared(void) -> self& {
+	static self instance;
+	return instance;
+}
+
+
+// -- public overrides --------------------------------------------------------
+
+/* fd */
+auto sm::signal::fd(void) const noexcept -> int {
+	return _pipe[0U];
+}
+
+#include <iostream>
+
+/* on event */
+auto sm::signal::on_event(const sm::event& events, sm::taskmaster& tm) -> void {
+
+	if (events.is_in() != true)
+		return;
+
+	int sig;
+
+	if (::read(fd(), &sig, sizeof(sig)) == -1)
+		throw sm::system_error("read");
+
+	switch (sig) {
+
+		case SIGINT:
+			sm::logger::signal("SIGINT");
+			break;
+
+		case SIGABRT:
+			sm::logger::signal("SIGABRT");
+			break;
+
+		case SIGFPE:
+			sm::logger::signal("SIGFPE");
+			break;
+
+		case SIGSEGV:
+			sm::logger::signal("SIGSEGV");
+			break;
+
+		case SIGTERM:
+			sm::logger::signal("SIGTERM");
+			break;
+
+		case SIGHUP:
+			sm::logger::signal("SIGHUP");
+			break;
+
+		case SIGQUIT:
+			sm::logger::signal("SIGQUIT");
+			break;
+
+		case SIGTRAP:
+			sm::logger::signal("SIGTRAP");
+			break;
+
+		case SIGTSTP:
+			sm::logger::signal("SIGTSTP");
+			return;
+
+		case SIGCONT:
+			sm::logger::signal("SIGCONT");
+			return;
+
+		case SIGPIPE:
+			sm::logger::signal("SIGPIPE");
+			break;
+
+		case SIGALRM:
+			sm::logger::signal("SIGALRM");
+			break;
+
+		default:
+			sm::logger::signal("UNKNOWN");
+			break;
+	}
+
+	// stop taskmaster
+	tm.stop();
+}
+
 
 /*
 SIGABRT      P1990      Core    Abort signal from abort(3)
@@ -116,91 +216,3 @@ SIGXFSZ      P2001      Core    File size limit exceeded (4.2BSD);
 								see setrlimit(2)
 SIGWINCH       -        Ign     Window resize signal (4.3BSD, Sun)
 */
-
-
-// -- public static methods ---------------------------------------------------
-
-/* shared */
-auto sm::signal::shared(void) -> self& {
-	static self instance;
-	return instance;
-}
-
-
-// -- public overrides --------------------------------------------------------
-
-/* fd */
-auto sm::signal::fd(void) const noexcept -> int {
-	return _pipe[0U];
-}
-
-
-/* on event */
-auto sm::signal::on_event(const sm::event& events) -> void {
-
-	if (events.is_in() != true)
-		return;
-
-	int sig;
-
-	if (::read(fd(), &sig, sizeof(sig)) == -1)
-		throw sm::system_error("read");
-
-	switch (sig) {
-
-		case SIGINT:
-			sm::logger::signal("SIGINT");
-			break;
-
-		case SIGILL:
-			sm::logger::signal("SIGILL");
-			break;
-
-		case SIGSTOP:
-			sm::logger::signal("SIGSTOP");
-			break;
-
-		case SIGABRT:
-			sm::logger::signal("SIGABRT");
-			break;
-
-		case SIGFPE:
-			sm::logger::signal("SIGFPE");
-			break;
-
-		case SIGSEGV:
-			sm::logger::signal("SIGSEGV");
-			break;
-
-		case SIGTERM:
-			sm::logger::signal("SIGTERM");
-			break;
-
-		case SIGHUP:
-			sm::logger::signal("SIGHUP");
-			break;
-
-		case SIGQUIT:
-			sm::logger::signal("SIGQUIT");
-			break;
-
-		case SIGTRAP:
-			sm::logger::signal("SIGTRAP");
-			break;
-
-		case SIGPIPE:
-			sm::logger::signal("SIGPIPE");
-			break;
-
-		case SIGALRM:
-			sm::logger::signal("SIGALRM");
-			break;
-
-		default:
-			sm::logger::signal("UNKNOWN");
-			break;
-	}
-
-	// stop running
-	sm::running::stop();
-}

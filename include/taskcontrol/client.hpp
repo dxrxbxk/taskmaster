@@ -70,6 +70,8 @@ namespace sm {
 					if (::send(_socket, rl.line().data(), rl.line().size(), 0) == -1)
 						throw sm::system_error("send");
 
+					continue; // CCONTINUUUUUUUUUUUUUUU
+
 					char buffer[1024U];
 
 					unsigned attempts = 0U;

@@ -29,6 +29,11 @@ sm::server::server(const ::in_port_t& port)
 	sm::logger::info(msh.c_str());
 }
 
+/* destructor */
+sm::server::~server(void) noexcept {
+	sm::logger::info("server: stopped");
+}
+
 
 // -- public overrides --------------------------------------------------------
 
@@ -38,22 +43,26 @@ auto sm::server::fd(void) const noexcept -> int {
 }
 
 /* on event */
-auto sm::server::on_event(const sm::event& events) -> void {
+auto sm::server::on_event(const sm::event& events, sm::taskmaster& tm) -> void {
 
-	auto& monitor = sm::taskmaster::monitor();
-	auto& clients = sm::taskmaster::clients();
+	auto& monitor = tm.monitor();
+	auto& clients = tm.clients();
 
 	if (events.is_in()) {
 
 		sm::logger::info("server: incoming connection");
 
+		sm::addr addr;
 		// accept the client
-		auto socket = _socket.accept();
+		auto socket = _socket.accept(addr);
 
 		// create new client
 		auto& client = clients.add(static_cast<sm::socket&&>(socket));
 
 		// subscribe to events
-		monitor.subscribe(client, sm::event{EPOLLIN | EPOLLRDHUP | EPOLLHUP});
+		monitor.subscribe(
+				client,
+				sm::event{EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLERR}
+		);
 	}
 }

@@ -1,7 +1,7 @@
 #ifndef signal_hpp
 #define signal_hpp
 
-#include "common/dispatch.hpp"
+#include "taskmaster/events/monitor.hpp"
 #include "common/resources/unique_fd.hpp"
 
 
@@ -82,7 +82,7 @@ namespace sm {
 			auto fd(void) const noexcept -> int override;
 
 			/* on event */
-			auto on_event(const sm::event&) -> void override;
+			auto on_event(const sm::event&, sm::taskmaster&) -> void override;
 
 	}; // class signal
 

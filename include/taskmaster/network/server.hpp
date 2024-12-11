@@ -2,7 +2,7 @@
 #define server_hpp
 
 #include "io_event.hpp"
-#include "common/dispatch.hpp"
+#include "taskmaster/events/monitor.hpp"
 #include "common/network/socket.hpp"
 #include "common/network/addr.hpp"
 
@@ -48,7 +48,7 @@ namespace sm {
 			server(self&&) noexcept = default;
 
 			/* destructor */
-			~server(void) noexcept = default;
+			~server(void) noexcept;
 
 
 			// -- public assignment operators ---------------------------------
@@ -66,7 +66,7 @@ namespace sm {
 			auto fd(void) const noexcept -> int override;
 
 			/* on event */
-			auto on_event(const sm::event&) -> void override;
+			auto on_event(const sm::event&, sm::taskmaster&) -> void override;
 
 	}; // class server
 

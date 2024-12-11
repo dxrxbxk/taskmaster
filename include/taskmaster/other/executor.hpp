@@ -15,6 +15,7 @@ namespace sm {
 
 	class executor final {
 
+
 		public:
 
 			auto exec(void) -> void {
@@ -32,6 +33,8 @@ namespace sm {
 				const int fd = sm::open("./log.txt", O_CREAT | O_WRONLY, 0644);
 
 				auto ret = ::dup2(fd, STDOUT_FILENO);
+
+				//execve(nullptr, nullptr, nullptr);
 			}
 
 	}; // class executor

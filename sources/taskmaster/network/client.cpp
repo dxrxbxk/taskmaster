@@ -2,7 +2,6 @@
 #include "taskmaster/log/logger.hpp"
 #include <iostream>
 #include "taskmaster/taskmaster.hpp"
-#include "common/reader.hpp"
 
 
 // -- C L I E N T -------------------------------------------------------------
@@ -23,12 +22,13 @@ auto sm::client::fd(void) const noexcept -> int {
 }
 
 /* on event */
-auto sm::client::on_event(const sm::event& event) -> void {
+auto sm::client::on_event(const sm::event& event, sm::taskmaster& tm) -> void {
 
 
 	if (event.is_hup()
-	 || event.is_rdhup()) {
-		self::_disconnect();
+	 || event.is_rdhup()
+	 || event.is_err()) {
+		self::_disconnect(tm);
 		return;
 	}
 
@@ -40,12 +40,12 @@ auto sm::client::on_event(const sm::event& event) -> void {
 	reader.receive(_socket);
 
 	if (reader.size() == 0U) {
-		self::_disconnect();
+		self::_disconnect(tm);
 		return;
 	}
 
 	std::string str{"client: received message: "};
-	str.append(reader.data(), reader.size());
+	str.append(self::_to_hex(reader));
 
 	sm::logger::info(str.data());
 }
@@ -54,8 +54,8 @@ auto sm::client::on_event(const sm::event& event) -> void {
 // -- private methods ---------------------------------------------------------
 
 /* disconnect */
-auto sm::client::_disconnect(void) -> void {
-	sm::taskmaster::monitor().unsubscribe(*this);
-	sm::taskmaster::clients().remove(*this);
+auto sm::client::_disconnect(sm::taskmaster& tm) -> void {
+	tm.monitor().unsubscribe(*this);
+	tm.clients().remove(*this);
 	sm::logger::info("client: disconnected");
 }

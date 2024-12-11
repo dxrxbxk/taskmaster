@@ -4,6 +4,7 @@
 #include "common/resources/unique_fd.hpp"
 #include "taskmaster/log/timestamp.hpp"
 #include "common/diagnostics/exception.hpp"
+#include "common/string/strlen.hpp"
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -33,6 +34,18 @@ namespace sm {
 			/* self type */
 			using self = sm::logger;
 
+			/* log function */
+			using log_func = auto (self::*)(const char*, const char*) -> void;
+
+
+			// -- private members ---------------------------------------------
+
+			/* file descriptor */
+			//sm::unique_fd _fd;
+
+			/* functions */
+			log_func _function;
+
 
 			// -- private static members --------------------------------------
 
@@ -52,16 +65,55 @@ namespace sm {
 			// -- private lifecycle -------------------------------------------
 
 			/* default constructor */
-			logger(void) noexcept = default;
+			logger(void) noexcept
+			: _function{&self::_log_standard} {
+			}
+
+			/* deleted copy constructor */
+			logger(const self&) = delete;
+
+			/* deleted move constructor */
+			logger(self&&) = delete;
+
+			/* destructor */
+			~logger(void) noexcept = default;
 
 
-			~logger(void) noexcept;
+			// -- private assignment operators --------------------------------
+
+			/* deleted copy assignment operator */
+			auto operator=(const self&) -> self& = delete;
+
+			/* deleted move assignment operator */
+			auto operator=(self&&) -> self& = delete;
 
 
-		private:
+			// -- private static methods --------------------------------------
 
-			template <unsigned N>
-			static auto _log(const char (&level)[N], const char* message) -> void {
+			/* shared */
+			static auto _shared(void) noexcept -> self& {
+				static self instance;
+				return instance;
+			}
+
+
+
+			auto _log_standard(const char* level, const char* message) -> void {
+
+				const auto len = sm::strlen(level);
+
+				// get timestamp
+				sm::timestamp ts;
+
+				(void)::write(STDOUT_FILENO, ts.data(), ts.size());
+				(void)::write(STDOUT_FILENO, " ", 1);
+				(void)::write(STDOUT_FILENO, level, len);
+				(void)::write(STDOUT_FILENO, ": ", 2);
+				(void)::write(STDOUT_FILENO, message, ::strlen(message));
+				(void)::write(STDOUT_FILENO, "\n", 1);
+			}
+
+			auto _log_daemon(const char* level, const char* message) -> void {
 
 				// open log file
 				int fd = ::open(_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
@@ -101,12 +153,14 @@ namespace sm {
 
 				}
 
+				const auto len = sm::strlen(level);
+
 				// get timestamp
 				sm::timestamp ts;
 
 				::write(fd, ts.data(), ts.size());
 				::write(fd, " ", 1);
-				::write(fd, level, N - 1);
+				::write(fd, level, len);
 				::write(fd, ": ", 2);
 				::write(fd, message, ::strlen(message));
 				::write(fd, "\n", 1);
@@ -120,29 +174,45 @@ namespace sm {
 
 			// -- public static methods ---------------------------------------
 
+			/* log to standard */
+			static auto log_to_standard(void) -> void {
+				self::_shared()._function = &self::_log_standard;
+			}
+
+			/* log to daemon */
+			static auto log_to_daemon(void) -> void {
+				self::_shared()._function = &self::_log_daemon;
+			}
+
+
+			/* call */
+			auto _call(const char* level, const char* message) -> void {
+				(this->*_function)(level, message);
+			}
+
 			/* info */
 			static auto info(const char* message) -> void {
-				self::_log("\x1b[32mINFO\x1b[0m", message);
+				self::_shared()._call("\x1b[32mINFO\x1b[0m", message);
 			}
 
 			/* warn */
 			static auto warn(const char* message) -> void {
-				self::_log("\x1b[33mWARN\x1b[0m", message);
+				self::_shared()._call("\x1b[33mWARN\x1b[0m", message);
 			}
 
 			/* debug */
 			static auto debug(const char* message) -> void {
-				self::_log("\x1b[34mDEBG\x1b[0m", message);
+				self::_shared()._call("\x1b[34mDEBG\x1b[0m", message);
 			}
 
 			/* error */
 			static auto error(const char* message) -> void {
-				self::_log("\x1b[31mERRO\x1b[0m", message);
+				self::_shared()._call("\x1b[31mERRO\x1b[0m", message);
 			}
 
 			/* signal */
 			static auto signal(const char* message) -> void {
-				self::_log("\x1b[35mSIGN\x1b[0m", message);
+				self::_shared()._call("\x1b[35mSIGN\x1b[0m", message);
 			}
 
 	}; // class logger

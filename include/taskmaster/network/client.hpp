@@ -1,8 +1,9 @@
 #ifndef client_hpp
 #define client_hpp
 
+#include "taskmaster/events/monitor.hpp"
 #include "common/network/socket.hpp"
-#include "common/dispatch.hpp"
+#include "common/reader.hpp"
 
 
 // -- S M  N A M E S P A C E --------------------------------------------------
@@ -32,7 +33,28 @@ namespace sm {
 			// -- private methods ---------------------------------------------
 
 			/* disconnect */
-			auto _disconnect(void) -> void;
+			auto _disconnect(sm::taskmaster&) -> void;
+
+			/* to hex */
+			template <unsigned N>
+			auto _to_hex(const sm::reader<N>& reader) -> std::string {
+
+				// hex string
+				std::string hex;
+
+				// loop over data
+				for (unsigned i = 0U; i < reader.size(); ++i) {
+
+					// hex
+					char buff[6U];
+					snprintf(buff, 6U, "0x%02x ", reader.data()[i]);
+
+					// append
+					hex.append(buff, 5U);
+				}
+
+				return hex;
+			}
 
 
 		public:
@@ -70,7 +92,7 @@ namespace sm {
 			auto fd(void) const noexcept -> int override;
 
 			/* on event */
-			auto on_event(const sm::event&) -> void override;
+			auto on_event(const sm::event&, sm::taskmaster&) -> void override;
 
 	}; // class client
 

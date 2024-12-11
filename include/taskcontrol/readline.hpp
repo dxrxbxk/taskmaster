@@ -6,7 +6,6 @@
 #include "escape.hpp"
 #include "io_event.hpp"
 #include "common/reader.hpp"
-#include "common/dispatch.hpp"
 #include "common/running.hpp"
 
 #include <iostream>
@@ -21,7 +20,7 @@ namespace sm {
 
 	// -- R E A D L I N E -----------------------------------------------------
 
-	class readline final : public sm::io_event, public sm::terminal::observer {
+	class readline final : public sm::terminal::observer {
 
 
 		private:
@@ -188,7 +187,7 @@ namespace sm {
 			}
 
 
-			auto fd(void) const noexcept -> int override {
+			auto fd(void) const noexcept -> int /* override */ {
 				return STDIN_FILENO;
 			}
 
@@ -204,9 +203,9 @@ namespace sm {
 				_render();
 			}
 
-			auto on_event(const ::uint32_t& events) -> void override {
+			auto on_event(const ::uint32_t& events) -> void /* override */ {
 
-				if (events & EPOLLIN) {
+				//if (events & EPOLLIN) {
 
 					sm::reader<128U> reader{};
 
@@ -245,7 +244,7 @@ namespace sm {
 						}
 
 					}
-				}
+				//}
 
 			}
 

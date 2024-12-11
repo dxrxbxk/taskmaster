@@ -15,6 +15,12 @@
 namespace sm {
 
 
+	// -- forward declarations ------------------------------------------------
+
+	/* taskmaster */
+	class taskmaster;
+
+
 	// -- E V E N T -----------------------------------------------------------
 
 	class event final {
@@ -161,9 +167,10 @@ namespace sm {
 			virtual auto fd(void) const noexcept -> int = 0;
 
 			/* on event */
-			virtual auto on_event(const sm::event&) -> void = 0;
+			virtual auto on_event(const sm::event&, sm::taskmaster&) -> void = 0;
 
 	}; // class event
+
 
 
 	// -- M O N I T O R -------------------------------------------------------
@@ -250,7 +257,7 @@ namespace sm {
 
 
 			/* wait */
-			auto wait(void) -> void {
+			auto wait(sm::taskmaster& tm) -> void {
 
 				// wait for events
 				const auto state = ::epoll_wait(_fd,
@@ -278,7 +285,7 @@ namespace sm {
 					auto& listener = *(reinterpret_cast<sm::listener*>(_events[i].data.ptr));
 
 					// trigger event
-					listener.on_event(ev);
+					listener.on_event(ev, tm);
 				}
 
 			}

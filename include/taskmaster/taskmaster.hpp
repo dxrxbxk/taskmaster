@@ -3,12 +3,19 @@
 
 #include "taskmaster/network/server.hpp"
 #include "taskmaster/network/client_manager.hpp"
-#include "common/dispatch.hpp"
+#include "taskmaster/events/monitor.hpp"
+#include "taskmaster/runlock.hpp"
 
 
 // -- S M  N A M E S P A C E --------------------------------------------------
 
 namespace sm {
+
+
+	// -- forward declarations ------------------------------------------------
+
+	/* options */
+	class options;
 
 
 	// -- T A S K M A S T E R -------------------------------------------------
@@ -26,6 +33,12 @@ namespace sm {
 
 			// -- private members ---------------------------------------------
 
+			/* runlock */
+			sm::runlock _runlock;
+
+			/* running */
+			bool _running;
+
 			/* server */
 			sm::server _server;
 
@@ -39,18 +52,23 @@ namespace sm {
 			// -- private static methods --------------------------------------
 
 			/* shared */
-			static auto _shared(void) -> self&;
+			static auto _shared(const sm::options&) -> self&;
+
+			/* launch */
+			static auto _launch(const sm::options&) -> self;
 
 			/* daemonize */
 			static auto _daemonize(void) -> bool;
 
-			auto _run(void) -> void;
 
 
 			// -- private lifecycle -------------------------------------------
 
-			/* default constructor */
-			taskmaster(void);
+			/* deleted default constructor */
+			taskmaster(void) = delete;
+
+			/* options constructor */
+			taskmaster(const sm::options&);
 
 			/* deleted copy constructor */
 			taskmaster(const self&) = delete;
@@ -71,25 +89,30 @@ namespace sm {
 			auto operator=(self&&) -> self& = delete;
 
 
+			// -- private methods ---------------------------------------------
+
+			/* run */
+			auto _run(void) -> void;
+
 
 		public:
 
 			// -- public static methods ---------------------------------------
 
 			/* run */
-			static auto run(void) -> void;
+			static auto run(const sm::options&) -> void;
 
 			/* server */
-			static auto server(void) noexcept -> sm::server&;
+			auto server(void) noexcept -> sm::server&;
 
 			/* monitor */
-			static auto monitor(void) noexcept -> sm::monitor&;
+			auto monitor(void) noexcept -> sm::monitor&;
 
 			/* stop */
-			static auto stop(void) noexcept -> void;
+			auto stop(void) noexcept -> void;
 
 			/* clients */
-			static auto clients(void) noexcept -> sm::client_manager&;
+			auto clients(void) noexcept -> sm::client_manager&;
 
 	}; // class taskmaster
 

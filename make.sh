@@ -530,12 +530,12 @@ function _kill() {
 
 	# kill taskmaster process
 	if ! kill -s $sig $pids; then
-		_error 'failed to kill taskmaster process.'
+		_error 'failed to send' $sig 'to taskmaster process.'
 		return
 	fi
 
 	# print success message
-	_success 'taskmaster process killed ('$pids').'
+	_success 'sent' $sig 'to taskmaster process.'
 }
 
 # log

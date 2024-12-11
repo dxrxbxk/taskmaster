@@ -6,6 +6,8 @@
 #include "common/system/setsid.hpp"
 #include "common/system/dup2.hpp"
 
+#include "taskmaster/time/timer.hpp"
+
 
 // -- T A S K M A S T E R -----------------------------------------------------
 
@@ -72,8 +74,13 @@ auto sm::taskmaster::_launch(const sm::options& opts) -> self {
 
 // -- private lifecycle -------------------------------------------------------
 
+
 /* run */
 auto sm::taskmaster::_run(void) -> void {
+
+	sm::timer tm{2000, 0};
+
+	_monitor.subscribe(tm, sm::event{EPOLLIN});
 
 	// poll
 	while (_running == true) {

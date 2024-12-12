@@ -1,9 +1,11 @@
 #ifndef program_hpp
 #define program_hpp
 
+#include <unordered_map>
 #include <map>
 #include <string>
 #include <vector>
+#include "common/resources/unique_ptr.hpp"
 
 
 // -- S M  N A M E S P A C E --------------------------------------------------
@@ -92,9 +94,11 @@ namespace sm {
 
 
 			// -- private members ---------------------------------------------
+			using map_prog = std::unordered_map<std::string, sm::unique_ptr<sm::program>>;
 
-			std::map<std::string, sm::program> _programs;
+			map_prog _programs;
 
+			using map_id = std::unordered_map<pid_t, sm::program*>;
 
 		public:
 

@@ -78,8 +78,6 @@ auto sm::parser::_error(void) -> void {
 #include "common/system/open.hpp"
 
 
-
-
 auto sm::parser_tester(void) -> void {
 
 	sm::unique_fd file = sm::open("./tools/taskmaster.conf", O_RDONLY);

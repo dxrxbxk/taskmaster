@@ -78,7 +78,7 @@ auto sm::taskmaster::_launch(const sm::options& opts) -> self {
 /* run */
 auto sm::taskmaster::_run(void) -> void {
 
-	sm::timer tm{2000, 0};
+	sm::timer tm{3'000, 300};
 
 	_monitor.subscribe(tm, sm::event{EPOLLIN});
 

@@ -116,7 +116,7 @@ function _check_tools() {
 	local -r required=('rm' 'nproc' 'wait' 'clang++')
 	
 	# optional tools
-	local -r optional=('ccache')
+	local -r optional=('ccache' 'fzy')
 
 	# loop over required tools
 	for tool in $required; do

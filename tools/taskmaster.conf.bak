@@ -1,0 +1,74 @@
+[myexec]
+cmd = ifjfj
+cmd = "/bin/echo$VAR -n"
+restart = true
+
+
+
+[ls $program_id #first program
+]
+cmd = "$VAR/bin/ls -l\""
+restart = false
+
+$fijfe
+
+[ $FIJF taskmaster]
+port   = 9000
+daemon = false
+log    = /tmp/taskmaster.log
+
+# hello world
+
+[$VAR # program id
+]
+cmd = $VAR
+
+[jijf   ijfj]
+
+[]
+cmd = "/usr/sbin/nginx" # command to run
+numprocs = 1 # number of processes
+umask = 022 # file mode creation mask
+workingdir = /tmp # working directory
+autostart = true # start at launch
+autorestart = unexpected # restart when unexpected exit
+exitcodes = [0, 2]
+startretries = 3
+starttime = 5
+stopsignal = TERM
+stoptime = 10
+stdout = /tmp/nginx.stdout
+stderr = /tmp/nginx.stderr
+env = [STARTED_BY='taskmaster', PATH='/bin:/usr/bin:/sbin']
+
+[nginx]
+cmd         = '/usr/sbin/nginx'
+numprocs    = 1
+umask       = 022
+workingdir  = /tmp
+autostart   = true
+autorestart = unexpected
+exitcodes   = {0, 2}
+
+
+[ ? ]
+cmd = ?
+env = [ ?, ?, ?]
+
+
+
+? "cmd $VAR"
+? 'cmd $VAR'
+? cmd
+? $VAR
+
+[ hello, 'world$vava', "$HOME" ]
+
+
+
+
+
+
+
+
+

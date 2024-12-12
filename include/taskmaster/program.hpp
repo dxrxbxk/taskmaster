@@ -24,6 +24,15 @@ namespace sm {
 			using self = sm::program;
 
 
+			// -- private constants -------------------------------------------
+
+			enum : unsigned {
+				restart_false      = 0U,
+				restart_true       = 1U,
+				restart_unexpected = 2U,
+			};
+
+
 			// -- private members ---------------------------------------------
 
 
@@ -36,7 +45,7 @@ namespace sm {
 
 			bool _auto_start;
 			
-			bool _auto_restart;
+			unsigned _auto_restart;
 
 			std::vector<int> _exit_codes;
 
@@ -69,6 +78,54 @@ namespace sm {
 			}
 
 	}; // class program
+
+
+	class program_manager final {
+
+
+		private:
+
+			// -- private types -----------------------------------------------
+
+			/* self type */
+			using self = sm::program_manager;
+
+
+			// -- private members ---------------------------------------------
+
+			std::map<std::string, sm::program> _programs;
+
+
+		public:
+
+			// -- public lifecycle --------------------------------------------
+
+			/* default constructor */
+			program_manager(void) noexcept = default;
+
+			/* copy constructor */
+			program_manager(const self&) = default;
+
+			/* move constructor */
+			program_manager(self&&) noexcept = default;
+
+			/* destructor */
+			~program_manager(void) noexcept = default;
+
+
+			// -- public assignment operators ---------------------------------
+
+			/* copy assignment operator */
+			auto operator=(const self&) -> self& = default;
+
+			/* move assignment operator */
+			auto operator=(self&&) noexcept -> self& = default;
+
+
+			// -- public modifiers --------------------------------------------
+
+
+	};
 
 } // namespace sm
 

@@ -1,337 +1,906 @@
-#ifndef PARSER_HPP
-# define PARSER_HPP
+#ifndef parser_hpp
+#define parser_hpp
 
 #include "common/reader.hpp"
+#include <iostream>
+
+
+// -- S M  N A M E S P A C E --------------------------------------------------
 
 namespace sm {
 
-class parser {
-	public:
-		template <unsigned int N>
-		void parse(const sm::reader<N> &buf) {
-			_it = buf.data();
-			_end = buf.data() + buf.size();
-			_parse();
-		}
 
-	private:
-		struct transition;
+	// -- forward declarations ------------------------------------------------
 
-		const uint8_t *_it;
-		const uint8_t *_end;
-		const transition *_tr;
-
-		void _parse();
-
-		void _skip();
-		void _increment();
-		void _add_title();
-		void _add_key();
-		void _add_value();
-		void _error();
-
-		enum state_type {
-			S_START,
-			S_DEFAULT,
-
-			S_WAIT_TITLE,
-			S_IN_TITLE,
-			S_END_TITLE,
-
-			S_IN_KEY,
-			S_END_KEY,
-
-			S_WAIT_VALUE,
-
-			S_START_TABLE,
-			S_IN_TALBE,
-			S_END_TABLE,
-
-			S_IN_VALUE,
-			S_END_VALUE,
-
-			S_IN_STRING,
-			S_END_STRING,
-
-			S_EXPAND,
-
-			S_ERROR,
-
-			S_SIZE,
-		};
-
-		enum char_type {
-			C_PRINTABLE,
-			C_WHITESPACE,
-			C_COMMENT,
-			C_NEWLINE,
-			C_RETURN,
-			C_CONTROL,
-			C_EQUAL,
-			C_LBRACKET,
-			C_RBRACKET,
-			C_QUOTE,
-			C_DQUOTE,
-			C_DOLLAR,
-			C_COMMA,
-			C_EOB,
-			C_SIZE,
-		};
-
-		struct transition {
-			state_type state;
-			void (parser::*action)();
-		};
-
-		static constexpr transition _machine[S_SIZE][C_SIZE] = {
-			/* START */
-			{
-				{S_START, &parser::_skip}, /* C_PRINTABLE */
-				{S_START, &parser::_skip}, /* C_WHITESPACE */
-				{S_START, &parser::_skip}, /* C_COMMENT */
-				{S_START, &parser::_skip}, /* C_NEWLINE */
-				{S_START, &parser::_skip}, /* C_RETURN */
-				{S_START, &parser::_skip}, /* C_CONTROL */
-				{S_START, &parser::_skip}, /* C_EQUAL */
-				{S_WAIT_TITLE, &parser::_skip}, /* C_LBRACKET */
-				{S_START, &parser::_skip}, /* C_RBRACKET */
-				{S_START, &parser::_skip}, /* C_QUOTE */
-				{S_START, &parser::_skip}, /* C_DQUOTE */
-				{S_START, &parser::_skip}, /* C_DOLLAR */
-				{S_START, &parser::_skip}, /* C_COMMA */
-				{S_START, &parser::_skip}, /* C_EOB */
-			},
-			/* DEFAULT */
-			{
-				{S_IN_KEY, &parser::_skip}, /* C_PRINTABLE */
-				{S_DEFAULT, &parser::_skip}, /* C_WHITESPACE */
-				{S_DEFAULT, &parser::_skip}, /* C_COMMENT */
-				{S_DEFAULT, &parser::_skip}, /* C_NEWLINE */
-				{S_DEFAULT, &parser::_skip}, /* C_RETURN */
-				{S_DEFAULT, &parser::_skip}, /* C_CONTROL */
-				{S_DEFAULT, &parser::_skip}, /* C_EQUAL */
-				{S_WAIT_TITLE, &parser::_skip}, /* C_LBRACKET */
-				{S_DEFAULT, &parser::_skip}, /* C_RBRACKET */
-				{S_DEFAULT, &parser::_skip}, /* C_QUOTE */
-				{S_DEFAULT, &parser::_skip}, /* C_DQUOTE */
-				{S_DEFAULT, &parser::_skip}, /* C_DOLLAR */
-				{S_DEFAULT, &parser::_skip}, /* C_COMMA */
-				{S_DEFAULT, &parser::_skip}, /* C_EOB */
-			},
-
-			/* WAIT_TITLE */
-			{
-				{S_IN_TITLE, &parser::_skip}, /* C_PRINTABLE */
-				{S_WAIT_TITLE, &parser::_skip}, /* C_WHITESPACE */
-				{S_WAIT_TITLE, &parser::_skip}, /* C_COMMENT */
-				{S_WAIT_TITLE, &parser::_skip}, /* C_NEWLINE */
-				{S_WAIT_TITLE, &parser::_skip}, /* C_RETURN */
-				{S_WAIT_TITLE, &parser::_skip}, /* C_CONTROL */
-				{S_WAIT_TITLE, &parser::_skip}, /* C_EQUAL */
-				{S_WAIT_TITLE, &parser::_skip}, /* C_LBRACKET */
-				{S_WAIT_TITLE, &parser::_skip}, /* C_RBRACKET */
-				{S_WAIT_TITLE, &parser::_skip}, /* C_QUOTE */
-				{S_WAIT_TITLE, &parser::_skip}, /* C_DQUOTE */
-				{S_WAIT_TITLE, &parser::_skip}, /* C_DOLLAR */
-				{S_WAIT_TITLE, &parser::_skip}, /* C_COMMA */
-				{S_WAIT_TITLE, &parser::_skip}, /* C_EOB */
-			},
-
-			/* S_IN_TITLE */
-			{
-				{S_IN_TITLE, &parser::_increment}, /* C_PRINTABLE */
-				{S_END_TITLE, &parser::_add_title}, /* C_WHITESPACE */
-				{S_IN_TITLE, &parser::_skip}, /* C_COMMENT */
-				{S_IN_TITLE, &parser::_skip}, /* C_NEWLINE */
-				{S_IN_TITLE, &parser::_skip}, /* C_RETURN */
-				{S_IN_TITLE, &parser::_skip}, /* C_CONTROL */
-				{S_IN_TITLE, &parser::_skip}, /* C_EQUAL */
-				{S_IN_TITLE, &parser::_skip}, /* C_LBRACKET */
-				{S_IN_TITLE, &parser::_skip}, /* C_RBRACKET */
-				{S_IN_TITLE, &parser::_skip}, /* C_QUOTE */
-				{S_IN_TITLE, &parser::_skip}, /* C_DQUOTE */
-				{S_IN_TITLE, &parser::_skip}, /* C_DOLLAR */
-				{S_IN_TITLE, &parser::_skip}, /* C_COMMA */
-				{S_IN_TITLE, &parser::_skip}, /* C_EOB */
-			},
-
-			/* S_END_TITLE */
-			{ 
-				{S_END_TITLE, &parser::_skip}, /* C_PRINTABLE */
-				{S_END_TITLE, &parser::_skip}, /* C_WHITESPACE */
-				{S_END_TITLE, &parser::_skip}, /* C_COMMENT */
-				{S_END_TITLE, &parser::_skip}, /* C_NEWLINE */
-				{S_END_TITLE, &parser::_skip}, /* C_RETURN */
-				{S_END_TITLE, &parser::_skip}, /* C_CONTROL */
-				{S_END_TITLE, &parser::_skip}, /* C_EQUAL */
-				{S_END_TITLE, &parser::_skip}, /* C_LBRACKET */
-				{S_DEFAULT, &parser::_skip}, /* C_RBRACKET */
-				{S_END_TITLE, &parser::_skip}, /* C_QUOTE */
-				{S_END_TITLE, &parser::_skip}, /* C_DQUOTE */
-				{S_END_TITLE, &parser::_skip}, /* C_DOLLAR */
-				{S_END_TITLE, &parser::_skip}, /* C_COMMA */
-				{S_END_TITLE, &parser::_skip}, /* C_EOB */
-			},
-			/* S_IN_KEY */
-			{
-				{S_IN_KEY, &parser::_increment}, /* C_PRINTABLE */
-				{S_END_KEY, &parser::_skip}, /* C_WHITESPACE */
-				{S_IN_KEY, &parser::_skip}, /* C_COMMENT */
-				{S_IN_KEY, &parser::_skip}, /* C_NEWLINE */
-				{S_IN_KEY, &parser::_skip}, /* C_RETURN */
-				{S_IN_KEY, &parser::_skip}, /* C_CONTROL */
-				{S_IN_KEY, &parser::_skip}, /* C_EQUAL */
-				{S_IN_KEY, &parser::_skip}, /* C_LBRACKET */
-				{S_IN_KEY, &parser::_skip}, /* C_RBRACKET */
-				{S_IN_KEY, &parser::_skip}, /* C_QUOTE */
-				{S_IN_KEY, &parser::_skip}, /* C_DQUOTE */
-				{S_IN_KEY, &parser::_skip}, /* C_DOLLAR */
-				{S_IN_KEY, &parser::_skip}, /* C_COMMA */
-				{S_IN_KEY, &parser::_skip}, /* C_EOB */
-			},
-
-			/* S_END_KEY */
-			{
-				{S_END_KEY, &parser::_skip}, /* C_PRINTABLE */
-				{S_END_KEY, &parser::_skip}, /* C_WHITESPACE */
-				{S_END_KEY, &parser::_skip}, /* C_COMMENT */
-				{S_END_KEY, &parser::_skip}, /* C_NEWLINE */
-				{S_END_KEY, &parser::_skip}, /* C_RETURN */
-				{S_END_KEY, &parser::_skip}, /* C_CONTROL */
-				{S_WAIT_VALUE, &parser::_skip}, /* C_EQUAL */
-				{S_END_KEY, &parser::_skip}, /* C_LBRACKET */
-				{S_END_KEY, &parser::_skip}, /* C_RBRACKET */
-				{S_END_KEY, &parser::_skip}, /* C_QUOTE */
-				{S_END_KEY, &parser::_skip}, /* C_DQUOTE */
-				{S_END_KEY, &parser::_skip}, /* C_DOLLAR */
-				{S_END_KEY, &parser::_skip}, /* C_COMMA */
-				{S_END_KEY, &parser::_skip}, /* C_EOB */
-			},
-
-			/* S_WAIT_VALUE */
-			{
-				{S_IN_VALUE, &parser::_skip}, /* C_PRINTABLE */
-				{S_WAIT_VALUE, &parser::_skip}, /* C_WHITESPACE */
-				{S_WAIT_VALUE, &parser::_skip}, /* C_COMMENT */
-				{S_WAIT_VALUE, &parser::_skip}, /* C_NEWLINE */
-				{S_WAIT_VALUE, &parser::_skip}, /* C_RETURN */
-				{S_WAIT_VALUE, &parser::_skip}, /* C_CONTROL */
-				{S_WAIT_VALUE, &parser::_skip}, /* C_EQUAL */
-				{S_START_TABLE, &parser::_skip}, /* C_LBRACKET */
-				{S_WAIT_VALUE, &parser::_skip}, /* C_RBRACKET */
-				{S_WAIT_VALUE, &parser::_skip}, /* C_QUOTE */
-				{S_WAIT_VALUE, &parser::_skip}, /* C_DQUOTE */
-				{S_WAIT_VALUE, &parser::_skip}, /* C_DOLLAR */
-				{S_WAIT_VALUE, &parser::_skip}, /* C_COMMA */
-				{S_WAIT_VALUE, &parser::_skip}, /* C_EOB */
-			},
-
-			/* S_START_TABLE */
-			{
-				{S_IN_TALBE, &parser::_skip}, /* C_PRINTABLE */
-				{S_START_TABLE, &parser::_skip}, /* C_WHITESPACE */
-				{S_START_TABLE, &parser::_skip}, /* C_COMMENT */
-				{S_START_TABLE, &parser::_skip}, /* C_NEWLINE */
-				{S_START_TABLE, &parser::_skip}, /* C_RETURN */
-				{S_START_TABLE, &parser::_skip}, /* C_CONTROL */
-				{S_START_TABLE, &parser::_skip}, /* C_EQUAL */
-				{S_START_TABLE, &parser::_skip}, /* C_LBRACKET */
-				{S_START_TABLE, &parser::_skip}, /* C_RBRACKET */
-				{S_START_TABLE, &parser::_skip}, /* C_QUOTE */
-				{S_START_TABLE, &parser::_skip}, /* C_DQUOTE */
-				{S_START_TABLE, &parser::_skip}, /* C_DOLLAR */
-				{S_START_TABLE, &parser::_skip}, /* C_COMMA */
-				{S_START_TABLE, &parser::_skip}, /* C_EOB */
-			},
-
-			/* S_IN_TABLE */
-			{
-				{S_IN_TALBE, &parser::_add_value}, /* C_PRINTABLE */
-				{S_IN_TALBE, &parser::_skip}, /* C_WHITESPACE */
-				{S_IN_TALBE, &parser::_skip}, /* C_COMMENT */
-				{S_IN_TALBE, &parser::_skip}, /* C_NEWLINE */
-				{S_IN_TALBE, &parser::_skip}, /* C_RETURN */
-				{S_IN_TALBE, &parser::_skip}, /* C_CONTROL */
-				{S_IN_TALBE, &parser::_skip}, /* C_EQUAL */
-				{S_IN_TALBE, &parser::_skip}, /* C_LBRACKET */
-				{S_IN_TALBE, &parser::_skip}, /* C_RBRACKET */
-				{S_IN_TALBE, &parser::_skip}, /* C_QUOTE */
-				{S_IN_TALBE, &parser::_skip}, /* C_DQUOTE */
-				{S_IN_TALBE, &parser::_skip}, /* C_DOLLAR */
-				{S_IN_TALBE, &parser::_skip}, /* C_COMMA */
-				{S_IN_TALBE, &parser::_skip}, /* C_EOB */
-			},
-				
-		};
+	/* program manager */
+	class program_manager;
 
 
-		static constexpr char_type _char_table[256] = {
-			// ASCII 0-31: Contrôle (non imprimable)
-			C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL,
-			C_CONTROL, C_WHITESPACE, C_NEWLINE, C_CONTROL, C_CONTROL, C_RETURN, C_CONTROL, C_CONTROL,
-			C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL,
-			C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL,
+	// -- P A R S E R ---------------------------------------------------------
 
-			// ASCII 32-47: Espaces et symboles
-			C_WHITESPACE, C_PRINTABLE, C_QUOTE, C_PRINTABLE, C_DOLLAR, C_PRINTABLE, C_PRINTABLE, C_QUOTE,
-			C_LBRACKET, C_RBRACKET, C_PRINTABLE, C_PRINTABLE, C_COMMA, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE,
-
-			// ASCII 48-57: Chiffres
-			C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE,
-			C_PRINTABLE, C_PRINTABLE,
-
-			// ASCII 58-64: Symboles
-			C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_EQUAL, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE,
-
-			// ASCII 65-90: Lettres majuscules
-			C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE,
-			C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE,
-			C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE,
-			C_PRINTABLE, C_PRINTABLE, C_PRINTABLE,
-
-			// ASCII 91-96: Symboles
-			C_LBRACKET, C_PRINTABLE, C_RBRACKET, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE,
-
-			// ASCII 97-122: Lettres minuscules
-			C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE,
-			C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE,
-			C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE,
-			C_PRINTABLE, C_PRINTABLE, C_PRINTABLE,
-
-			// ASCII 123-127: Symboles et DEL
-			C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_PRINTABLE, C_CONTROL,
-
-			// ASCII 128-255: Étendu (non imprimable ou définissable au besoin)
-			C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL,
-			C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL,
-			C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL,
-			C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL,
-			C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL,
-			C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL,
-			C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL,
-			C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL,
-			C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL,
-			C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL,
-			C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL,
-			C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL,
-			C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL,
-			C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL,
-			C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL, C_CONTROL
-		};
+	class parser {
 
 
+		private:
 
-	public:
+			// -- private types -----------------------------------------------
 
-		parser() noexcept;
-		~parser() = default;
-		parser(const parser &src) = default;
-		parser &operator=(const parser &src) = default;
-		parser(parser &&src) = default;
-		parser &operator=(parser &&src) = default;
+			/* self type */
+			using self = sm::parser;
 
-};
+			/* action type */
+			using action_type = auto (parser::*)(void) -> void;
 
-}
+
+			// -- forward declarations ----------------------------------------
+
+			/* transition */
+			struct transition;
+
+
+			// -- private members ---------------------------------------------
+
+			/* iterator */
+			const char* _it;
+
+			/* end iterator */
+			const char* _end;
+
+			/* transition */
+			const transition* _tr;
+
+			const transition* _back;
+
+			/* count */
+			sm::usize _count;
+
+			/* action */
+			action_type _action;
+
+			/* buffer */
+			std::string _buffer;
+
+			/* program */
+			sm::program_manager* _pm;
+
+
+		public:
+
+			// -- public lifecycle --------------------------------------------
+
+			/* default constructor */
+			parser(void) noexcept;
+
+			/* deleted copy constructor */
+			parser(const self&) = delete;
+
+			/* deleted move constructor */
+			parser(self&&) = delete;
+
+			/* destructor */
+			~parser(void) noexcept = default;
+
+
+			// -- public assignment operators ---------------------------------
+
+			/* deleted copy assignment operator */
+			auto operator=(const self&) -> self& = delete;
+
+			/* deleted move assignment operator */
+			auto operator=(self&&) -> self& = delete;
+
+
+			// -- public methods ----------------------------------------------
+
+			template <unsigned int N>
+			void parse(const sm::reader<N>& buffer, sm::program_manager& pm) {
+
+				// set program manager
+				_pm = &pm;
+
+				// get iterator
+				_it  = buffer.data();
+				_end = buffer.data() + buffer.size();
+
+				// parse implementation
+				self::_parse();
+			}
+
+		private:
+
+
+			// -- private methods ---------------------------------------------
+
+			/* parse implementation */
+			auto _parse(void) -> void;
+
+
+			/* skip */
+			auto _skip(void) noexcept -> void;
+
+			/* increment */
+			auto _increment(void) noexcept -> void;
+
+			/* add id */
+			auto _add_id(void) -> void;
+
+			/* add key */
+			auto _add_key(void) -> void;
+
+			/* add value */
+			auto _add_value(void) -> void;
+
+			/* error */
+			auto _error(void) -> void;
+
+			/* flush */
+			auto _flush(void) -> void;
+
+
+			// -- private constants -------------------------------------------
+
+			enum state_type {
+
+				S_START,
+
+				S_DEFAULT,
+
+				S_WAIT_NEWLINE,
+				S_IN_COMMENT,
+
+				S_WAIT_ID,
+				S_IN_ID,
+				S_WAIT_CLOSE_ID,
+
+
+				S_IN_KEY,
+				S_WAIT_ASSIGN,
+				S_WAIT_VALUE,
+				S_IN_VALUE,
+
+
+				S_STATE_MAX,
+				S_ERROR, // must be after S_STATE_MAX
+			};
+
+			enum char_type {
+
+				C_INVALID,
+				C_NEWLINE,
+				C_WHITESPACE,
+
+				C_DIGIT,
+				C_ALPHA,
+				C_UNDERSCORE,
+
+				C_SIMPLE,
+				C_DOUBLE,
+
+				C_SYMBOL,
+
+
+				C_HASH,
+				C_EQUAL,
+				C_DOLLAR,
+				C_COMMA,
+
+				C_LEFT_BRACKET,
+				C_RIGHT_BRACKET,
+
+				C_EOB,
+
+				C_CHAR_MAX,
+			};
+
+			struct transition final {
+				state_type state;
+				void (parser::*action)();
+			};
+
+			static constexpr transition _machine[S_STATE_MAX][C_CHAR_MAX] {
+
+				// -- START ---------------------------------------------------
+
+				{
+					// INVALID
+					{S_ERROR,         &parser::_error},
+					// NEWLINE
+					{S_START,         &parser::_skip},
+					// WHITESPACE
+					{S_START,         &parser::_skip},
+					// DIGIT
+					{S_ERROR,         &parser::_error},
+					// ALPHA
+					{S_ERROR,         &parser::_error},
+					// UNDERSCORE
+					{S_ERROR,         &parser::_error},
+					// SIMPLE
+					{S_ERROR,         &parser::_error},
+					// DOUBLE
+					{S_ERROR,         &parser::_error},
+					// SYMBOL
+					{S_ERROR,         &parser::_error},
+					// HASH
+					{S_IN_COMMENT,    &parser::_skip},
+					// EQUAL
+					{S_ERROR,         &parser::_error},
+					// DOLLAR
+					{S_ERROR,         &parser::_error},
+					// COMMA
+					{S_ERROR,         &parser::_error},
+					// LEFT_BRACKET
+					{S_WAIT_ID,       &parser::_skip},
+					// RIGHT_BRACKET
+					{S_ERROR,         &parser::_error},
+					// EOB
+					{S_START,         &parser::_skip},
+				},
+
+
+				// -- DEFAULT -------------------------------------------------
+
+				{
+					// INVALID
+					{S_ERROR,         &parser::_error},
+					// NEWLINE
+					{S_DEFAULT,       &parser::_skip},
+					// WHITESPACE
+					{S_DEFAULT,       &parser::_skip},
+					// DIGIT
+					{S_ERROR,         &parser::_error},
+					// ALPHA
+					{S_IN_KEY,        &parser::_increment},
+					// SIMPLE
+					{S_ERROR,         &parser::_error},
+					// DOUBLE
+					{S_ERROR,         &parser::_error},
+					// SYMBOL
+					{S_ERROR,         &parser::_error},
+					// UNDERSCORE
+					{S_ERROR,         &parser::_error},
+					// HASH
+					{S_IN_COMMENT,    &parser::_skip},
+					// EQUAL
+					{S_ERROR,         &parser::_error},
+					// DOLLAR
+					{S_ERROR,         &parser::_error},
+					// COMMA
+					{S_ERROR,         &parser::_error},
+					// LEFT_BRACKET
+					{S_WAIT_ID,       &parser::_skip},
+					// RIGHT_BRACKET
+					{S_ERROR,         &parser::_error},
+					// EOB
+					{S_DEFAULT,       &parser::_skip},
+				},
+
+
+				// -- WAIT NEWLINE --------------------------------------------
+
+				{
+					// INVALID
+					{S_ERROR,         &parser::_error},
+					// NEWLINE
+					{S_DEFAULT,       &parser::_skip},
+					// WHITESPACE
+					{S_WAIT_NEWLINE,  &parser::_skip},
+					// DIGIT
+					{S_ERROR,         &parser::_error},
+					// ALPHA
+					{S_ERROR,         &parser::_error},
+					// SIMPLE
+					{S_ERROR,         &parser::_error},
+					// DOUBLE
+					{S_ERROR,         &parser::_error},
+					// SYMBOL
+					{S_ERROR,         &parser::_error},
+					// UNDERSCORE
+					{S_ERROR,         &parser::_error},
+					// HASH
+					{S_IN_COMMENT,    &parser::_skip},
+					// EQUAL
+					{S_ERROR,         &parser::_error},
+					// DOLLAR
+					{S_ERROR,         &parser::_error},
+					// COMMA
+					{S_ERROR,         &parser::_error},
+					// LEFT_BRACKET
+					{S_ERROR,         &parser::_error},
+					// RIGHT_BRACKET
+					{S_ERROR,         &parser::_error},
+					// EOB
+					{S_WAIT_NEWLINE,  &parser::_skip},
+				},
+
+
+				// -- IN COMMENT ----------------------------------------------
+
+				{
+					// INVALID
+					{S_ERROR,         &parser::_error},
+					// NEWLINE
+					{S_DEFAULT,       &parser::_skip},
+					// WHITESPACE
+					{S_IN_COMMENT,    &parser::_skip},
+					// DIGIT
+					{S_IN_COMMENT,    &parser::_skip},
+					// ALPHA
+					{S_IN_COMMENT,    &parser::_skip},
+					// SIMPLE
+					{S_IN_COMMENT,    &parser::_skip},
+					// DOUBLE
+					{S_IN_COMMENT,    &parser::_skip},
+					// SYMBOL
+					{S_IN_COMMENT,    &parser::_skip},
+					// UNDERSCORE
+					{S_IN_COMMENT,    &parser::_skip},
+					// HASH
+					{S_IN_COMMENT,    &parser::_skip},
+					// EQUAL
+					{S_IN_COMMENT,    &parser::_skip},
+					// DOLLAR
+					{S_IN_COMMENT,    &parser::_skip},
+					// COMMA
+					{S_IN_COMMENT,    &parser::_skip},
+					// LEFT_BRACKET
+					{S_IN_COMMENT,    &parser::_skip},
+					// RIGHT_BRACKET
+					{S_IN_COMMENT,    &parser::_skip},
+					// EOB
+					{S_IN_COMMENT,    &parser::_skip},
+				},
+
+
+				// -- WAIT ID -------------------------------------------------
+
+				{
+					// INVALID
+					{S_ERROR,         &parser::_error},
+					// NEWLINE
+					{S_ERROR,         &parser::_error},
+					// WHITESPACE
+					{S_WAIT_ID,       &parser::_skip},
+					// DIGIT
+					{S_IN_ID,         &parser::_increment},
+					// ALPHA
+					{S_IN_ID,         &parser::_increment},
+					// SIMPLE
+					{S_IN_ID,         &parser::_increment},
+					// DOUBLE
+					{S_IN_ID,         &parser::_increment},
+					// SYMBOL
+					{S_IN_ID,         &parser::_increment},
+					// UNDERSCORE
+					{S_IN_ID,         &parser::_increment},
+					// HASH
+					{S_IN_ID,         &parser::_increment},
+					// EQUAL
+					{S_IN_ID,         &parser::_increment},
+					// DOLLAR
+					{S_IN_ID,         &parser::_increment},
+					// COMMA
+					{S_IN_ID,         &parser::_increment},
+					// LEFT_BRACKET
+					{S_ERROR,         &parser::_error},
+					// RIGHT_BRACKET
+					{S_ERROR,         &parser::_skip},
+					// EOB
+					{S_WAIT_ID,       &parser::_skip},
+				},
+
+
+				// -- IN ID ---------------------------------------------------
+
+				{
+					// INVALID
+					{S_ERROR,         &parser::_error},
+					// NEWLINE
+					{S_ERROR,         &parser::_error},
+					// WHITESPACE
+					{S_WAIT_CLOSE_ID, &parser::_add_id},
+					// DIGIT
+					{S_IN_ID,         &parser::_increment},
+					// ALPHA
+					{S_IN_ID,         &parser::_increment},
+					// SIMPLE
+					{S_IN_ID,         &parser::_increment},
+					// DOUBLE
+					{S_IN_ID,         &parser::_increment},
+					// SYMBOL
+					{S_IN_ID,         &parser::_increment},
+					// UNDERSCORE
+					{S_IN_ID,         &parser::_increment},
+					// HASH
+					{S_IN_ID,         &parser::_increment},
+					// EQUAL
+					{S_IN_ID,         &parser::_increment},
+					// DOLLAR
+					{S_IN_ID,         &parser::_increment},
+					// COMMA
+					{S_IN_ID,         &parser::_increment},
+					// LEFT_BRACKET
+					{S_ERROR,         &parser::_error},
+					// RIGHT_BRACKET
+					{S_WAIT_NEWLINE,  &parser::_add_id},
+					// EOB
+					{S_IN_ID,         &parser::_flush},
+				},
+
+
+				// -- WAIT CLOSE ID -------------------------------------------
+
+				{
+					// INVALID
+					{S_ERROR,         &parser::_error},
+					// NEWLINE
+					{S_ERROR,         &parser::_error},
+					// WHITESPACE
+					{S_WAIT_CLOSE_ID, &parser::_skip},
+					// DIGIT
+					{S_ERROR,         &parser::_error},
+					// ALPHA
+					{S_ERROR,         &parser::_error},
+					// SIMPLE
+					{S_ERROR,         &parser::_error},
+					// DOUBLE
+					{S_ERROR,         &parser::_error},
+					// SYMBOL
+					{S_ERROR,         &parser::_error},
+					// UNDERSCORE
+					{S_ERROR,         &parser::_error},
+					// HASH
+					{S_ERROR,         &parser::_error},
+					// EQUAL
+					{S_ERROR,         &parser::_error},
+					// DOLLAR
+					{S_ERROR,         &parser::_error},
+					// COMMA
+					{S_ERROR,         &parser::_error},
+					// LEFT_BRACKET
+					{S_ERROR,         &parser::_error},
+					// RIGHT_BRACKET
+					{S_WAIT_NEWLINE,  &parser::_skip},
+					// EOB
+					{S_WAIT_CLOSE_ID, &parser::_skip},
+				},
+
+
+				// -- IN KEY --------------------------------------------------
+
+				{
+					// INVALID
+					{S_ERROR,         &parser::_error},
+					// NEWLINE
+					{S_ERROR,         &parser::_error},
+					// WHITESPACE
+					{S_WAIT_ASSIGN,   &parser::_add_key},
+					// DIGIT
+					{S_ERROR,         &parser::_error},
+					// ALPHA
+					{S_IN_KEY,        &parser::_increment},
+					// SIMPLE
+					{S_ERROR,         &parser::_error},
+					// DOUBLE
+					{S_ERROR,         &parser::_error},
+					// SYMBOL
+					{S_ERROR,         &parser::_error},
+					// UNDERSCORE
+					{S_IN_KEY,        &parser::_increment},
+					// HASH
+					{S_ERROR,         &parser::_error},
+					// EQUAL
+					{S_WAIT_VALUE,    &parser::_add_key},
+					// DOLLAR
+					{S_ERROR,         &parser::_error},
+					// COMMA
+					{S_ERROR,         &parser::_error},
+					// LEFT_BRACKET
+					{S_ERROR,         &parser::_error},
+					// RIGHT_BRACKET
+					{S_ERROR,         &parser::_error},
+					// EOB
+					{S_IN_KEY,        &parser::_flush},
+				},
+
+				// -- WAIT ASSIGN ---------------------------------------------
+
+				{
+					// INVALID
+					{S_ERROR,         &parser::_error},
+					// NEWLINE
+					{S_ERROR,         &parser::_error},
+					// WHITESPACE
+					{S_WAIT_ASSIGN,   &parser::_skip},
+					// DIGIT
+					{S_ERROR,         &parser::_error},
+					// ALPHA
+					{S_ERROR,         &parser::_error},
+					// SIMPLE
+					{S_ERROR,         &parser::_error},
+					// DOUBLE
+					{S_ERROR,         &parser::_error},
+					// SYMBOL
+					{S_ERROR,         &parser::_error},
+					// UNDERSCORE
+					{S_ERROR,         &parser::_error},
+					// HASH
+					{S_ERROR,         &parser::_error},
+					// EQUAL
+					{S_WAIT_VALUE,    &parser::_skip},
+					// DOLLAR
+					{S_ERROR,         &parser::_error},
+					// COMMA
+					{S_ERROR,         &parser::_error},
+					// LEFT_BRACKET
+					{S_ERROR,         &parser::_error},
+					// RIGHT_BRACKET
+					{S_ERROR,         &parser::_error},
+					// EOB
+					{S_WAIT_ASSIGN,   &parser::_skip},
+				},
+
+
+				// -- WAIT VALUE ----------------------------------------------
+
+				{
+					// INVALID
+					{S_ERROR,         &parser::_error},
+					// NEWLINE
+					{S_ERROR,         &parser::_error},
+					// WHITESPACE
+					{S_WAIT_VALUE,    &parser::_skip},
+					// DIGIT
+					{S_IN_VALUE,      &parser::_increment},
+					// ALPHA
+					{S_IN_VALUE,      &parser::_increment},
+					// SIMPLE
+					{S_ERROR,         &parser::_error}, // see later
+					// DOUBLE
+					{S_ERROR,         &parser::_error}, // see later
+					// SYMBOL
+					{S_IN_VALUE,      &parser::_increment},
+					// UNDERSCORE
+					{S_IN_VALUE,      &parser::_increment},
+					// HASH
+					{S_IN_VALUE,      &parser::_increment},
+					// EQUAL
+					{S_IN_VALUE,      &parser::_increment},
+					// DOLLAR
+					{S_ERROR,         &parser::_error}, // see later
+					// COMMA
+					{S_IN_VALUE,      &parser::_increment},
+					// LEFT_BRACKET
+					{S_ERROR,         &parser::_error}, // see later
+					// RIGHT_BRACKET
+					{S_ERROR,         &parser::_error}, // see later
+					// EOB
+					{S_WAIT_VALUE,    &parser::_skip},
+				},
+
+
+				// -- IN VALUE ------------------------------------------------
+
+				{
+					// INVALID
+					{S_ERROR,         &parser::_error},
+					// NEWLINE
+					{S_DEFAULT,       &parser::_add_value},
+					// WHITESPACE
+					{S_WAIT_NEWLINE,  &parser::_add_value},
+					// DIGIT
+					{S_IN_VALUE,      &parser::_increment},
+					// ALPHA
+					{S_IN_VALUE,      &parser::_increment},
+					// SIMPLE
+					{S_ERROR,         &parser::_error}, // see later
+					// DOUBLE
+					{S_ERROR,         &parser::_error}, // see later
+					// SYMBOL
+					{S_IN_VALUE,      &parser::_increment},
+					// UNDERSCORE
+					{S_IN_VALUE,      &parser::_increment},
+					// HASH
+					{S_IN_VALUE,      &parser::_increment},
+					// EQUAL
+					{S_IN_VALUE,      &parser::_increment},
+					// DOLLAR
+					{S_ERROR,         &parser::_error}, // see later
+					// COMMA
+					{S_IN_VALUE,      &parser::_increment},
+					// LEFT_BRACKET
+					{S_ERROR,         &parser::_error}, // see later
+					// RIGHT_BRACKET
+					{S_ERROR,         &parser::_error}, // see later
+					// EOB
+					{S_IN_VALUE,      &parser::_flush},
+				},
+
+			};
+
+
+			static constexpr char_type _char_table[256U] {
+
+				// 0x00 - 0x08 (control characters)
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID,
+
+				// 0x09 (horizontal tab)
+				C_WHITESPACE,
+
+				// 0x0A - 0x0C (newline, vertical tab, form feed)
+				C_NEWLINE, C_NEWLINE, C_NEWLINE,
+
+				// 0x0D (return)
+				C_INVALID,
+
+				// 0x0E - 0x1F (control characters)
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID,
+
+				// 0x20 (space)
+				C_WHITESPACE,
+
+				// 0x21 (exclamation mark)
+				C_SYMBOL,
+
+				// 0x22 (double quote)
+				C_DOUBLE,
+
+				// 0x23 (hash)
+				C_HASH,
+
+				// 0x24 (dollar)
+				C_DOLLAR,
+
+				// 0x25 - 0x26 (percent, ampersand)
+				C_SYMBOL, C_SYMBOL,
+
+				// 0x27 (single quote)
+				C_SIMPLE,
+
+				// 0x28 - 0x2B (left parenthesis, right parenthesis, asterisk, plus)
+				C_SYMBOL, C_SYMBOL, C_SYMBOL, C_SYMBOL,
+
+				// 0x2C (comma)
+				C_COMMA,
+
+				// 0x2D - 0x2F (minus, dot, slash)
+				C_SYMBOL, C_SYMBOL, C_SYMBOL,
+
+				// 0x30 - 0x39 (0-9)
+				C_DIGIT, C_DIGIT, C_DIGIT, C_DIGIT,
+				C_DIGIT, C_DIGIT, C_DIGIT, C_DIGIT,
+				C_DIGIT, C_DIGIT,
+
+				// 0x3A - 0x3C (colon, semicolon, less)
+				C_SYMBOL, C_SYMBOL, C_SYMBOL,
+
+				// 0x3D (equal)
+				C_EQUAL,
+
+				// 0x3E - 0x40 (greater, question, at)
+				C_SYMBOL, C_SYMBOL, C_SYMBOL,
+
+				// 0x41 - 0x5A (A-Z)
+				C_ALPHA, C_ALPHA, C_ALPHA, C_ALPHA,
+				C_ALPHA, C_ALPHA, C_ALPHA, C_ALPHA,
+				C_ALPHA, C_ALPHA, C_ALPHA, C_ALPHA,
+				C_ALPHA, C_ALPHA, C_ALPHA, C_ALPHA,
+				C_ALPHA, C_ALPHA, C_ALPHA, C_ALPHA,
+				C_ALPHA, C_ALPHA, C_ALPHA, C_ALPHA,
+				C_ALPHA, C_ALPHA,
+
+				// 0x5B (left bracket)
+				C_LEFT_BRACKET,
+
+				// 0x5C (backslash)
+				C_SYMBOL,
+
+				// 0x5D (right bracket)
+				C_RIGHT_BRACKET,
+
+				// 0x5E (caret)
+				C_SYMBOL,
+
+				// 0x5F (underscore)
+				C_UNDERSCORE,
+
+				// 0x60 (grave)
+				C_SYMBOL,
+
+				// 0x61 - 0x7A (a-z)
+				C_ALPHA, C_ALPHA, C_ALPHA, C_ALPHA,
+				C_ALPHA, C_ALPHA, C_ALPHA, C_ALPHA,
+				C_ALPHA, C_ALPHA, C_ALPHA, C_ALPHA,
+				C_ALPHA, C_ALPHA, C_ALPHA, C_ALPHA,
+				C_ALPHA, C_ALPHA, C_ALPHA, C_ALPHA,
+				C_ALPHA, C_ALPHA, C_ALPHA, C_ALPHA,
+				C_ALPHA, C_ALPHA,
+
+				// 0x7B - 0x7E (left brace, vertical bar, right brace, tilde)
+				C_SYMBOL, C_SYMBOL, C_SYMBOL, C_SYMBOL,
+
+				// 0x7F - 0xFF (invalid characters)
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
+				C_INVALID,
+
+			}; // _char_table
+
+
+
+
+
+			auto _cmd(void) -> void {
+
+				// _buffer (value)
+				// _pm (program manager)
+
+				std::cout << "cmd -> " << _buffer << std::endl;
+
+				// _
+			}
+
+			auto _numprocs(void) -> void {
+				std::cout << "numprocs -> " << _buffer << std::endl;
+			}
+			auto _umask(void) -> void {
+				std::cout << "umask -> " << _buffer << std::endl;
+			}
+			auto _workingdir(void) -> void {
+				std::cout << "workingdir -> " << _buffer << std::endl;
+			}
+			auto _autostart(void) -> void {
+				std::cout << "autostart -> " << _buffer << std::endl;
+			}
+			auto _autorestart(void) -> void {
+				std::cout << "autorestart -> " << _buffer << std::endl;
+			}
+			auto _exitcodes(void) -> void {
+				std::cout << "exitcodes -> " << _buffer << std::endl;
+			}
+			auto _startretries(void) -> void {
+				std::cout << "startretries -> " << _buffer << std::endl;
+			}
+			auto _starttime(void) -> void {
+				std::cout << "starttime -> " << _buffer << std::endl;
+			}
+			auto _stopsignal(void) -> void {
+				std::cout << "stopsignal -> " << _buffer << std::endl;
+			}
+			auto _stoptime(void) -> void {
+				std::cout << "stoptime -> " << _buffer << std::endl;
+			}
+			auto _stdout(void) -> void {
+				std::cout << "stdout -> " << _buffer << std::endl;
+			}
+			auto _stderr(void) -> void {
+				std::cout << "stderr -> " << _buffer << std::endl;
+			}
+			auto _env(void) -> void {
+				std::cout << "env -> " << _buffer << std::endl;
+			}
+
+
+			static constexpr action_type _actions[] {
+				&parser::_cmd,
+				&parser::_numprocs,
+				&parser::_umask,
+				&parser::_workingdir,
+				&parser::_autostart,
+				&parser::_autorestart,
+				&parser::_exitcodes,
+				&parser::_startretries,
+				&parser::_starttime,
+				&parser::_stopsignal,
+				&parser::_stoptime,
+				&parser::_stdout,
+				&parser::_stderr,
+				&parser::_env,
+			};
+
+			static constexpr std::string_view _keywords[] {
+				"cmd",
+				"numprocs",
+				"umask",
+				"workingdir",
+				"autostart",
+				"autorestart",
+				"exitcodes",
+				"startretries",
+				"starttime",
+				"stopsignal",
+				"stoptime",
+				"stdout",
+				"stderr",
+				"env",
+			};
+
+			static auto _search_key(const std::string_view& key) -> action_type {
+
+				constexpr auto size = sizeof(_keywords)
+									/ sizeof(_keywords[0U]);
+
+				// loop over keywords
+				for (sm::usize i = 0U; i < size; ++i) {
+
+					if (key == _keywords[i])
+						return _actions[i];
+				}
+
+				std::cout << "unknown keyword: " << key << std::endl;
+
+				// keyword not found
+				throw sm::runtime_error("unknown keyword");
+			}
+
+
+
+	}; // class parser
+
+
+	/* tester */
+	auto parser_tester(void) -> void;
+
+
+
+	class config final {
+
+		private:
+
+			// -- private types -----------------------------------------------
+
+			/* self type */
+			using self = sm::config;
+
+
+			// -- private members ---------------------------------------------
+
+			/* path */
+			std::string _path;
+
+		public:
+
+
+	}; // class config
+
+
+
+
+} // namespace sm
 
 #endif

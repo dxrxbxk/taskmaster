@@ -83,7 +83,77 @@ namespace sm {
 			/* deleted move assignment operator */
 			auto operator=(self&&) -> self& = delete;
 
-	}; // class runlock
+
+
+		private:
+
+
+			auto list_processes(void) -> void {
+
+				/*
+				struct ::dirent* entry;
+
+				sm::unique_dir proc{"/proc"};
+
+				constexpr char line[] = "Name:\ttaskmaster\n";
+				constexpr auto length = sizeof(line) - 1U;
+
+				const ::pid_t process_id = ::getpid();
+
+				start:
+				// loop over entries
+				while ((entry = proc.read()) != nullptr) {
+
+					// skip non-directories
+					if (entry->d_type != DT_DIR)
+						continue;
+
+
+					// declare pid
+					::pid_t pid = 0;
+
+					//// check for numeric directory name
+					//for (unsigned i = 0U; i < sizeof(entry->d_name)
+					//		|| entry->d_name[i] != '\0'; ++i) {
+					//
+					//	pid *= 10;
+					//	pid += static_cast<::pid_t>(entry->d_name[i] - '0');
+					//
+					//	if (entry->d_name[i] < '0'
+					//	 || entry->d_name[i] > '9') {
+					//		goto start;
+					//	}
+					//}
+
+
+					// vérifier si le nom du répertoire est un nombre (pid)
+					if (not isdigit(entry->d_name[0U])) {
+						continue;
+					}
+
+					// vérifier si le pid est le notre
+					if (::atoi(entry->d_name) == pid) {
+						continue;
+					}
+
+					char path[PATH_MAX];
+
+					snprintf(path, PATH_MAX, "/proc/%s/status", entry->d_name);
+
+					const sm::unique_fd fd = sm::open(path, O_RDONLY);
+
+					sm::reader<length> reader;
+
+					reader.read(fd);
+
+					if (reader.size() == length
+					&& strncmp(reader.data(), line, reader.size()) == 0)
+						throw sm::runtime_error("taskmaster is already running");
+				}
+						*/
+			}
+
+		}; // class runlock
 
 } // namespace sm
 

@@ -2,7 +2,12 @@
 #define contiguous_cstr_hpp
 
 #include "memory/malloc.hpp"
+#include "memory/memcpy.hpp"
+#include "guards/malloc_guard.hpp"
+#include "string/strlen.hpp"
 #include "types.hpp"
+
+#include <iostream>
 
 
 // -- S M  N A M E S P A C E --------------------------------------------------
@@ -29,10 +34,10 @@ namespace sm {
 			char** _data;
 
 			/* size */
-			sm::u32 _size;
+			sm::usize _size;
 
 			/* capacity */
-			sm::u32 _capacity;
+			sm::usize _capacity;
 
 
 		public:
@@ -44,10 +49,8 @@ namespace sm {
 			: _data{nullptr}, _size{0U}, _capacity{0U} {
 			}
 
-
-			/* copy constructor */
-			contiguous_cstr(const self& other) {
-			}
+			/* deleted copy constructor */
+			contiguous_cstr(const self&) = delete;
 
 			/* move constructor */
 			contiguous_cstr(self&& other) noexcept
@@ -59,23 +62,14 @@ namespace sm {
 
 			/* destructor */
 			~contiguous_cstr(void) noexcept {
-
-				if (_data == nullptr)
-					return;
-
-				for (sm::u32 i = 0U; i < _size; ++i)
-					sm::free(_data[i]);
-
-				sm::free(_data);
+				self::_free();
 			}
 
 
 			// -- public assignment operators ---------------------------------
 
-			/* copy assignment operator */
-			auto operator=(const self& other) -> self& {
-				return *this;
-			}
+			/* deleted copy assignment operator */
+			auto operator=(const self&) -> self& = delete;
 
 			/* move assignment operator */
 			auto operator=(self&& other) noexcept -> self& {
@@ -106,7 +100,7 @@ namespace sm {
 			auto clear(void) noexcept -> void {
 
 				// free cstrs
-				for (sm::u32 i = 0U; i < _size; ++i)
+				for (sm::usize i = 0U; i < _size; ++i)
 					sm::free(_data[i]);
 
 				// reset size
@@ -114,7 +108,7 @@ namespace sm {
 			}
 
 			/* reserve */
-			auto reserve(const sm::u32& capacity) -> void {
+			auto reserve(const sm::usize& capacity) -> void {
 
 				// check current capacity
 				if (capacity <= _capacity)
@@ -128,7 +122,7 @@ namespace sm {
 		private:
 
 			/* reserve */
-			auto _reserve(const sm::u32& capacity) -> void {
+			auto _reserve(const sm::usize& capacity) -> void {
 
 				// reallocate
 				_data = sm::realloc(_data, capacity + 1U);
@@ -137,36 +131,42 @@ namespace sm {
 				_capacity = capacity;
 
 				// null terminate
-				_data[_capacity] = nullptr;
+				for (sm::usize i = _size; i <= _capacity; ++i)
+					_data[i] = nullptr;
 			}
 
 
 		public:
 
 			/* push */
-			auto push(const char* data, const sm::u32& size) -> void {
+			auto push(const char* data, const sm::usize& size) -> void {
 
 				// check if we need to allocate
 				if (_size == _capacity) {
 
 					// calculate new capacity
-					const sm::u32 cap = _capacity == 0U ? 1U : (_capacity * 2U);
+					const sm::usize cap = _capacity == 0U ? 1U : (_capacity * 2U);
 
 					// reallocate
 					self::_reserve(cap);
 				}
 
 				// allocate new string
-				//_data[_size] = sm::malloc<char>(arg.size() + 1U);
+				_data[_size] = sm::malloc<char>(size + 1U);
 
 				// copy string
-				//std::copy(arg.begin(), arg.end(), _data[_size]);
+				sm::memcpy(_data[_size], data, size);
 
 				// null terminate
-				//_data[_size][arg.size()] = '\0';
+				_data[_size][size] = '\0';
 
 				// increment size
 				++_size;
+			}
+
+			/* push */
+			auto push(const char* data) -> void {
+				self::push(data, sm::strlen(data));
 			}
 
 
@@ -180,6 +180,39 @@ namespace sm {
 			/* data */
 			auto data(void) const noexcept -> const char* const* {
 				return _data;
+			}
+
+
+			// -- public operators --------------------------------------------
+
+			/* operator[] */
+			auto operator[](const sm::usize& index) noexcept -> char* {
+				return _data[index];
+			}
+
+			/* operator[] */
+			auto operator[](const sm::usize& index) const noexcept -> const char* {
+				return _data[index];
+			}
+
+
+			// -- public methods ----------------------------------------------
+
+			/* debug */
+			auto debug(void) const noexcept -> void {
+
+				if (_data == nullptr) {
+					std::cout << "cstr is not allocated" << std::endl;
+					return;
+				}
+
+				for (sm::usize i = 0U; i < _size; ++i)
+					std::cout << _data[i] << std::endl;
+
+				if (_data[_size] != nullptr)
+					std::cout << "not null terminated" << std::endl;
+				else
+					std::cout << "null terminated" << std::endl;
 			}
 
 
@@ -200,7 +233,7 @@ namespace sm {
 				if (_data == nullptr)
 					return;
 
-				for (sm::u32 i = 0U; i < _size; ++i)
+				for (sm::usize i = 0U; i < _size; ++i)
 					sm::free(_data[i]);
 
 				sm::free(_data);

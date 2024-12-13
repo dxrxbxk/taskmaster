@@ -95,8 +95,102 @@ namespace sm {
 				return ::readdir(_dir);
 			}
 
-
 	}; // class directory
+
+
+	// -- D I R  E N T I T Y --------------------------------------------------
+
+	class dir_entity final {
+
+
+		// -- friends ---------------------------------------------------------
+
+		/* unique_dir as friend */
+		friend class unique_dir;
+
+
+		private:
+
+			// -- private types -----------------------------------------------
+
+			/* self type */
+			using self = sm::dir_entity;
+
+
+			// -- private members ---------------------------------------------
+
+			/* entity */
+			struct ::dirent* _entity;
+
+
+			// -- private lifecycle -------------------------------------------
+
+			/* deleted default constructor */
+			dir_entity(void) = delete;
+
+			/* dirent constructor */
+			dir_entity(struct ::dirent* entity)
+			: _entity{entity} {
+			}
+
+
+		public:
+
+			// -- public lifecycle --------------------------------------------
+
+			/* copy constructor */
+			dir_entity(const self&) noexcept = default;
+
+			/* move constructor */
+			dir_entity(self&&) noexcept = default;
+
+			/* destructor */
+			~dir_entity(void) noexcept = default;
+
+
+			// -- public assignment operators ---------------------------------
+
+			/* copy assignment operator */
+			auto operator=(const self&) noexcept -> self& = default;
+
+			/* move assignment operator */
+			auto operator=(self&&) noexcept -> self& = default;
+
+
+			// -- public accessors --------------------------------------------
+
+			/* is regular */
+			auto is_regular(void) const noexcept -> bool {
+				return _entity->d_type == DT_REG;
+			}
+
+			/* is directory */
+			auto is_directory(void) const noexcept -> bool {
+				return _entity->d_type == DT_DIR;
+			}
+
+			/* is symbolic link */
+			auto is_symlink(void) const noexcept -> bool {
+				return _entity->d_type == DT_LNK;
+			}
+
+			/* name */
+			auto name(void) const noexcept -> const char* {
+				return _entity->d_name;
+			}
+
+			/* is current or parent */
+			auto is_current_or_parent(void) const noexcept -> bool {
+
+				// check for . or ..
+				return  _entity->d_name[0U] == '.'
+					&& (_entity->d_name[1U] == '\0'
+					|| (_entity->d_name[1U] == '.'
+					&&  _entity->d_name[2U] == '\0'));
+			}
+
+
+	}; // class dir_entity
 
 } // namespace sm
 

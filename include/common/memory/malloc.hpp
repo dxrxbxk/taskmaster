@@ -1,6 +1,7 @@
 #ifndef memory_malloc
 #define memory_malloc
 
+#include "common/types.hpp"
 #include "common/diagnostics/exception.hpp"
 
 #include <stdlib.h>
@@ -13,7 +14,7 @@ namespace sm {
 
 	/* malloc */
 	template <typename T>
-	auto malloc(const ::size_t& size) -> T* {
+	auto malloc(const sm::usize& size) -> T* {
 
 		T* ptr = static_cast<T*>(::malloc(size * sizeof(T)));
 
@@ -25,7 +26,7 @@ namespace sm {
 
 	/* realloc */
 	template <typename T>
-	auto realloc(T* ptr, const ::size_t& size) -> T* {
+	auto realloc(T* ptr, const sm::usize& size) -> T* {
 
 		T* new_ptr = static_cast<T*>(::realloc(ptr, size * sizeof(T)));
 

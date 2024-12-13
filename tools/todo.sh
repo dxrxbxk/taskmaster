@@ -5,8 +5,8 @@
 declare -rg list=(
 	'more secure lock file'
 	'config parser'
-	'main argument parser'
-	'data structure for tasks'
+	'main argument parser [✓]'
+	'data structure for tasks [✓]'
 	'hot reload config'
 )
 

@@ -86,6 +86,11 @@ namespace sm {
 				return _buffer[i];
 			}
 
+			/* eof */
+			auto eof(void) const noexcept -> bool {
+				return _size == 0U;
+			}
+
 
 			// -- public methods ----------------------------------------------
 

@@ -1,11 +1,20 @@
 #ifndef program_hpp
 #define program_hpp
 
-#include <unordered_map>
-#include <map>
+#include "common/resources/unique_fd.hpp"
+#include "common/contiguous_cstr.hpp"
+#include "common/system/fork.hpp"
+#include "common/system/dup2.hpp"
+#include "common/system/open.hpp"
+#include "common/system/execve.hpp"
+#include "common/system/access.hpp"
+
+#include "taskmaster/core_affinity.hpp"
+#include "taskmaster/events/monitor.hpp"
+
 #include <string>
 #include <vector>
-#include "common/resources/unique_ptr.hpp"
+#include <unistd.h>
 
 
 // -- S M  N A M E S P A C E --------------------------------------------------
@@ -15,7 +24,7 @@ namespace sm {
 
 	// -- P R O G R A M -------------------------------------------------------
 
-	class program final {
+	class program final : public sm::listener {
 
 
 		private:
@@ -29,107 +38,146 @@ namespace sm {
 			// -- private constants -------------------------------------------
 
 			enum : unsigned {
-				restart_false      = 0U,
-				restart_true       = 1U,
-				restart_unexpected = 2U,
+				FALSE      = 0U,
+				TRUE       = 1U,
+				UNEXPECTED = 2U,
 			};
 
 
 			// -- private members ---------------------------------------------
 
+			/* id */
+			std::string _id;
 
-			char** _cmd;
+			/* pid */
+			::pid_t _pid;
 
-			unsigned _numprocs;
+			/* pid descriptor */
+			sm::unique_fd _pidfd;
 
-			std::string _umask;
-			std::string _working_dir;
+			/* command */
+			sm::contiguous_cstr _cmd;
 
-			bool _auto_start;
-			
-			unsigned _auto_restart;
+			/* number of processes */
+			sm::usize _numprocs;
 
-			std::vector<int> _exit_codes;
+			/* umask */
+			::mode_t _umask;
 
-			unsigned _start_retries;
-
-			unsigned _start_time;
-
-			int _stop_signal;
-
-			unsigned _stop_time;
-
-			std::string _stdout;
-			std::string _stderr;
-
-			std::map<std::string, std::string> _env;
-
-
-		public:
-
-			// -- public modifiers --------------------------------------------
+			/* working directory */
+			std::string _workingdir;
 
 			/* auto start */
-			auto auto_start(const bool& value) noexcept -> void {
-				_auto_start = value;
-			}
-
+			bool _autostart;
+			
 			/* auto restart */
-			auto auto_restart(const bool& value) noexcept -> void {
-				_auto_restart = value;
-			}
+			unsigned _autorestart;
 
-	}; // class program
+			/* exit codes */
+			std::vector<int> _exitcodes;
 
+			/* start retries */
+			unsigned _startretries;
 
-	class program_manager final {
+			/* start time */
+			unsigned _starttime;
 
+			/* stop signal */
+			int _stopsignal;
 
-		private:
+			/* stop time */
+			unsigned _stoptime;
 
-			// -- private types -----------------------------------------------
+			/* stdout redirect */
+			std::string _stdout;
 
-			/* self type */
-			using self = sm::program_manager;
+			/* stderr redirect */
+			std::string _stderr;
 
+			/* environment */
+			sm::contiguous_cstr _env;
 
-			// -- private members ---------------------------------------------
-			using map_prog = std::unordered_map<std::string, sm::unique_ptr<sm::program>>;
-
-			map_prog _programs;
-
-			using map_id = std::unordered_map<pid_t, sm::program*>;
 
 		public:
 
 			// -- public lifecycle --------------------------------------------
 
-			/* default constructor */
-			program_manager(void) noexcept = default;
+			/* deleted default constructor */
+			program(void) = delete;
 
-			/* copy constructor */
-			program_manager(const self&) = default;
+			/* id constructor */
+			program(std::string&&);
 
-			/* move constructor */
-			program_manager(self&&) noexcept = default;
+			/* deleted copy constructor */
+			program(const self&) = delete;
 
-			/* destructor */
-			~program_manager(void) noexcept = default;
+			/* deleted move constructor */
+			program(self&&) = delete;
 
 
 			// -- public assignment operators ---------------------------------
 
-			/* copy assignment operator */
-			auto operator=(const self&) -> self& = default;
+			/* deleted copy assignment operator */
+			auto operator=(const self&) -> self& = delete;
 
-			/* move assignment operator */
-			auto operator=(self&&) noexcept -> self& = default;
+			/* deleted move assignment operator */
+			auto operator=(self&&) -> self& = delete;
+
+
+			// -- public methods ----------------------------------------------
+
+			/* execute */
+			auto execute(sm::taskmaster&) -> void;
+
+
+			// -- public overrides --------------------------------------------
+
+			/* fd */
+			auto fd(void) const noexcept -> int override;
+
+			/* on_event */
+			auto on_event(const sm::event&, sm::taskmaster&) -> void override;
+
+
+			auto disconnect(sm::taskmaster&) -> void;
 
 
 			// -- public modifiers --------------------------------------------
 
+			/* cmd push */
+			auto cmd_push(const char* arg) noexcept -> void {
+				_cmd.push(arg);
+			}
 
-	};
+			/* auto start */
+			auto autostart(const bool& value) noexcept -> void {
+				_autostart = value;
+			}
+
+			/* auto restart */
+			auto autorestart(const bool& value) noexcept -> void {
+				_autorestart = value;
+			}
+
+			/* stdout */
+			auto stdout(std::string&& value) noexcept -> void {
+				_stdout = std::move(value);
+			}
+
+			/* stderr */
+			auto stderr(std::string&& value) noexcept -> void {
+				_stderr = std::move(value);
+			}
+
+
+			// -- public accessors --------------------------------------------
+
+			/* id */
+			auto id(void) const noexcept -> const std::string& {
+				return _id;
+			}
+
+	}; // class program
 
 } // namespace sm
 

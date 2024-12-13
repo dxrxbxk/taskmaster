@@ -12,7 +12,7 @@ declare -rg   reset='\x1b[0m'
 
 # print success message
 function _success() {
-	echo $success'[>]'$reset $@
+	echo $success'[✓]'$reset $@
 }
 
 # print error message

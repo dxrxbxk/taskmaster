@@ -2,6 +2,10 @@
 #define parser_hpp
 
 #include "common/reader.hpp"
+#include "common/resources/unique_ptr.hpp"
+#include "taskmaster/program.hpp"
+#include "taskmaster/program_manager.hpp"
+
 #include <iostream>
 
 
@@ -13,7 +17,10 @@ namespace sm {
 	// -- forward declarations ------------------------------------------------
 
 	/* program manager */
-	class program_manager;
+	//class program_manager;
+
+	/* program */
+	//class program;
 
 
 	// -- P A R S E R ---------------------------------------------------------
@@ -49,10 +56,12 @@ namespace sm {
 			/* transition */
 			const transition* _tr;
 
-			const transition* _back;
 
 			/* count */
 			sm::usize _count;
+
+			/* line */
+			sm::usize _line;
 
 			/* action */
 			action_type _action;
@@ -60,8 +69,12 @@ namespace sm {
 			/* buffer */
 			std::string _buffer;
 
-			/* program */
+
+			/* program manager */
 			sm::program_manager* _pm;
+
+			/* program */
+			sm::unique_ptr<sm::program> _program;
 
 
 		public:
@@ -95,6 +108,15 @@ namespace sm {
 			template <unsigned int N>
 			void parse(const sm::reader<N>& buffer, sm::program_manager& pm) {
 
+				// check for end of file
+				if (buffer.eof()) {
+
+					if (_program)
+						_pm->add_program(std::move(_program));
+
+					return;
+				}
+
 				// set program manager
 				_pm = &pm;
 
@@ -106,6 +128,7 @@ namespace sm {
 				self::_parse();
 			}
 
+
 		private:
 
 
@@ -114,9 +137,11 @@ namespace sm {
 			/* parse implementation */
 			auto _parse(void) -> void;
 
-
 			/* skip */
 			auto _skip(void) noexcept -> void;
+
+			/* newline */
+			auto _newline(void) -> void;
 
 			/* increment */
 			auto _increment(void) noexcept -> void;
@@ -178,7 +203,6 @@ namespace sm {
 
 				C_SYMBOL,
 
-
 				C_HASH,
 				C_EQUAL,
 				C_DOLLAR,
@@ -205,7 +229,7 @@ namespace sm {
 					// INVALID
 					{S_ERROR,         &parser::_error},
 					// NEWLINE
-					{S_START,         &parser::_skip},
+					{S_START,         &parser::_newline},
 					// WHITESPACE
 					{S_START,         &parser::_skip},
 					// DIGIT
@@ -243,7 +267,7 @@ namespace sm {
 					// INVALID
 					{S_ERROR,         &parser::_error},
 					// NEWLINE
-					{S_DEFAULT,       &parser::_skip},
+					{S_DEFAULT,       &parser::_newline},
 					// WHITESPACE
 					{S_DEFAULT,       &parser::_skip},
 					// DIGIT
@@ -281,7 +305,7 @@ namespace sm {
 					// INVALID
 					{S_ERROR,         &parser::_error},
 					// NEWLINE
-					{S_DEFAULT,       &parser::_skip},
+					{S_DEFAULT,       &parser::_newline},
 					// WHITESPACE
 					{S_WAIT_NEWLINE,  &parser::_skip},
 					// DIGIT
@@ -319,7 +343,7 @@ namespace sm {
 					// INVALID
 					{S_ERROR,         &parser::_error},
 					// NEWLINE
-					{S_DEFAULT,       &parser::_skip},
+					{S_DEFAULT,       &parser::_newline},
 					// WHITESPACE
 					{S_IN_COMMENT,    &parser::_skip},
 					// DIGIT
@@ -584,7 +608,7 @@ namespace sm {
 					// INVALID
 					{S_ERROR,         &parser::_error},
 					// NEWLINE
-					{S_DEFAULT,       &parser::_add_value},
+					{S_DEFAULT,       &parser::_add_value}, // need to add newline
 					// WHITESPACE
 					{S_WAIT_NEWLINE,  &parser::_add_value},
 					// DIGIT
@@ -776,30 +800,58 @@ namespace sm {
 			}
 
 			auto _numprocs(void) -> void {
+
+				// atoi
 				std::cout << "numprocs -> " << _buffer << std::endl;
 			}
+
 			auto _umask(void) -> void {
+
+				// atoi
+				// check (maybe)
+				// bool test = (umask & 0777) == umask;
 				std::cout << "umask -> " << _buffer << std::endl;
 			}
 			auto _workingdir(void) -> void {
+
+				// check if path exists
 				std::cout << "workingdir -> " << _buffer << std::endl;
 			}
 			auto _autostart(void) -> void {
+
+				// check if value is true or false of 1 or 0
 				std::cout << "autostart -> " << _buffer << std::endl;
 			}
 			auto _autorestart(void) -> void {
+
+				// check if value is true or false of 1 or 0
 				std::cout << "autorestart -> " << _buffer << std::endl;
 			}
 			auto _exitcodes(void) -> void {
+
+
 				std::cout << "exitcodes -> " << _buffer << std::endl;
 			}
+
 			auto _startretries(void) -> void {
+
+				// atoi
+
 				std::cout << "startretries -> " << _buffer << std::endl;
 			}
+
 			auto _starttime(void) -> void {
+
+				// atoi
+				// 0 - intmax
+				// [dd/mm/yyyy hh:mm:ss]
 				std::cout << "starttime -> " << _buffer << std::endl;
 			}
+
 			auto _stopsignal(void) -> void {
+
+				// atoi
+				// 0 - 31
 				std::cout << "stopsignal -> " << _buffer << std::endl;
 			}
 			auto _stoptime(void) -> void {
@@ -849,6 +901,7 @@ namespace sm {
 				"stderr",
 				"env",
 			};
+
 
 			static auto _search_key(const std::string_view& key) -> action_type {
 

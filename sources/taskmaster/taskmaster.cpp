@@ -6,6 +6,8 @@
 #include "common/system/setsid.hpp"
 #include "common/system/dup2.hpp"
 
+#include "taskmaster/program.hpp"
+
 #include "taskmaster/time/timer.hpp"
 
 
@@ -78,9 +80,18 @@ auto sm::taskmaster::_launch(const sm::options& opts) -> self {
 /* run */
 auto sm::taskmaster::_run(void) -> void {
 
-	sm::timer tm{3'000, 300};
+	//sm::timer tm{3'000, 300};
+	//_monitor.subscribe(tm, sm::event{EPOLLIN});
 
-	_monitor.subscribe(tm, sm::event{EPOLLIN});
+	sm::program prog{"test"};
+
+	prog.cmd_push("/root/data/taskmaster/hello_taskmaster");
+
+	prog.stdout("/root/data/taskmaster/ls.out");
+	prog.stderr("/root/data/taskmaster/ls.err");
+
+	prog.execute(*this);
+
 
 	// poll
 	while (_running == true) {

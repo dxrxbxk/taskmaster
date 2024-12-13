@@ -1,6 +1,8 @@
 #ifndef exception_hpp
 #define exception_hpp
 
+#include "common/memory/memcpy.hpp"
+
 #include <string.h>
 #include <errno.h>
 
@@ -69,8 +71,11 @@ namespace sm {
 
 			// -- private members ---------------------------------------------
 
+			/* errno */
+			int _errno;
+
 			/* buffer */
-			char _buffer[4096];
+			char _buffer[4096U];
 
 
 		public:
@@ -85,7 +90,7 @@ namespace sm {
 			/* where constructor */
 			template <unsigned N>
 			system_error(const char (&where)[N]) noexcept
-			/* : _buffer{} uninitialized */ {
+			: _errno{errno} /* _buffer{} uninitialized */ {
 
 				// buffer size
 				constexpr auto buffer_size = sizeof(_buffer);
@@ -111,15 +116,15 @@ namespace sm {
 				char* ptr = _buffer;
 
 				// copy where
-				memcpy(ptr, where, w_len);
+				sm::memcpy(ptr, where, w_len);
 				ptr += w_len;
 
 				// copy separator
-				memcpy(ptr, ": ", 2);
+				sm::memcpy(ptr, ": ", 2);
 				ptr += 2;
 
 				// copy error
-				memcpy(ptr, err_str, err_len);
+				sm::memcpy(ptr, err_str, err_len);
 				ptr += err_len;
 
 				// null terminate
@@ -150,6 +155,14 @@ namespace sm {
 			/* what */
 			auto what(void) const noexcept -> const char* override {
 				return _buffer;
+			}
+
+
+			// -- public accessors --------------------------------------------
+
+			/* code */
+			auto code(void) const noexcept -> int {
+				return _errno;
 			}
 
 	}; // class system_error

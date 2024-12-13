@@ -43,4 +43,8 @@ auto main(int ac, char** av) -> int {
 
 		return EXIT_FAILURE;
 	}
+
+	catch (const int&) {
+		return EXIT_SUCCESS;
+	}
 }

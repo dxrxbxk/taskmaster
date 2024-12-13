@@ -2,6 +2,7 @@
 #include "taskmaster/taskmaster.hpp"
 #include "taskmaster/log/logger.hpp"
 
+#include "common/system/pipe.hpp"
 #include "common/system/syscall.hpp"
 #include <sys/syscall.h>
 
@@ -34,6 +35,9 @@ sm::program::program(std::string&& id)
 
 // -- public methods ----------------------------------------------------------
 
+#include <sys/mman.h>
+#include <semaphore.h>
+
 /* execute */
 auto sm::program::execute(sm::taskmaster& tm) -> void {
 
@@ -41,6 +45,8 @@ auto sm::program::execute(sm::taskmaster& tm) -> void {
 	if (_pid != 0)
 		return;
 
+	// create pipe
+	sm::pipe pipe{FD_CLOEXEC};
 
 	// fork process
 	_pid = sm::fork();
@@ -48,33 +54,64 @@ auto sm::program::execute(sm::taskmaster& tm) -> void {
 	// check for child
 	if (_pid == 0) {
 
+		// close read end
+		pipe.close_read();
 
-		// test if program is executable
-		sm::access<X_OK>(_cmd[0U]);
+		try {
 
-		// close stdin (maybe...)
-		static_cast<void>(::close(STDIN_FILENO));
+			// test if program is executable
+			sm::access<X_OK>(_cmd[0U]);
 
-		// chdir
-		// cpu affinity
-		sm::core_affinity::set(_numprocs);
+			// close stdin (maybe...)
+			static_cast<void>(::close(STDIN_FILENO));
 
-		// set umask
+			// chdir
 
-		// redirect standard descriptors
-		sm::unique_fd fds[] {
-			sm::open(_stdout.data(), O_WRONLY | O_APPEND | O_CREAT, /* mode */ 0644),
-			sm::open(_stderr.data(), O_WRONLY | O_APPEND | O_CREAT, /* mode */ 0644)
-		};
+			// cpu affinity
+			sm::core_affinity::set(_numprocs);
 
-		sm::dup2(fds[0U], STDOUT_FILENO);
-		sm::dup2(fds[1U], STDERR_FILENO);
+			// set umask
+			throw sm::system_error("test");
 
-		// execute program
-		sm::execve(_cmd[0U], _cmd.data(), _env.data());
+			// redirect standard descriptors
+			sm::unique_fd fds[] {
+				sm::open(_stdout.data(), O_WRONLY | O_APPEND | O_CREAT, /* mode */ 0644),
+				sm::open(_stderr.data(), O_WRONLY | O_APPEND | O_CREAT, /* mode */ 0644)
+			};
+
+			sm::dup2(fds[0U], STDOUT_FILENO);
+			sm::dup2(fds[1U], STDERR_FILENO);
+
+			// execute program
+			sm::execve(_cmd[0U], _cmd.data(), _env.data());
+
+		} catch (const sm::exception& e) {
+
+			// write to pipe
+			pipe.write(e.what());
+
+			throw int{EXIT_FAILURE};
+			//tm.~taskmaster();
+			_exit(EXIT_FAILURE);
+		}
+
 	}
 
 	else { // -- parent process
+
+
+		// close write end
+		pipe.close_write();
+
+		char buffer[1024]{};
+
+		pipe.read(buffer);
+
+		if (buffer[0] != '\0') {
+			throw sm::runtime_error(buffer);
+			sm::logger::error("could not execute program");
+			return;
+		}
 
 		sm::logger::info(_cmd[0U]);
 

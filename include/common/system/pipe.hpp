@@ -83,20 +83,18 @@ namespace sm {
 			auto close_write(void) noexcept -> void;
 
 			/* read */
-			template <typename T>
-			auto read(T& buffer) -> void {
+			auto read(char *buffer, size_t size) -> void {
 
-				const auto bytes = ::read(_fds[0U], &buffer, sizeof(buffer));
+				const auto bytes = ::read(_fds[0U], buffer, size);
 
 				if (bytes == -1)
 					throw sm::system_error("read");
 			}
 
 			/* write */
-			template <typename T>
-			auto write(const T& buffer) -> void {
+			auto write(const char *str) -> void {
 
-				const auto bytes = ::write(_fds[1U], &buffer, sizeof(buffer));
+				const auto bytes = ::write(_fds[1U], str, strlen(str));
 
 				if (bytes == -1)
 					throw sm::system_error("write");

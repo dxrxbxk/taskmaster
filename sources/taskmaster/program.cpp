@@ -105,7 +105,7 @@ auto sm::program::execute(sm::taskmaster& tm) -> void {
 
 		char buffer[1024]{};
 
-		pipe.read(buffer);
+		pipe.read(buffer, 1024);
 
 		if (buffer[0] != '\0') {
 			throw sm::runtime_error(buffer);

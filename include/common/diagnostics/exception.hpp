@@ -184,7 +184,7 @@ namespace sm {
 			// -- private members ---------------------------------------------
 
 			/* what */
-			const char* _what;
+			char _buffer[4096U];
 
 
 		public:
@@ -192,13 +192,22 @@ namespace sm {
 			// -- public lifecycle --------------------------------------------
 
 			/* default constructor */
-			runtime_error(void) noexcept
-			: _what{"unknown error"} {
+			runtime_error(void) noexcept {
+				memcpy(_buffer, "unknown error", 14);
 			}
 
-			/* what constructor */
-			runtime_error(const char* what) noexcept
-			: _what{what != nullptr ? what : "unknown error"} {
+			void append(const char *str, size_t &offset) {
+				size_t len = strlen(str);
+				sm::memcpy(_buffer + offset, str, len);
+				sm::memcpy(_buffer + offset + len, " ", 1);
+				offset += len + 1;
+			}
+
+			template<typename... Args>
+			runtime_error(Args&&... args) noexcept {
+				size_t offset = 0;
+				(append(args, offset), ...);
+				_buffer[offset] = '\0';
 			}
 
 			/* copy constructor */
@@ -224,7 +233,7 @@ namespace sm {
 
 			/* what */
 			auto what(void) const noexcept -> const char* override {
-				return _what;
+				return _buffer;
 			}
 
 	}; // class runtime_error

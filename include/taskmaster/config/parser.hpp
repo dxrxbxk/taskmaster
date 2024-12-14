@@ -811,7 +811,7 @@ namespace sm {
 
 				// check if value is in valid range
 				// 0 - 0777
-				auto umask = sm::atoi<mode_t>(_buffer.data());
+				auto umask = sm::atoi<::mode_t, sm::oct>(_buffer.data());
 
 				if ((umask & 0777) != umask)
 					throw sm::runtime_error("invalid umask");

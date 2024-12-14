@@ -23,24 +23,27 @@ struct oct {
 
 template <typename T, typename U=sm::dec> requires std::is_unsigned_v<T>
 auto atoi(const char* str) -> T {
+
 	T result = 0;
 
+
 	while (*str) {
+
 		if ((*str ^ '0') > 9)
-			throw sm::runtime_error{"atoi unsigned: invalid character"};
+			throw sm::runtime_error{"not a number"};
+
 		constexpr auto max = std::numeric_limits<T>::max();
-		std::cout << "max: " << (int)max << std::endl;
-		std::cout << "result: " << (int)result << std::endl;
 
 		if (result > (max / static_cast<T>(U::value)))
-			throw sm::runtime_error{"atoi unsigned: overflow: (max / 10)"};
+			throw sm::runtime_error{"overflow"};
+
 		result *= U::value;
 		const auto digit = static_cast<T>(*str - '0');
-		if (result > (max - digit))
-			throw sm::runtime_error{"atoi unsigned: overflow"};
-		result += digit;
-		++str;
 
+		if (result > (max - digit))
+			throw sm::runtime_error{"overflow"};
+
+		result += digit; ++str;
 	}
 
 	return result;

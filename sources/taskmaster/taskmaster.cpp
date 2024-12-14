@@ -90,14 +90,14 @@ auto sm::taskmaster::_run(void) -> void {
 	//sm::timer tm{3'000, 300};
 	//_monitor.subscribe(tm, sm::event{EPOLLIN});
 
-	sm::program prog{"test"};
+	//sm::program prog{"test"};
+	//
+	//prog.cmd_push("/root/data/taskmaster/hello_taskmaster");
+	//
+	//prog.stdout("/root/data/taskmaster/ls.out");
+	//prog.stderr("/root/data/taskmaster/ls.err");
 
-	prog.cmd_push("/root/data/taskmaster/hello_taskmaster");
-
-	prog.stdout("/root/data/taskmaster/ls.out");
-	prog.stderr("/root/data/taskmaster/ls.err");
-
-	prog.execute(*this);
+	//prog.execute(*this);
 
 
 	// poll

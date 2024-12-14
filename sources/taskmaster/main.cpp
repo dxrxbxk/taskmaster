@@ -10,6 +10,7 @@
 
 #include "taskmaster/config/parser.hpp"
 #include "common/stream.hpp"
+#include "common/atoi.hpp"
 
 
 #include <pwd.h>
@@ -26,6 +27,7 @@ auto main(int ac, char** av) -> int {
 
 
 	try {
+
 
 		//auto uid = ::getuid();
 		//

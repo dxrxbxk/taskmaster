@@ -5,6 +5,7 @@
 #include "common/resources/unique_ptr.hpp"
 #include "taskmaster/program.hpp"
 #include "taskmaster/program_manager.hpp"
+#include "common/atoi.hpp"
 
 #include <iostream>
 
@@ -808,23 +809,13 @@ namespace sm {
 			auto _umask(void) -> void {
 
 
-				::mode_t umask = 0;
-
-				for (sm::usize i = 0U; i < _buffer.size(); ++i) {
-
-					sm::u8 ch = static_cast<sm::u8>(_buffer[i]);
-
-					if ((ch ^ 0x30U) > 9U)
-						throw sm::runtime_error("invalid umask");
-
-					umask *= 8;
-					umask += (ch ^ 0x30U);
-				}
-
 				// check if value is in valid range
 				// 0 - 0777
+				auto umask = sm::atoi<mode_t>(_buffer.data());
+
 				if ((umask & 0777) != umask)
 					throw sm::runtime_error("invalid umask");
+
 
 				// atoi
 				// check (maybe)

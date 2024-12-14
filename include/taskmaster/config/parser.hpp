@@ -5,9 +5,13 @@
 #include "common/resources/unique_ptr.hpp"
 #include "taskmaster/program.hpp"
 #include "taskmaster/program_manager.hpp"
-#include "common/atoi.hpp"
+#include "common/utils/atoi.hpp"
+#include "common/utils/is_dir.hpp"
+#include "taskmaster/signal.hpp"
 
 #include <iostream>
+#include <sys/stat.h>
+#include <filesystem>
 
 
 // -- S M  N A M E S P A C E --------------------------------------------------
@@ -792,104 +796,93 @@ namespace sm {
 
 			auto _cmd(void) -> void {
 
-				// _buffer (value)
-				// _pm (program manager)
+				if (sm::is_command(_buffer.data()) == false)
+					throw sm::runtime_error("invalid command");
 
-				//std::cout << "cmd -> " << _buffer << std::endl;
-
-				// _
+				_program->cmd_push(std::move(_buffer.data()));
 			}
 
 			auto _numprocs(void) -> void {
 
-				// atoi
-				//std::cout << "numprocs -> " << _buffer << std::endl;
+				auto numprocs = sm::atoi<unsigned>(_buffer.data());
+
+				if (numprocs == 0U)
+					throw sm::runtime_error("invalid numprocs");
+
+				_program->numprocs(numprocs);
 			}
 
 			auto _umask(void) -> void {
 
 
 				// check if value is in valid range
-				// 0 - 0777
 				auto umask = sm::atoi<::mode_t, sm::oct>(_buffer.data());
 
 				if ((umask & 0777) != umask)
 					throw sm::runtime_error("invalid umask");
 
+				_program->umask(umask);
 
-				// atoi
-				// check (maybe)
-				// bool test = (umask & 0777) == umask;
-				//std::cout << "umask -> " << _buffer << std::endl;
 			}
 
 			auto _workingdir(void) -> void {
 
-				//struct ::stat st;
-				//
-				//if (::stat(_buffer.data(), &st) == -1)
-				//	throw sm::runtime_error("invalid working directory");
+				if (sm::is_dir(_buffer.data()) == false)
+					throw sm::runtime_error("invalid working directory");
 
-				// check if path exists
-				//std::cout << "workingdir -> " << _buffer << std::endl;
+				_program->workingdir(std::move(_buffer));
 			}
 
 			auto _autostart(void) -> void {
-
-
-
-				// check if value is true or false of 1 or 0
-				//std::cout << "autostart -> " << _buffer << std::endl;
+				_program->autostart(sm::atoi<bool>(_buffer.data()));
 			}
 
 			auto _autorestart(void) -> void {
-
-				// check if value is true or false of 1 or 0
-				//std::cout << "autorestart -> " << _buffer << std::endl;
+				_program->autorestart(sm::atoi<bool>(_buffer.data()));
 			}
 
 			auto _exitcodes(void) -> void {
-
-
-				//std::cout << "exitcodes -> " << _buffer << std::endl;
+				_program->exitcodes(sm::atoi<int>(_buffer.data()));
 			}
 
 			auto _startretries(void) -> void {
-
-				// atoi
-
-				//std::cout << "startretries -> " << _buffer << std::endl;
+				_program->startretries(sm::atoi<unsigned>(_buffer.data()));
 			}
 
-			auto _starttime(void) -> void {
 
-				// atoi
-				// 0 - intmax
-				// [dd/mm/yyyy hh:mm:ss]
-				//std::cout << "starttime -> " << _buffer << std::endl;
+			auto _starttime(void) -> void {
+				_program->starttime(sm::atoi<unsigned>(_buffer.data()));
 			}
 
 			auto _stopsignal(void) -> void {
-
-				// atoi
-				// 0 - 31
-				//std::cout << "stopsignal -> " << _buffer << std::endl;
+				/* need implementation */
+				if (sm::signal::to_int(_buffer.data()) == -1)
+					throw sm::runtime_error("invalid signal");
 			}
 
 			auto _stoptime(void) -> void {
-				//std::cout << "stoptime -> " << _buffer << std::endl;
+				_program->stoptime(sm::atoi<unsigned>(_buffer.data()));
 			}
 
 			auto _stdout(void) -> void {
-				//std::cout << "stdout -> " << _buffer << std::endl;
+				std::filesystem::path parent = std::filesystem::path{_buffer.data()}.parent_path();
+
+				if (is_dir(parent.c_str()) == false)
+					throw sm::runtime_error("invalid stdout path");
+
+				_program->stdout(std::move(_buffer));
 			}
 
 			auto _stderr(void) -> void {
-				//std::cout << "stderr -> " << _buffer << std::endl;
+
+				std::filesystem::path parent = std::filesystem::path{_buffer.data()}.parent_path();
+				if (is_dir(parent.c_str()) == false)
+					throw sm::runtime_error("invalid stderr path");
+				_program->stderr(std::move(_buffer));
 			}
 
 			auto _env(void) -> void {
-				//std::cout << "env -> " << _buffer << std::endl;
+				_program->env_push(_buffer.data());
 			}
 
 

@@ -51,6 +51,11 @@ namespace sm {
 				return count;
 			}
 
+			template <typename T> requires sm::is_integral<T> // and not sm::is_bool<T>
+			static constexpr auto _min(void) noexcept -> T {
+				return ~self::_max<T>();
+			}
+
 			template <typename T>
 			static consteval auto _digits(void) -> sm::usize {
 

@@ -10,7 +10,6 @@
 
 #include "taskmaster/config/parser.hpp"
 #include "common/stream.hpp"
-#include "common/atoi.hpp"
 
 
 #include <pwd.h>

@@ -145,8 +145,21 @@ namespace sm {
 			// -- public modifiers --------------------------------------------
 
 			/* cmd push */
+
 			auto cmd_push(const char* arg) noexcept -> void {
 				_cmd.push(arg);
+			}
+
+			auto numprocs(const sm::usize& value) noexcept -> void {
+				_numprocs = value;
+			}
+
+			auto umask(const ::mode_t& value) noexcept -> void {
+				_umask = value;
+			}
+
+			auto workingdir(std::string&& value) noexcept -> void {
+				_workingdir = std::move(value);
 			}
 
 			/* auto start */
@@ -167,6 +180,30 @@ namespace sm {
 			/* stderr */
 			auto stderr(std::string&& value) noexcept -> void {
 				_stderr = std::move(value);
+			}
+
+			auto exitcodes(const int &value) noexcept -> void {
+				_exitcodes.push_back(value);
+			}
+
+			auto startretries(const unsigned& value) noexcept -> void {
+				_startretries = value;
+			}
+
+			auto starttime(const unsigned& value) noexcept -> void {
+				_starttime = value;
+			}
+
+			auto stopsignal(const int& value) noexcept -> void {
+				_stopsignal = value;
+			}
+
+			auto stoptime(const unsigned& value) noexcept -> void {
+				_stoptime = value;
+			}
+
+			auto env_push(const char* arg) noexcept -> void {
+				_env.push(arg);
 			}
 
 

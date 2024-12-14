@@ -32,12 +32,34 @@ auto sm::signal::_record(const int& sig) -> void {
 		throw sm::system_error("signal");
 }
 
+// -- private methods ---------------------------------------------------------
+
+auto sm::signal::_fill_map(void) -> void {
+
+	_signals["INT"]  = SIGINT;
+	_signals["ABRT"] = SIGABRT;
+	_signals["FPE"]  = SIGFPE;
+	_signals["SEGV"] = SIGSEGV;
+	_signals["TERM"] = SIGTERM;
+	_signals["HUP"]  = SIGHUP;
+	_signals["QUIT"] = SIGQUIT;
+	_signals["TRAP"] = SIGTRAP;
+	_signals["TSTP"] = SIGTSTP;
+	_signals["CONT"] = SIGCONT;
+	_signals["PIPE"] = SIGPIPE;
+	_signals["ALRM"] = SIGALRM;
+	_signals["STOP"] = SIGSTOP;
+}
+
 
 // -- private lifecycle -------------------------------------------------------
 
 /* default constructor */
 sm::signal::signal(void)
 : _pipe{} {
+
+	_fill_map();
+	
 
 	// check for dangerous cast
 	static_assert(sizeof(sm::unique_fd) == sizeof(int));
@@ -167,6 +189,18 @@ auto sm::signal::on_event(const sm::event& events, sm::taskmaster& tm) -> void {
 
 	// stop taskmaster
 	tm.stop();
+}
+
+// -- public methods ----------------------------------------------------------
+
+auto sm::signal::to_int(const std::string& sig) -> int {
+
+	auto it = shared()._signals.find(sig);
+
+	if (it == shared()._signals.end())
+		throw sm::runtime_error("invalid signal");
+
+	return it->second;
 }
 
 

@@ -75,9 +75,9 @@ sm::options::options(const int& ac, char** av)
 		(this->*kf.func)(*it);
 	}
 
-	std::cout << "port: " << _port << std::endl;
-	std::cout << "daemon: " << _daemon << std::endl;
-	std::cout << "config: " << _config << std::endl;
+	//std::cout << "port: " << _port << std::endl;
+	//std::cout << "daemon: " << _daemon << std::endl;
+	//std::cout << "config: " << _config << std::endl;
 }
 
 auto sm::options::_handle_port(const char* arg) -> void {
@@ -158,4 +158,9 @@ auto sm::options::daemon(void) const noexcept -> bool {
 /* config */
 auto sm::options::config(void) const noexcept -> const std::string& {
 	return _config;
+}
+
+/* has config */
+auto sm::options::has_config(void) const noexcept -> bool {
+	return _config.empty() == false;
 }

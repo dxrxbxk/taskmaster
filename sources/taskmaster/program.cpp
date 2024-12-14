@@ -1,9 +1,11 @@
 #include "taskmaster/program.hpp"
 #include "taskmaster/taskmaster.hpp"
 #include "taskmaster/log/logger.hpp"
+#include "taskmaster/pipe_exec.hpp"
 
-#include "common/system/pipe.hpp"
 #include "common/system/syscall.hpp"
+#include "common/system/chdir.hpp"
+
 #include <sys/syscall.h>
 
 #include <signal.h>
@@ -35,18 +37,18 @@ sm::program::program(std::string&& id)
 
 // -- public methods ----------------------------------------------------------
 
-#include <sys/mman.h>
-#include <semaphore.h>
-
 /* execute */
 auto sm::program::execute(sm::taskmaster& tm) -> void {
 
 	// check if program is running
-	if (_pid != 0)
+	if (_pid != 0) {
+
+		sm::logger::warn("program already running");
 		return;
+	}
 
 	// create pipe
-	sm::pipe pipe{FD_CLOEXEC};
+	sm::pipe_exec pipe;
 
 	// fork process
 	_pid = sm::fork();
@@ -54,24 +56,22 @@ auto sm::program::execute(sm::taskmaster& tm) -> void {
 	// check for child
 	if (_pid == 0) {
 
-		// close read end
-		pipe.close_read();
-
 		try {
 
 			// test if program is executable
 			sm::access<X_OK>(_cmd[0U]);
 
-			// close stdin (maybe...)
-			static_cast<void>(::close(STDIN_FILENO));
-
 			// chdir
+			sm::chdir(_workingdir.data());
 
 			// cpu affinity
 			sm::core_affinity::set(_numprocs);
 
 			// set umask
-			throw sm::system_error("test");
+			throw sm::runtime_error("test", "to", "simulate", "an", "error", "in", "the", "program", "execution");
+
+			// close stdin
+			static_cast<void>(::close(STDIN_FILENO));
 
 			// redirect standard descriptors
 			sm::unique_fd fds[] {
@@ -90,28 +90,28 @@ auto sm::program::execute(sm::taskmaster& tm) -> void {
 			// write to pipe
 			pipe.write(e.what());
 
-			throw int{EXIT_FAILURE};
-			//tm.~taskmaster();
-			_exit(EXIT_FAILURE);
+			//_exit(EXIT_FAILURE);
+			throw sm::exit{EXIT_FAILURE};
 		}
 
 	}
 
-	else { // -- parent process
 
+	// -- parent process ------------------------------------------------------
 
-		// close write end
-		pipe.close_write();
+	// check for error
+	if (pipe.read() != 0U) {
 
-		char buffer[1024]{};
+		// log error
+		sm::logger::error(pipe.data());
 
-		pipe.read(buffer, 1024);
+		// wait for child
+		::waitpid(_pid, nullptr, 0);
 
-		if (buffer[0] != '\0') {
-			throw sm::runtime_error(buffer);
-			sm::logger::error("could not execute program");
-			return;
-		}
+		// reset pid
+		_pid = 0;
+	}
+	else {
 
 		sm::logger::info(_cmd[0U]);
 
@@ -120,7 +120,6 @@ auto sm::program::execute(sm::taskmaster& tm) -> void {
 		_pidfd = static_cast<int>(sm::syscall(SYS_pidfd_open, _pid, 0));
 
 		monitor.subscribe(*this, sm::event{EPOLLIN});
-
 	}
 }
 
@@ -137,7 +136,7 @@ auto sm::program::on_event(const sm::event& events, sm::taskmaster& tm) -> void 
 
 
 	// check for error
-	if (events & EPOLLERR)
+	if (events.is_err())
 		throw sm::runtime_error("program received epollerr");
 
 	// check for hangup

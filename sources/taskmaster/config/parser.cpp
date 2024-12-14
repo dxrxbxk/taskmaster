@@ -35,8 +35,6 @@ auto sm::parser::_parse(void) -> void {
 	// trigger end of buffer
 	_tr = &_machine[_tr->state][C_EOB];
 	(this->*_tr->action)();
-
-	std::cout << "line: " << _line << std::endl;
 }
 
 

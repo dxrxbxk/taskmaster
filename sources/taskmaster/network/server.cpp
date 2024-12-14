@@ -29,11 +29,6 @@ sm::server::server(const ::in_port_t& port)
 	sm::logger::info(msh.c_str());
 }
 
-/* destructor */
-sm::server::~server(void) noexcept {
-	sm::logger::info("server: stopped");
-}
-
 
 // -- public overrides --------------------------------------------------------
 

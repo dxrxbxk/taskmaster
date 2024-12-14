@@ -48,7 +48,7 @@ namespace sm {
 			server(self&&) noexcept = default;
 
 			/* destructor */
-			~server(void) noexcept;
+			~server(void) noexcept = default;
 
 
 			// -- public assignment operators ---------------------------------

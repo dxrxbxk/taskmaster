@@ -9,7 +9,10 @@
 
 
 #include "taskmaster/config/parser.hpp"
+#include "common/stream.hpp"
 
+
+#include <pwd.h>
 
 auto main(int ac, char** av) -> int {
 
@@ -21,7 +24,36 @@ auto main(int ac, char** av) -> int {
 	//return 0;
 
 
+
 	try {
+
+		//auto uid = ::getuid();
+		//
+		//struct ::passwd* pw = ::getpwuid(uid);
+		//
+		//if (pw == nullptr) {
+		//	throw sm::system_error{"getpwuid"};
+		//}
+		//
+		//sm::logger::info(pw->pw_name);
+		//sm::logger::info(pw->pw_dir);
+		//sm::logger::info(pw->pw_shell);
+		//sm::logger::info(pw->pw_passwd);
+		//
+		//
+		//
+		//return 0;
+
+		//char buffer[1024];
+		//
+		//sm::stream s{buffer, sizeof(buffer)};
+		//
+		//s.print(true, ' ', false, ' ', 42, '=', " goodbye, world!\n");
+		//
+		//std::cout << buffer << std::flush;
+		//
+		//
+		//return 0;
 
 		//sm::parser_tester();
 		//
@@ -36,6 +68,7 @@ auto main(int ac, char** av) -> int {
 		return EXIT_SUCCESS;
 	}
 
+	// main exception handler
 	catch (const sm::exception& e) {
 
 		// log error
@@ -44,7 +77,10 @@ auto main(int ac, char** av) -> int {
 		return EXIT_FAILURE;
 	}
 
-	catch (const int&) {
-		return EXIT_SUCCESS;
+	// child process exception handler
+	catch (const sm::exit& e) {
+
+		// return status
+		return e.status();
 	}
 }

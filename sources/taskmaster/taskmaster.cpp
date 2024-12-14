@@ -3,6 +3,7 @@
 #include "taskmaster/log/logger.hpp"
 #include "taskmaster/signal.hpp"
 #include "common/system/fork.hpp"
+#include "common/system/chdir.hpp"
 #include "common/system/setsid.hpp"
 #include "common/system/dup2.hpp"
 
@@ -28,15 +29,23 @@ auto sm::taskmaster::_launch(const sm::options& opts) -> self {
 
 		// check for root
 		if (::getuid() != 0)
-			throw sm::system_error("daemonize: must be root");
+			throw sm::runtime_error("taskmaster: must be root");
+
+
+		sm::logger::info("------------------------------------------------------------");
+		sm::logger::warn("taskmaster: is launching as daemon");
+		sm::logger::info("taskmaster: you can find logs in \x1b[32m/var/log/taskmaster.log\x1b[0m");
+		sm::logger::info("taskmaster: enjoy!");
+		sm::logger::info("------------------------------------------------------------");
+
+
 
 		// fork
 		auto pid = sm::fork();
 
 		// parent process
 		if (pid > 0) {
-			opts.~options();
-			_exit(0);
+			throw sm::exit{EXIT_SUCCESS};
 		}
 
 		// create new session
@@ -47,12 +56,10 @@ auto sm::taskmaster::_launch(const sm::options& opts) -> self {
 
 		// second parent process
 		if (pid > 0) {
-			opts.~options();
-			_exit(0);
+			throw sm::exit{EXIT_SUCCESS};
+			//opts.~options();
+			//_exit(0);
 		}
-
-		// dup
-		//sm::dup2(caca, pipi);
 
 		// close standard descriptors
 		static_cast<void>(::close(STDIN_FILENO));
@@ -60,7 +67,7 @@ auto sm::taskmaster::_launch(const sm::options& opts) -> self {
 		static_cast<void>(::close(STDERR_FILENO));
 
 		// change directory
-		static_cast<void>(::chdir("/"));
+		sm::chdir("/");
 
 		// change umask
 		::umask(0);
@@ -101,19 +108,47 @@ auto sm::taskmaster::_run(void) -> void {
 	}
 }
 
+
+static auto pid(void) -> ::pid_t {
+	static ::pid_t pid = ::getpid();
+	return pid;
+}
+
 /* default constructor */
 sm::taskmaster::taskmaster(const sm::options& opts)
 : _runlock{},
+  _config{},
   _running{true},
-  _server{::in_port_t{4242}},
+  _server{opts.port()},
   _monitor{},
-  _clients{} {
+  _clients{},
+  _programs{} {
+
+
+	// set config from options
+	if (opts.has_config() == true)
+		_config.path(opts.config());
+
+	// parse config
+	_config.parse(_programs);
+
+	pid();
 
 	// subscribe to server
 	_monitor.subscribe(_server, sm::event{EPOLLIN});
 
 	// subscribe to signals
 	_monitor.subscribe(sm::signal::shared(), sm::event{EPOLLIN});
+}
+
+/* destructor */
+sm::taskmaster::~taskmaster(void) noexcept {
+
+	// avoid double destruction
+	if (pid() != ::getpid())
+		return;
+
+	sm::logger::warn("taskmaster: stopping");
 }
 
 

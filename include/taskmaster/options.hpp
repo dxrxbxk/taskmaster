@@ -123,6 +123,12 @@ namespace sm {
 			/* config */
 			auto config(void) const noexcept -> const std::string&;
 
+			/* config */
+			auto config(void) noexcept -> std::string&&;
+
+			/* has config */
+			auto has_config(void) const noexcept -> bool;
+
 	}; // class options
 
 } // namespace sm

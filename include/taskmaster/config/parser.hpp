@@ -794,7 +794,7 @@ namespace sm {
 				// _buffer (value)
 				// _pm (program manager)
 
-				std::cout << "cmd -> " << _buffer << std::endl;
+				//std::cout << "cmd -> " << _buffer << std::endl;
 
 				// _
 			}
@@ -802,42 +802,72 @@ namespace sm {
 			auto _numprocs(void) -> void {
 
 				// atoi
-				std::cout << "numprocs -> " << _buffer << std::endl;
+				//std::cout << "numprocs -> " << _buffer << std::endl;
 			}
 
 			auto _umask(void) -> void {
 
+
+				::mode_t umask = 0;
+
+				for (sm::usize i = 0U; i < _buffer.size(); ++i) {
+
+					sm::u8 ch = static_cast<sm::u8>(_buffer[i]);
+
+					if ((ch ^ 0x30U) > 9U)
+						throw sm::runtime_error("invalid umask");
+
+					umask *= 8;
+					umask += (ch ^ 0x30U);
+				}
+
+				// check if value is in valid range
+				// 0 - 0777
+				if ((umask & 0777) != umask)
+					throw sm::runtime_error("invalid umask");
+
 				// atoi
 				// check (maybe)
 				// bool test = (umask & 0777) == umask;
-				std::cout << "umask -> " << _buffer << std::endl;
+				//std::cout << "umask -> " << _buffer << std::endl;
 			}
+
 			auto _workingdir(void) -> void {
 
+				//struct ::stat st;
+				//
+				//if (::stat(_buffer.data(), &st) == -1)
+				//	throw sm::runtime_error("invalid working directory");
+
 				// check if path exists
-				std::cout << "workingdir -> " << _buffer << std::endl;
+				//std::cout << "workingdir -> " << _buffer << std::endl;
 			}
+
 			auto _autostart(void) -> void {
 
+
+
 				// check if value is true or false of 1 or 0
-				std::cout << "autostart -> " << _buffer << std::endl;
+				//std::cout << "autostart -> " << _buffer << std::endl;
 			}
+
 			auto _autorestart(void) -> void {
 
 				// check if value is true or false of 1 or 0
-				std::cout << "autorestart -> " << _buffer << std::endl;
+				//std::cout << "autorestart -> " << _buffer << std::endl;
 			}
+
 			auto _exitcodes(void) -> void {
 
 
-				std::cout << "exitcodes -> " << _buffer << std::endl;
+				//std::cout << "exitcodes -> " << _buffer << std::endl;
 			}
 
 			auto _startretries(void) -> void {
 
 				// atoi
 
-				std::cout << "startretries -> " << _buffer << std::endl;
+				//std::cout << "startretries -> " << _buffer << std::endl;
 			}
 
 			auto _starttime(void) -> void {
@@ -845,26 +875,30 @@ namespace sm {
 				// atoi
 				// 0 - intmax
 				// [dd/mm/yyyy hh:mm:ss]
-				std::cout << "starttime -> " << _buffer << std::endl;
+				//std::cout << "starttime -> " << _buffer << std::endl;
 			}
 
 			auto _stopsignal(void) -> void {
 
 				// atoi
 				// 0 - 31
-				std::cout << "stopsignal -> " << _buffer << std::endl;
+				//std::cout << "stopsignal -> " << _buffer << std::endl;
 			}
+
 			auto _stoptime(void) -> void {
-				std::cout << "stoptime -> " << _buffer << std::endl;
+				//std::cout << "stoptime -> " << _buffer << std::endl;
 			}
+
 			auto _stdout(void) -> void {
-				std::cout << "stdout -> " << _buffer << std::endl;
+				//std::cout << "stdout -> " << _buffer << std::endl;
 			}
+
 			auto _stderr(void) -> void {
-				std::cout << "stderr -> " << _buffer << std::endl;
+				//std::cout << "stderr -> " << _buffer << std::endl;
 			}
+
 			auto _env(void) -> void {
-				std::cout << "env -> " << _buffer << std::endl;
+				//std::cout << "env -> " << _buffer << std::endl;
 			}
 
 
@@ -931,29 +965,8 @@ namespace sm {
 
 
 
-	class config final {
-
-		private:
-
-			// -- private types -----------------------------------------------
-
-			/* self type */
-			using self = sm::config;
-
-
-			// -- private members ---------------------------------------------
-
-			/* path */
-			std::string _path;
-
-		public:
-
-
-	}; // class config
-
-
 
 
 } // namespace sm
 
-#endif
+#endif // parser_hpp

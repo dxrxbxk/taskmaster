@@ -2,11 +2,13 @@
 #define exception_hpp
 
 #include "common/memory/memcpy.hpp"
+#include "common/string/strlen.hpp"
 
 #include <string.h>
 #include <errno.h>
 
 #include <stdexcept>
+
 
 // -- S M  N A M E S P A C E --------------------------------------------------
 
@@ -58,7 +60,7 @@ namespace sm {
 
 	// -- S Y S T E M  E R R O R ----------------------------------------------
 
-	class system_error : public sm::exception {
+	class system_error final : public sm::exception {
 
 
 		private:
@@ -109,7 +111,7 @@ namespace sm {
 				size_t err_len = strlen(err_str);
 
 				// check out of bounds
-				if(err_len + w_len + 3U > buffer_size)
+				if (err_len + w_len + 3U > buffer_size)
 					err_len = buffer_size - w_len - 3U;
 
 				// offset pointer
@@ -170,7 +172,7 @@ namespace sm {
 
 	// -- R U N T I M E  E R R O R --------------------------------------------
 
-	class runtime_error : public sm::exception {
+	class runtime_error final : public sm::exception {
 
 
 		private:
@@ -196,17 +198,27 @@ namespace sm {
 				memcpy(_buffer, "unknown error", 14);
 			}
 
-			void append(const char *str, size_t &offset) {
-				size_t len = strlen(str);
-				sm::memcpy(_buffer + offset, str, len);
-				sm::memcpy(_buffer + offset + len, " ", 1);
-				offset += len + 1;
+
+			void _append(const char* str, sm::usize& offset) {
+
+				const auto len = sm::strlen(str);
+
+				char* ptr = _buffer + offset;
+
+				sm::memcpy(ptr, str, len);
+
+				ptr += len;
+
+				sm::memcpy(ptr, " ", 1U);
+
+				offset += len + 1U;
 			}
 
-			template<typename... Args>
-			runtime_error(Args&&... args) noexcept {
+			template<typename... Ts>
+			runtime_error(Ts&&... args) noexcept {
 				size_t offset = 0;
-				(append(args, offset), ...);
+				unsigned i = 0U;
+				(_append(args, offset), ...);
 				_buffer[offset] = '\0';
 			}
 
@@ -237,6 +249,64 @@ namespace sm {
 			}
 
 	}; // class runtime_error
+
+
+	class exit final {
+
+
+		private:
+
+			// -- private types -----------------------------------------------
+
+			/* self type */
+			using self = sm::exit;
+
+
+			// -- private members ---------------------------------------------
+
+			/* status */
+			int _status;
+
+
+		public:
+
+			// -- public lifecycle --------------------------------------------
+
+			/* deleted default constructor */
+			exit(void) = delete;
+
+			/* status constructor */
+			exit(const int& status) noexcept
+			: _status{status} {
+			}
+
+			/* copy constructor */
+			exit(const self&) noexcept = default;
+
+			/* move constructor */
+			exit(self&&) noexcept = default;
+
+			/* destructor */
+			~exit(void) noexcept = default;
+
+
+			// -- public assignment operators ---------------------------------
+
+			/* copy assignment operator */
+			auto operator=(const self&) noexcept -> self& = default;
+
+			/* move assignment operator */
+			auto operator=(self&&) noexcept -> self& = default;
+
+
+			// -- public accessors --------------------------------------------
+
+			/* status */
+			auto status(void) const noexcept -> int {
+				return _status;
+			}
+
+	}; // class exit
 
 } // namespace sm
 

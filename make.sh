@@ -460,10 +460,6 @@ function _clean() {
 
 function _launch_test() {
 
-	_build
-
-	#local first_cmd='ls'
-	#local second_cmd='ps'
 
 	# create new tmux session
 	tmux new-session -d -s 'taskmaster'
@@ -550,6 +546,28 @@ function _log() {
 	clear && tail --follow $logfile
 }
 
+# leak
+function _leak() {
+
+	# valgrind log file
+	local -r valgrind_log='valgrind.log'
+
+	# valgrind flags
+	local -r valgrind_flags=(
+				'--leak-check=full'
+				'--show-leak-kinds=all'
+				'--track-origins=yes'
+				'--errors-for-leak-kinds=all'
+				'--undef-value-errors=yes'
+				'--malloc-fill=0x55'
+				'--free-fill=0x55'
+				'--track-fds=yes'
+	)
+
+	# run valgrind
+	valgrind $valgrind_flags $taskmaster
+}
+
 
 # -- M A I N ------------------------------------------------------------------
 
@@ -575,6 +593,7 @@ case $1 in
 
 	# test
 	'test')
+		_build
 		_launch_test
 		;;
 	
@@ -587,6 +606,12 @@ case $1 in
 	# log
 	'log')
 		_log
+		;;
+
+	# leak
+	'leak')
+		_build
+		_leak
 		;;
 
 	# unknown (usage)

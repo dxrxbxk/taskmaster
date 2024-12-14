@@ -1,5 +1,5 @@
-#ifndef pipe_hpp
-#define pipe_hpp
+#ifndef chdir_hpp
+#define chdir_hpp
 
 
 // -- S M  N A M E S P A C E --------------------------------------------------
@@ -7,9 +7,9 @@
 namespace sm {
 
 
-	/* pipe */
-	auto pipe(int (&)[2U]) -> void;
+	/* chdir */
+	auto chdir(const char*) -> void;
 
 } // namespace sm
 
-#endif // pipe_hpp
+#endif // chdir_hpp

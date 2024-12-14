@@ -3,8 +3,10 @@
 
 #include "taskmaster/network/server.hpp"
 #include "taskmaster/network/client_manager.hpp"
+#include "taskmaster/program_manager.hpp"
 #include "taskmaster/events/monitor.hpp"
 #include "taskmaster/runlock.hpp"
+#include "taskmaster/config.hpp"
 
 
 // -- S M  N A M E S P A C E --------------------------------------------------
@@ -36,6 +38,9 @@ namespace sm {
 			/* runlock */
 			sm::runlock _runlock;
 
+			/* config */
+			sm::config _config;
+
 			/* running */
 			bool _running;
 
@@ -47,6 +52,9 @@ namespace sm {
 
 			/* clients */
 			sm::client_manager _clients;
+
+			/* program manager */
+			sm::program_manager _programs;
 
 
 			// -- private static methods --------------------------------------
@@ -77,7 +85,7 @@ namespace sm {
 			taskmaster(self&&) = delete;
 
 			/* destructor */
-			~taskmaster(void) noexcept = default;
+			~taskmaster(void) noexcept;
 
 
 			// -- private assignment operators --------------------------------

@@ -2,7 +2,7 @@
 #define stream_hpp
 
 #include "common/types.hpp"
-#include "common/type_traits/is_integral.hpp"
+#include "common/type_traits/type_traits.hpp"
 #include "common/memory/memcpy.hpp"
 #include "common/string/strlen.hpp"
 

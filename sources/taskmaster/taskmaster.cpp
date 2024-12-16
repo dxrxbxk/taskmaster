@@ -10,6 +10,7 @@
 #include "taskmaster/program.hpp"
 
 #include "taskmaster/time/timer.hpp"
+#include "common/guards/close_guard.hpp"
 
 
 // -- T A S K M A S T E R -----------------------------------------------------
@@ -21,60 +22,106 @@ auto sm::taskmaster::_shared(const sm::options& opts) -> self& {
 	static self instance = self::_launch(opts);
 	return instance;
 }
+		//sm::logger::info("------------------------------------------------------------");
+		//sm::logger::warn("taskmaster: is launching as daemon");
+		//sm::logger::info("taskmaster: you can find logs in \x1b[32m/var/log/taskmaster.log\x1b[0m");
+		//sm::logger::info("taskmaster: enjoy!");
+		//sm::logger::info("------------------------------------------------------------");
 
 /* launch */
 auto sm::taskmaster::_launch(const sm::options& opts) -> self {
 
-	if (opts.daemon() == true) {
+	enum {
+		// read end
+		RD = 0,
+		// write end
+		WR = 1
+	};
 
-		// check for root
-		if (::getuid() != 0)
-			throw sm::runtime_error("taskmaster: must be root");
 
-
-		sm::logger::info("------------------------------------------------------------");
-		sm::logger::warn("taskmaster: is launching as daemon");
-		sm::logger::info("taskmaster: you can find logs in \x1b[32m/var/log/taskmaster.log\x1b[0m");
-		sm::logger::info("taskmaster: enjoy!");
-		sm::logger::info("------------------------------------------------------------");
+	if (opts.daemon() == false)
+		return self{opts};
 
 
 
-		// fork
-		auto pid = sm::fork();
+	int pipe1[2U];
 
-		// parent process
-		if (pid > 0) {
-			throw sm::exit{EXIT_SUCCESS};
-		}
+	// create pipe
+	if (::pipe(pipe1) == -1)
+		throw sm::system_error{__func__};
 
-		// create new session
-		sm::setsid();
+	// check for root
+	if (::getuid() != 0)
+		throw sm::runtime_error("taskmaster: must be root");
 
-		// fork
-		pid = sm::fork();
+	// fork
+	auto pid = sm::fork();
 
-		// second parent process
-		if (pid > 0) {
-			throw sm::exit{EXIT_SUCCESS};
-			//opts.~options();
-			//_exit(0);
-		}
+	// parent process
+	if (pid > 0) {
 
-		// close standard descriptors
-		static_cast<void>(::close(STDIN_FILENO));
-		static_cast<void>(::close(STDOUT_FILENO));
-		static_cast<void>(::close(STDERR_FILENO));
+		// close write end
+		static_cast<void>(::close(pipe1[WR]));
 
-		// change directory
-		sm::chdir("/");
+		// read from pipe
+		char buffer[1U];
+		if (::read(pipe1[RD], buffer, sizeof(buffer)) != 0)
+			throw sm::runtime_error("taskmaster: failed to launch as daemon");
 
-		// change umask
-		::umask(0);
 
-		// setup logger to print into daemon log file
-		sm::logger::log_to_daemon();
+		throw sm::exit{EXIT_SUCCESS};
 	}
+
+	// -- first child process ---------------------------------------------
+
+	// close read end
+	static_cast<void>(::close(pipe1[RD]));
+
+
+	int pipe2[2U];
+
+	// create new pipe
+	if (::pipe(pipe2) == -1)
+		throw sm::system_error{"pipe"};
+
+
+	// create new session
+	sm::setsid();
+
+	// fork
+	pid = sm::fork();
+
+	// second parent process
+	if (pid > 0) {
+
+		// close write end
+		static_cast<void>(::close(pipe2[WR]));
+
+		// read from pipe
+		char buffer[1U];
+		if (::read(pipe2[RD], buffer, sizeof(buffer)) != 0) {
+
+
+
+		}
+
+
+		throw sm::exit{EXIT_SUCCESS};
+	}
+
+	// close standard descriptors
+	static_cast<void>(::close(STDIN_FILENO));
+	static_cast<void>(::close(STDOUT_FILENO));
+	static_cast<void>(::close(STDERR_FILENO));
+
+	// change directory
+	sm::chdir("/");
+
+	// change umask
+	::umask(0);
+
+	// setup logger to print into daemon log file
+	sm::logger::log_to_daemon();
 
 	// return instance
 	return self{opts};

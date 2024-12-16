@@ -1,5 +1,5 @@
-#ifndef parser_hpp
-#define parser_hpp
+#ifndef parser2_hpp
+#define parser2_hpp
 
 #include "common/reader.hpp"
 #include "common/resources/unique_ptr.hpp"
@@ -21,7 +21,7 @@ namespace sm {
 
 	// -- P A R S E R ---------------------------------------------------------
 
-	class parser {
+	class parser2 {
 
 
 		private:
@@ -29,10 +29,10 @@ namespace sm {
 			// -- private types -----------------------------------------------
 
 			/* self type */
-			using self = sm::parser;
+			using self = sm::parser2;
 
 			/* action type */
-			using action_type = auto (parser::*)(void) -> void;
+			using action_type = auto (parser2::*)(void) -> void;
 
 
 			// -- forward declarations ----------------------------------------
@@ -52,7 +52,6 @@ namespace sm {
 			/* transition */
 			const transition* _tr;
 
-
 			/* count */
 			sm::usize _count;
 
@@ -64,7 +63,6 @@ namespace sm {
 
 			/* buffer */
 			std::string _buffer;
-
 
 			/* program manager */
 			sm::program_manager* _pm;
@@ -78,16 +76,16 @@ namespace sm {
 			// -- public lifecycle --------------------------------------------
 
 			/* default constructor */
-			parser(void) noexcept;
+			parser2(void) noexcept;
 
 			/* deleted copy constructor */
-			parser(const self&) = delete;
+			parser2(const self&) = delete;
 
 			/* deleted move constructor */
-			parser(self&&) = delete;
+			parser2(self&&) = delete;
 
 			/* destructor */
-			~parser(void) noexcept = default;
+			~parser2(void) noexcept = default;
 
 
 			// -- public assignment operators ---------------------------------
@@ -214,7 +212,7 @@ namespace sm {
 
 			struct transition final {
 				state_type state;
-				void (parser::*action)();
+				void (parser2::*action)();
 			};
 
 			static constexpr transition _machine[S_STATE_MAX][C_CHAR_MAX] {
@@ -223,37 +221,37 @@ namespace sm {
 
 				{
 					// INVALID
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// NEWLINE
-					{S_START,         &parser::_newline},
+					{S_START,         &parser2::_newline},
 					// WHITESPACE
-					{S_START,         &parser::_skip},
+					{S_START,         &parser2::_skip},
 					// DIGIT
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// ALPHA
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// UNDERSCORE
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// SIMPLE
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// DOUBLE
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// SYMBOL
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// HASH
-					{S_IN_COMMENT,    &parser::_skip},
+					{S_IN_COMMENT,    &parser2::_skip},
 					// EQUAL
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// DOLLAR
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// COMMA
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// LEFT_BRACKET
-					{S_WAIT_ID,       &parser::_skip},
+					{S_WAIT_ID,       &parser2::_skip},
 					// RIGHT_BRACKET
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// EOB
-					{S_START,         &parser::_skip},
+					{S_START,         &parser2::_skip},
 				},
 
 
@@ -261,37 +259,37 @@ namespace sm {
 
 				{
 					// INVALID
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// NEWLINE
-					{S_DEFAULT,       &parser::_newline},
+					{S_DEFAULT,       &parser2::_newline},
 					// WHITESPACE
-					{S_DEFAULT,       &parser::_skip},
+					{S_DEFAULT,       &parser2::_skip},
 					// DIGIT
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// ALPHA
-					{S_IN_KEY,        &parser::_increment},
+					{S_IN_KEY,        &parser2::_increment},
 					// SIMPLE
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// DOUBLE
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// SYMBOL
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// UNDERSCORE
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// HASH
-					{S_IN_COMMENT,    &parser::_skip},
+					{S_IN_COMMENT,    &parser2::_skip},
 					// EQUAL
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// DOLLAR
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// COMMA
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// LEFT_BRACKET
-					{S_WAIT_ID,       &parser::_skip},
+					{S_WAIT_ID,       &parser2::_skip},
 					// RIGHT_BRACKET
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// EOB
-					{S_DEFAULT,       &parser::_skip},
+					{S_DEFAULT,       &parser2::_skip},
 				},
 
 
@@ -299,37 +297,37 @@ namespace sm {
 
 				{
 					// INVALID
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// NEWLINE
-					{S_DEFAULT,       &parser::_newline},
+					{S_DEFAULT,       &parser2::_newline},
 					// WHITESPACE
-					{S_WAIT_NEWLINE,  &parser::_skip},
+					{S_WAIT_NEWLINE,  &parser2::_skip},
 					// DIGIT
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// ALPHA
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// SIMPLE
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// DOUBLE
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// SYMBOL
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// UNDERSCORE
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// HASH
-					{S_IN_COMMENT,    &parser::_skip},
+					{S_IN_COMMENT,    &parser2::_skip},
 					// EQUAL
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// DOLLAR
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// COMMA
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// LEFT_BRACKET
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// RIGHT_BRACKET
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// EOB
-					{S_WAIT_NEWLINE,  &parser::_skip},
+					{S_WAIT_NEWLINE,  &parser2::_skip},
 				},
 
 
@@ -337,37 +335,37 @@ namespace sm {
 
 				{
 					// INVALID
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// NEWLINE
-					{S_DEFAULT,       &parser::_newline},
+					{S_DEFAULT,       &parser2::_newline},
 					// WHITESPACE
-					{S_IN_COMMENT,    &parser::_skip},
+					{S_IN_COMMENT,    &parser2::_skip},
 					// DIGIT
-					{S_IN_COMMENT,    &parser::_skip},
+					{S_IN_COMMENT,    &parser2::_skip},
 					// ALPHA
-					{S_IN_COMMENT,    &parser::_skip},
+					{S_IN_COMMENT,    &parser2::_skip},
 					// SIMPLE
-					{S_IN_COMMENT,    &parser::_skip},
+					{S_IN_COMMENT,    &parser2::_skip},
 					// DOUBLE
-					{S_IN_COMMENT,    &parser::_skip},
+					{S_IN_COMMENT,    &parser2::_skip},
 					// SYMBOL
-					{S_IN_COMMENT,    &parser::_skip},
+					{S_IN_COMMENT,    &parser2::_skip},
 					// UNDERSCORE
-					{S_IN_COMMENT,    &parser::_skip},
+					{S_IN_COMMENT,    &parser2::_skip},
 					// HASH
-					{S_IN_COMMENT,    &parser::_skip},
+					{S_IN_COMMENT,    &parser2::_skip},
 					// EQUAL
-					{S_IN_COMMENT,    &parser::_skip},
+					{S_IN_COMMENT,    &parser2::_skip},
 					// DOLLAR
-					{S_IN_COMMENT,    &parser::_skip},
+					{S_IN_COMMENT,    &parser2::_skip},
 					// COMMA
-					{S_IN_COMMENT,    &parser::_skip},
+					{S_IN_COMMENT,    &parser2::_skip},
 					// LEFT_BRACKET
-					{S_IN_COMMENT,    &parser::_skip},
+					{S_IN_COMMENT,    &parser2::_skip},
 					// RIGHT_BRACKET
-					{S_IN_COMMENT,    &parser::_skip},
+					{S_IN_COMMENT,    &parser2::_skip},
 					// EOB
-					{S_IN_COMMENT,    &parser::_skip},
+					{S_IN_COMMENT,    &parser2::_skip},
 				},
 
 
@@ -375,37 +373,37 @@ namespace sm {
 
 				{
 					// INVALID
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// NEWLINE
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// WHITESPACE
-					{S_WAIT_ID,       &parser::_skip},
+					{S_WAIT_ID,       &parser2::_skip},
 					// DIGIT
-					{S_IN_ID,         &parser::_increment},
+					{S_IN_ID,         &parser2::_increment},
 					// ALPHA
-					{S_IN_ID,         &parser::_increment},
+					{S_IN_ID,         &parser2::_increment},
 					// SIMPLE
-					{S_IN_ID,         &parser::_increment},
+					{S_IN_ID,         &parser2::_increment},
 					// DOUBLE
-					{S_IN_ID,         &parser::_increment},
+					{S_IN_ID,         &parser2::_increment},
 					// SYMBOL
-					{S_IN_ID,         &parser::_increment},
+					{S_IN_ID,         &parser2::_increment},
 					// UNDERSCORE
-					{S_IN_ID,         &parser::_increment},
+					{S_IN_ID,         &parser2::_increment},
 					// HASH
-					{S_IN_ID,         &parser::_increment},
+					{S_IN_ID,         &parser2::_increment},
 					// EQUAL
-					{S_IN_ID,         &parser::_increment},
+					{S_IN_ID,         &parser2::_increment},
 					// DOLLAR
-					{S_IN_ID,         &parser::_increment},
+					{S_IN_ID,         &parser2::_increment},
 					// COMMA
-					{S_IN_ID,         &parser::_increment},
+					{S_IN_ID,         &parser2::_increment},
 					// LEFT_BRACKET
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// RIGHT_BRACKET
-					{S_ERROR,         &parser::_skip},
+					{S_ERROR,         &parser2::_skip},
 					// EOB
-					{S_WAIT_ID,       &parser::_skip},
+					{S_WAIT_ID,       &parser2::_skip},
 				},
 
 
@@ -413,37 +411,37 @@ namespace sm {
 
 				{
 					// INVALID
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// NEWLINE
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// WHITESPACE
-					{S_WAIT_CLOSE_ID, &parser::_add_id},
+					{S_WAIT_CLOSE_ID, &parser2::_add_id},
 					// DIGIT
-					{S_IN_ID,         &parser::_increment},
+					{S_IN_ID,         &parser2::_increment},
 					// ALPHA
-					{S_IN_ID,         &parser::_increment},
+					{S_IN_ID,         &parser2::_increment},
 					// SIMPLE
-					{S_IN_ID,         &parser::_increment},
+					{S_IN_ID,         &parser2::_increment},
 					// DOUBLE
-					{S_IN_ID,         &parser::_increment},
+					{S_IN_ID,         &parser2::_increment},
 					// SYMBOL
-					{S_IN_ID,         &parser::_increment},
+					{S_IN_ID,         &parser2::_increment},
 					// UNDERSCORE
-					{S_IN_ID,         &parser::_increment},
+					{S_IN_ID,         &parser2::_increment},
 					// HASH
-					{S_IN_ID,         &parser::_increment},
+					{S_IN_ID,         &parser2::_increment},
 					// EQUAL
-					{S_IN_ID,         &parser::_increment},
+					{S_IN_ID,         &parser2::_increment},
 					// DOLLAR
-					{S_IN_ID,         &parser::_increment},
+					{S_IN_ID,         &parser2::_increment},
 					// COMMA
-					{S_IN_ID,         &parser::_increment},
+					{S_IN_ID,         &parser2::_increment},
 					// LEFT_BRACKET
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// RIGHT_BRACKET
-					{S_WAIT_NEWLINE,  &parser::_add_id},
+					{S_WAIT_NEWLINE,  &parser2::_add_id},
 					// EOB
-					{S_IN_ID,         &parser::_flush},
+					{S_IN_ID,         &parser2::_flush},
 				},
 
 
@@ -451,37 +449,37 @@ namespace sm {
 
 				{
 					// INVALID
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// NEWLINE
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// WHITESPACE
-					{S_WAIT_CLOSE_ID, &parser::_skip},
+					{S_WAIT_CLOSE_ID, &parser2::_skip},
 					// DIGIT
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// ALPHA
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// SIMPLE
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// DOUBLE
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// SYMBOL
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// UNDERSCORE
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// HASH
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// EQUAL
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// DOLLAR
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// COMMA
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// LEFT_BRACKET
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// RIGHT_BRACKET
-					{S_WAIT_NEWLINE,  &parser::_skip},
+					{S_WAIT_NEWLINE,  &parser2::_skip},
 					// EOB
-					{S_WAIT_CLOSE_ID, &parser::_skip},
+					{S_WAIT_CLOSE_ID, &parser2::_skip},
 				},
 
 
@@ -489,74 +487,74 @@ namespace sm {
 
 				{
 					// INVALID
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// NEWLINE
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// WHITESPACE
-					{S_WAIT_ASSIGN,   &parser::_add_key},
+					{S_WAIT_ASSIGN,   &parser2::_add_key},
 					// DIGIT
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// ALPHA
-					{S_IN_KEY,        &parser::_increment},
+					{S_IN_KEY,        &parser2::_increment},
 					// SIMPLE
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// DOUBLE
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// SYMBOL
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// UNDERSCORE
-					{S_IN_KEY,        &parser::_increment},
+					{S_IN_KEY,        &parser2::_increment},
 					// HASH
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// EQUAL
-					{S_WAIT_VALUE,    &parser::_add_key},
+					{S_WAIT_VALUE,    &parser2::_add_key},
 					// DOLLAR
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// COMMA
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// LEFT_BRACKET
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// RIGHT_BRACKET
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// EOB
-					{S_IN_KEY,        &parser::_flush},
+					{S_IN_KEY,        &parser2::_flush},
 				},
 
 				// -- WAIT ASSIGN ---------------------------------------------
 
 				{
 					// INVALID
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// NEWLINE
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// WHITESPACE
-					{S_WAIT_ASSIGN,   &parser::_skip},
+					{S_WAIT_ASSIGN,   &parser2::_skip},
 					// DIGIT
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// ALPHA
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// SIMPLE
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// DOUBLE
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// SYMBOL
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// UNDERSCORE
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// HASH
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// EQUAL
-					{S_WAIT_VALUE,    &parser::_skip},
+					{S_WAIT_VALUE,    &parser2::_skip},
 					// DOLLAR
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// COMMA
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// LEFT_BRACKET
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// RIGHT_BRACKET
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// EOB
-					{S_WAIT_ASSIGN,   &parser::_skip},
+					{S_WAIT_ASSIGN,   &parser2::_skip},
 				},
 
 
@@ -564,37 +562,37 @@ namespace sm {
 
 				{
 					// INVALID
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// NEWLINE
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// WHITESPACE
-					{S_WAIT_VALUE,    &parser::_skip},
+					{S_WAIT_VALUE,    &parser2::_skip},
 					// DIGIT
-					{S_IN_VALUE,      &parser::_increment},
+					{S_IN_VALUE,      &parser2::_increment},
 					// ALPHA
-					{S_IN_VALUE,      &parser::_increment},
+					{S_IN_VALUE,      &parser2::_increment},
 					// SIMPLE
-					{S_ERROR,         &parser::_error}, // see later
+					{S_ERROR,         &parser2::_error}, // see later
 					// DOUBLE
-					{S_ERROR,         &parser::_error}, // see later
+					{S_ERROR,         &parser2::_error}, // see later
 					// SYMBOL
-					{S_IN_VALUE,      &parser::_increment},
+					{S_IN_VALUE,      &parser2::_increment},
 					// UNDERSCORE
-					{S_IN_VALUE,      &parser::_increment},
+					{S_IN_VALUE,      &parser2::_increment},
 					// HASH
-					{S_IN_VALUE,      &parser::_increment},
+					{S_IN_VALUE,      &parser2::_increment},
 					// EQUAL
-					{S_IN_VALUE,      &parser::_increment},
+					{S_IN_VALUE,      &parser2::_increment},
 					// DOLLAR
-					{S_ERROR,         &parser::_error}, // see later
+					{S_ERROR,         &parser2::_error}, // see later
 					// COMMA
-					{S_IN_VALUE,      &parser::_increment},
+					{S_IN_VALUE,      &parser2::_increment},
 					// LEFT_BRACKET
-					{S_ERROR,         &parser::_error}, // see later
+					{S_ERROR,         &parser2::_error}, // see later
 					// RIGHT_BRACKET
-					{S_ERROR,         &parser::_error}, // see later
+					{S_ERROR,         &parser2::_error}, // see later
 					// EOB
-					{S_WAIT_VALUE,    &parser::_skip},
+					{S_WAIT_VALUE,    &parser2::_skip},
 				},
 
 
@@ -602,43 +600,43 @@ namespace sm {
 
 				{
 					// INVALID
-					{S_ERROR,         &parser::_error},
+					{S_ERROR,         &parser2::_error},
 					// NEWLINE
-					{S_DEFAULT,       &parser::_add_value}, // need to add newline
+					{S_DEFAULT,       &parser2::_add_value}, // need to add newline
 					// WHITESPACE
-					{S_WAIT_NEWLINE,  &parser::_add_value},
+					{S_WAIT_NEWLINE,  &parser2::_add_value},
 					// DIGIT
-					{S_IN_VALUE,      &parser::_increment},
+					{S_IN_VALUE,      &parser2::_increment},
 					// ALPHA
-					{S_IN_VALUE,      &parser::_increment},
+					{S_IN_VALUE,      &parser2::_increment},
 					// SIMPLE
-					{S_ERROR,         &parser::_error}, // see later
+					{S_ERROR,         &parser2::_error}, // see later
 					// DOUBLE
-					{S_ERROR,         &parser::_error}, // see later
+					{S_ERROR,         &parser2::_error}, // see later
 					// SYMBOL
-					{S_IN_VALUE,      &parser::_increment},
+					{S_IN_VALUE,      &parser2::_increment},
 					// UNDERSCORE
-					{S_IN_VALUE,      &parser::_increment},
+					{S_IN_VALUE,      &parser2::_increment},
 					// HASH
-					{S_IN_VALUE,      &parser::_increment},
+					{S_IN_VALUE,      &parser2::_increment},
 					// EQUAL
-					{S_IN_VALUE,      &parser::_increment},
+					{S_IN_VALUE,      &parser2::_increment},
 					// DOLLAR
-					{S_ERROR,         &parser::_error}, // see later
+					{S_ERROR,         &parser2::_error}, // see later
 					// COMMA
-					{S_IN_VALUE,      &parser::_increment},
+					{S_IN_VALUE,      &parser2::_increment},
 					// LEFT_BRACKET
-					{S_ERROR,         &parser::_error}, // see later
+					{S_ERROR,         &parser2::_error}, // see later
 					// RIGHT_BRACKET
-					{S_ERROR,         &parser::_error}, // see later
+					{S_ERROR,         &parser2::_error}, // see later
 					// EOB
-					{S_IN_VALUE,      &parser::_flush},
+					{S_IN_VALUE,      &parser2::_flush},
 				},
 
 			};
 
 
-			static constexpr char_type _char_table[256U] {
+			static constexpr char_type _ctable[256U] {
 
 				// 0x00 - 0x08 (control characters)
 				C_INVALID, C_INVALID, C_INVALID, C_INVALID,
@@ -878,20 +876,20 @@ namespace sm {
 
 
 			static constexpr action_type _actions[] {
-				&parser::_cmd,
-				&parser::_numprocs,
-				&parser::_umask,
-				&parser::_workingdir,
-				&parser::_autostart,
-				&parser::_autorestart,
-				&parser::_exitcodes,
-				&parser::_startretries,
-				&parser::_starttime,
-				&parser::_stopsignal,
-				&parser::_stoptime,
-				&parser::_stdout,
-				&parser::_stderr,
-				&parser::_env,
+				&parser2::_cmd,
+				&parser2::_numprocs,
+				&parser2::_umask,
+				&parser2::_workingdir,
+				&parser2::_autostart,
+				&parser2::_autorestart,
+				&parser2::_exitcodes,
+				&parser2::_startretries,
+				&parser2::_starttime,
+				&parser2::_stopsignal,
+				&parser2::_stoptime,
+				&parser2::_stdout,
+				&parser2::_stderr,
+				&parser2::_env,
 			};
 
 			static constexpr std::string_view _keywords[] {
@@ -932,11 +930,11 @@ namespace sm {
 
 
 
-	}; // class parser
+	}; // class parser2
 
 
 	/* tester */
-	auto parser_tester(void) -> void;
+	auto parser_tester2(void) -> void;
 
 
 
@@ -944,4 +942,4 @@ namespace sm {
 
 } // namespace sm
 
-#endif // parser_hpp
+#endif // parser2_hpp

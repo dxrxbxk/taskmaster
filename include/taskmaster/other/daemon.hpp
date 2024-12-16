@@ -60,6 +60,20 @@ namespace sm {
 
 			// -- public methods ----------------------------------------------
 
+			/* daemonize */
+			auto daemonize(void) {
+
+				try {
+
+
+				}
+
+				catch (const sm::exception& e) {
+
+				}
+
+			}
+
 
 	}; // class daemon
 

@@ -12,20 +12,67 @@
 #include "common/stream.hpp"
 
 
+#include "taskmaster/config/parser2.hpp"
 #include <pwd.h>
 
+#include <math.h>
 auto main(int ac, char** av) -> int {
-
-	//std::cout << "Hello, world!" << std::endl;
-	//std::cout << "This is the Taskmaster project." << std::endl;
-	//
-	//sleep(5);
-	//
-	//return 0;
-
 
 
 	try {
+
+
+		//sm::parser_tester2();
+		//
+		//return 0;
+
+
+		//auto num = sm::atoi<unsigned char, sm::oct>("57");
+		//
+		//std::cout << "num: " << (int)num
+		//		  << "\nhex: " << std::hex << (int)num
+		//		  << "\noct: " << std::oct << (int)num
+		//		  << std::endl;
+		//
+		//
+		//
+		//return 0;
+		//
+		//std::string ss[] {
+		//	"SIGHUP", "SIGINT", "SIGQUIT", "SIGILL", "SIGTRAP",
+		//	"SIGABRT", "SIGIOT", "SIGBUS", "SIGFPE", "SIGKILL",
+		//	"SIGUSR1", "SIGSEGV", "SIGUSR2", "SIGPIPE", "SIGALRM",
+		//	"SIGTERM", "SIGSTKFLT", "SIGCHLD", "SIGCONT",
+		//	"SIGSTOP", "SIGTSTP", "SIGTTIN", "SIGTTOU", "SIGURG",
+		//	"SIGXCPU", "SIGXFSZ", "SIGVTALRM", "SIGPROF", "SIGWINCH",
+		//	"SIGIO", "SIGPOLL", "SIGPWR", "SIGSYS", "SIGUNUSED",
+		//	"HUP", "INT", "QUIT", "ILL", "TRAP", "ABRT", "IOT",
+		//	"BUS", "FPE", "KILL", "USR1", "SEGV", "USR2", "PIPE",
+		//	"ALRM", "TERM", "STKFLT", "CHLD", "CONT", "STOP",
+		//	"TSTP", "TTIN", "TTOU", "URG", "XCPU", "XFSZ", "VTALRM",
+		//	"PROF", "WINCH", "IO", "POLL", "PWR", "SYS", "UNUSED",
+		//};
+
+		//for (const auto& s : ss) {
+		//	int n = sm::signal::has_signal(s.data(), (unsigned)s.size());
+		//	std::cout << s << " -> " << n << std::endl;
+		//}
+
+		//if (ac > 1) {
+		//
+		//	char** argv = av + 1;
+		//
+		//	while (*argv != nullptr) {
+		//
+		//		int n = sm::signal::has_signal(*argv,
+		//				(unsigned)strlen(*argv));
+		//		std::cout << *argv << " -> \x1b[32m" << n << "\x1b[0m" << std::endl;
+		//		++argv;
+		//	}
+		//
+		//}
+		//
+		//return 0;
 
 
 		//auto uid = ::getuid();

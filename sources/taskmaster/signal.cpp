@@ -6,7 +6,6 @@
 
 
 #include <unistd.h>
-#include <signal.h>
 
 
 #include <iostream>
@@ -64,10 +63,8 @@ sm::signal::signal(void)
 	// check for dangerous cast
 	static_assert(sizeof(sm::unique_fd) == sizeof(int));
 
-	int* ptr = reinterpret_cast<int*>(_pipe);
-
 	// create pipe
-	if (::pipe(ptr) == -1)
+	if (::pipe(reinterpret_cast<int*>(_pipe)) == -1)
 		throw sm::system_error("pipe");
 
 

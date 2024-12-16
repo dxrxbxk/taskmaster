@@ -15,6 +15,8 @@ auto sm::program_manager::size(void) const noexcept -> std::size_t {
 /* add program */
 auto sm::program_manager::add_program(sm::unique_ptr<sm::program>&& program) -> void {
 
+	program->info();
+
 	// insert program by moving
 	_programs.emplace(program->id(), std::move(program));
 }

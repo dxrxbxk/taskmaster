@@ -214,6 +214,37 @@ namespace sm {
 				return _id;
 			}
 
+
+			// -- public methods ----------------------------------------------
+
+			/* info */
+			auto info(void) const -> void {
+
+				std::cout << "\x1b[32m------------------------- " << _id << "\x1b[0m" << std::endl;
+				std::cout << "---------- pid: " << _pid << std::endl;
+				std::cout << "---------- cmd: " << _cmd.data() << std::endl;
+				std::cout << "----- numprocs: " << _numprocs << std::endl;
+				std::cout << "-------- umask: " << std::oct << _umask << std::dec << std::endl;
+				std::cout << "--- workingdir: " << _workingdir << std::endl;
+				std::cout << "---- autostart: " << std::boolalpha << _autostart << std::endl;
+				std::cout << "-- autorestart: " << _autorestart << std::endl;
+				std::cout << std::noboolalpha;
+				std::cout << "---- exitcodes: ";
+				for (const auto& code : _exitcodes)
+					std::cout << code << " ";
+				std::cout << std::endl;
+				std::cout << "- startretries: " << _startretries << std::endl;
+				std::cout << "---- starttime: " << _starttime << std::endl;
+				std::cout << "--- stopsignal: " << _stopsignal << std::endl;
+				std::cout << "----- stoptime: " << _stoptime << std::endl;
+				std::cout << "------- stdout: " << _stdout << std::endl;
+				std::cout << "------- stderr: " << _stderr << std::endl;
+				std::cout << "---------- env: " << _env.data() << std::endl;
+
+
+			}
+
+
 	}; // class program
 
 } // namespace sm

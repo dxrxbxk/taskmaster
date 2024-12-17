@@ -29,6 +29,9 @@ namespace sm {
 			/* socket */
 			sm::socket _socket;
 
+			/* buffer */
+			std::string _buffer;
+
 
 			// -- private methods ---------------------------------------------
 
@@ -36,21 +39,20 @@ namespace sm {
 			auto _disconnect(sm::taskmaster&) -> void;
 
 			/* to hex */
-			template <unsigned N>
-			auto _to_hex(const sm::reader<N>& reader) -> std::string {
+			auto _to_hex(const char* data, const sm::usize& size) -> std::string {
 
 				// hex string
 				std::string hex;
 
 				// loop over data
-				for (unsigned i = 0U; i < reader.size(); ++i) {
+				for (sm::usize i = 0U; i < size; ++i) {
 
 					// hex
-					char buff[6U];
-					snprintf(buff, 6U, "0x%02x ", reader.data()[i]);
+					char buff[4U];
+					snprintf(buff, 4U, "%02x ", data[i]);
 
 					// append
-					hex.append(buff, 5U);
+					hex.append(buff, 3U);
 				}
 
 				return hex;

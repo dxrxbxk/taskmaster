@@ -67,7 +67,11 @@ namespace sm {
 					 || rl.line() == "exit")
 						break;
 
-					if (::send(_socket, rl.line().data(), rl.line().size(), 0) == -1)
+
+					std::string msg{rl.line()};
+					msg.append("\r\n");
+
+					if (::send(_socket, msg.data(), msg.size(), 0) == -1)
 						throw sm::system_error("send");
 
 					continue; // CCONTINUUUUUUUUUUUUUUU
@@ -81,10 +85,10 @@ namespace sm {
 						const auto bytes = ::recv(_socket, buffer, sizeof(buffer), 0);
 
 						if (bytes == -1) {
-							if (errno == EAGAIN || errno == EWOULDBLOCK) {
-								::write(STDOUT_FILENO, "server is busy\n", 15U);
-								continue;
-							}
+							//if (errno == EAGAIN || errno == EWOULDBLOCK) {
+							//	::write(STDOUT_FILENO, "server is busy\n", 15U);
+							//	continue;
+							//}
 							throw sm::system_error("recv");
 						}
 					}

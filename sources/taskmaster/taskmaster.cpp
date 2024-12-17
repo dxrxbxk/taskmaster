@@ -13,6 +13,7 @@
 #include "common/guards/close_guard.hpp"
 
 
+
 // -- T A S K M A S T E R -----------------------------------------------------
 
 // -- private static methods --------------------------------------------------
@@ -43,6 +44,7 @@ auto sm::taskmaster::_launch(const sm::options& opts) -> self {
 		return self{opts};
 
 
+	throw sm::runtime_error("taskmaster: daemon mode is not implemented yet");
 
 	int pipe1[2U];
 
@@ -145,7 +147,6 @@ auto sm::taskmaster::_run(void) -> void {
 	//prog.stderr("/root/data/taskmaster/ls.err");
 
 	//prog.execute(*this);
-
 
 	// poll
 	while (_running == true) {

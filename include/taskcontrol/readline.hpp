@@ -297,7 +297,9 @@ namespace sm {
 				if (line == nullptr)
 					return;
 
-				try { _line = line; }
+				try { _line = line;
+					_line.append("\r\n");
+				}
 				catch (...) {}
 
 				::free(line);

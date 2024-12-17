@@ -15,6 +15,13 @@ namespace sm {
 	class unique_ptr {
 
 
+		// -- friends ---------------------------------------------------------
+
+		/* unique_ptr as friend */
+		template <typename U>
+		friend class sm::unique_ptr;
+
+
 		private:
 
 			// -- private types -----------------------------------------------
@@ -68,6 +75,17 @@ namespace sm {
 			/* move constructor */
 			unique_ptr(self&& other) noexcept
 			: _data{other._data} {
+
+				// invalidate other
+				other._data = nullptr;
+			}
+
+			/* move constructor (derived) */
+			template <typename D>
+			unique_ptr(sm::unique_ptr<D>&& other) noexcept
+			: _data{static_cast<T*>(other._data)} {
+
+				static_assert(std::is_base_of<T, D>::value, "invalid type conversion");
 
 				// invalidate other
 				other._data = nullptr;
@@ -146,7 +164,7 @@ namespace sm {
 	auto make_unique(Ts&& ...args) -> sm::unique_ptr<T> {
 
 		// allocate memory
-		T* data = sm::malloc<T>(1U);
+		T* data = sm::malloc<T>();
 
 		// need to implement allocation guard (possible memory leak)
 

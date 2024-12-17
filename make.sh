@@ -53,10 +53,7 @@ declare -rg script=${0:a}
 # -- T A R G E T S ------------------------------------------------------------
 
 # main executable
-declare -rg taskmaster=$cwd_dir'/taskmaster'
-
-# remote executable
-declare -rg taskcontrol=$cwd_dir'/taskcontrol'
+declare -rg executable=$cwd_dir'/taskmaster'
 
 # compile commands database
 declare -rg compile_db=$cwd_dir'/compile_commands.json'
@@ -84,26 +81,6 @@ declare -rg objs=(${srcs/%.cpp/.o})
 
 # dependency files
 declare -rg deps=(${srcs/%.cpp/.d})
-
-
-# master source files
-declare -rg master_srcs=($src_dir'/taskmaster/'**'/'*'.cpp'(.N))
-
-# control source files
-declare -rg control_srcs=($src_dir'/taskcontrol/'**'/'*'.cpp'(.N))
-
-# common source files
-declare -rg common_srcs=($src_dir'/common/'**'/'*'.cpp'(.N))
-
-
-# master object files
-declare -rg master_objs=(${master_srcs/%.cpp/.o})
-
-# control object files
-declare -rg control_objs=(${control_srcs/%.cpp/.o})
-
-# common object files
-declare -rg common_objs=(${common_srcs/%.cpp/.o})
 
 
 
@@ -362,22 +339,11 @@ function _compile {
 
 # -- L I N K  F U N C T I O N S -----------------------------------------------
 
-function _link_master {
+function _link_executable {
 
 	# link object files
-	if $cxx $master_objs $common_objs '-o' $taskmaster $ldflags; then
-		echo $success'[✓]'$reset 'linked' ${taskmaster:t}
-	else
-		echo $error'[x]'$reset 'linking failed'
-		exit 1
-	fi
-}
-
-function _link_control {
-
-	# link object files
-	if $cxx $control_objs $common_objs '-o' $taskcontrol $ldflags; then
-		echo $success'[✓]'$reset 'linked' ${taskcontrol:t}
+	if $cxx $objs '-o' $executable $ldflags; then
+		echo $success'[✓]'$reset 'linked' ${executable:t}
 	else
 		echo $error'[x]'$reset 'linking failed'
 		exit 1
@@ -386,38 +352,20 @@ function _link_control {
 
 function _link {
 
-	# check if taskmaster is missing
-	if [[ ! -f $taskmaster ]]; then
-		_link_master
+	# check if executable is missing
+	if [[ ! -f $executable ]]; then
+		_link_executable
 	fi
 
-	# check if taskcontrol is missing
-	if [[ ! -f $taskcontrol ]]; then
-		_link_control
-	fi
-
-	# loop over taskmaster object files
-	for obj in $master_objs $common_objs; do
+	# loop over object files
+	for obj in $objs; do
 
 		# check if object file is newer than target
-		if [[ $obj -nt $taskmaster ]]; then
-			_link_master
+		if [[ $obj -nt $executable ]]; then
+			_link_executable
 			break
 		fi
 	done
-
-	# loop over taskcontrol object files
-	for obj in $control_objs $common_objs; do
-
-		# check if object file is newer than target
-		if [[ $obj -nt $taskcontrol ]]; then
-			_link_control
-			break
-		fi
-	done
-
-	# no link required
-	#echo $success'[✓]'$reset ${executable:t} 'is up to date'
 }
 
 

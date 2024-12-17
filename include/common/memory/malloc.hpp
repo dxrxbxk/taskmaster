@@ -14,7 +14,7 @@ namespace sm {
 
 	/* malloc */
 	template <typename T>
-	auto malloc(const sm::usize& size) -> T* {
+	auto malloc(const sm::usize& size = 1U) -> T* {
 
 		T* ptr = static_cast<T*>(::malloc(size * sizeof(T)));
 

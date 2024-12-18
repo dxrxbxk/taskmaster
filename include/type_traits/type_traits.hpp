@@ -54,6 +54,29 @@ namespace sm {
 
 	// cppreference.com implementation
 
+
+	// -- I S  F L O A T I N G  P O I N T -------------------------------------
+
+	/* is float */
+	template <typename T>
+	concept is_floating_point = (sm::is_same<T, float>
+							  || sm::is_same<T, double>
+							  || sm::is_same<T, long double>);
+
+
+	// -- I S  A R I T H M E T I C --------------------------------------------
+
+	/* is arithmetic */
+	template <typename T>
+	concept is_arithmetic = (sm::is_integral<T> || sm::is_floating_point<T>);
+
+
+	// -- I S  S I G N E D ----------------------------------------------------
+
+	/* is signed */
+	template <typename T>
+	concept is_signed = sm::is_arithmetic<T> && (T(-1) < T(0));
+
 } // namespace sm
 
 #endif // is_same_hpp

@@ -387,8 +387,7 @@ function _clean() {
 
 	# remove all build files
 	local -r deleted=($(rm -vrf $objs $deps \
-								$taskmaster \
-								$taskcontrol \
+								$executable \
 								$compile_db \
 								'.cache'))
 

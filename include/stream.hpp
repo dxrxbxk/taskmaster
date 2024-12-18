@@ -2,10 +2,12 @@
 #define stream_hpp
 
 #include "types.hpp"
+#include "utils/limits.hpp"
 #include "type_traits/type_traits.hpp"
 #include "memory/memcpy.hpp"
 #include "string/strlen.hpp"
 
+#include <iostream>
 
 // -- S M  N A M E S P A C E --------------------------------------------------
 
@@ -35,60 +37,41 @@ namespace sm {
 
 		private:
 
-			template <typename T> requires sm::is_integral<T> // and not sm::is_bool<T>
-			static consteval auto _max(void) noexcept -> T {
 
-				// number of bits in type
-				constexpr T bits = static_cast<T>((sizeof(T) * 8U) - 0U/*sm::is_signed<T>*/);
+			template <typename T> requires sm::is_integral<T>
+			auto _append(const T& value, size_t& offset) -> void {
 
-				T count = 0;
+				constexpr auto size = sm::limits<T>::digits() + sm::is_signed<T>;
 
-				// loop through bits
-				for (T i = 0; i < bits; ++i)
-					// add shifted bit to max
-					count |= static_cast<T>(static_cast<T>(1) << i);
+				std::cout << "digits: " << size << std::endl;
 
-				return count;
-			}
-
-			template <typename T> requires sm::is_integral<T> // and not sm::is_bool<T>
-			static constexpr auto _min(void) noexcept -> T {
-				return ~self::_max<T>();
-			}
-
-			template <typename T>
-			static consteval auto _digits(void) -> sm::usize {
-
-				// max value of type
-				auto value = self::_max<T>();
-
-				// number of digits
-				sm::usize digits = 0U;
-
-				do {
-
-					// increment digits
-					++digits;
-
-				// divide max by base
-				} while (value /= 10);
-
-				return digits;
-			}
-
-
-			template <typename T> requires sm::is_integral<T> // unsigned
-			auto _append(const T& num, size_t& offset) -> void {
-
-				char buffer[self::_digits<T>() /* maybe + 1U (for sign) */];
+				char buffer[size];
 
 				// number of digits
 				sm::usize digits = sizeof(buffer) - 1U;
 
+
+				T num = value;
+
+				/*
+				bool negative = num < 0;
+				if constexpr (sm::is_signed<T>) {
+
+					if (num < 0) {
+
+						if (num == sm::limits<T>::min()) {
+							;
+						}
+						num = -num;
+					}
+				}
+				*/
+
+
 				do {
 
 					// get digit
-					buffer[digits] = static_cast<char>((num % 10U) ^ 0x30U);
+					buffer[digits] = static_cast<char>((num % 10) ^ 0x30);
 
 					// divide by base
 					num /= 10U;
@@ -99,8 +82,24 @@ namespace sm {
 				// check for zero
 				} while (num != 0U);
 
+
+				if constexpr (sm::is_signed<T>) {
+
+					// check for negative
+					if (value < 0) {
+						buffer[digits] = '-';
+						--digits;
+
+					}
+
+				}
+				else {
+				}
+
+				char* ptr;
+
 				// copy buffer to buffer
-				_append_impl(buffer + digits + 1U, sizeof(buffer) - digits - 1U, offset);
+				_append_impl(ptr, sizeof(buffer) - digits, offset);
 			}
 
 
@@ -109,12 +108,7 @@ namespace sm {
 			}
 
 			auto _append(const char& ch, size_t& offset) -> void {
-
-				if (offset + 2U >= _size)
-					return;
-
-				_buffer[offset] = ch;
-				++offset;
+				_append_impl(&ch, 1U, offset);
 			}
 
 			auto _append(const bool& b, size_t& offset) -> void {
@@ -134,13 +128,13 @@ namespace sm {
 
 
 		public:
+
 			template <typename... Ts>
-			auto print(const Ts&... args) -> void {
+			auto append(const Ts&... args) -> void {
 
 				size_t offset = 0;
 
-				unsigned i = 0U;
-				//(_append(args, offset), ...);
+				(_append(args, offset), ...);
 				_buffer[offset] = '\0';
 			}
 

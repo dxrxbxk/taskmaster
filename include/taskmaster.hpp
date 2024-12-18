@@ -116,6 +116,9 @@ namespace sm {
 			/* stop */
 			auto stop(void) noexcept -> void;
 
+			/* reload */
+			auto reload(void) -> void;
+
 	}; // class taskmaster
 
 } // namespace sm

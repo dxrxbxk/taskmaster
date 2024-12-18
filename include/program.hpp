@@ -9,7 +9,6 @@
 #include "system/execve.hpp"
 #include "system/access.hpp"
 
-#include "core_affinity.hpp"
 #include "events/monitor.hpp"
 
 #include <string>
@@ -56,45 +55,59 @@ namespace sm {
 			sm::unique_fd _pidfd;
 
 			/* command */
+			// The command to use to launch the program
 			sm::contiguous_cstr _cmd;
 
 			/* number of processes */
+			// The number of processes to start and keep running
 			sm::usize _numprocs;
 
 			/* umask */
+			// An umask to set before launching the program
 			::mode_t _umask;
 
-			/* working directory */
-			std::string _workingdir;
-
 			/* auto start */
+			// Whether to start this program at launch or not
 			bool _autostart;
 			
 			/* auto restart */
+			// Whether the program should be restarted always, never, or on unexpected exits only
 			unsigned _autorestart;
 
 			/* exit codes */
+			// Which return codes represent an "expected" exit status
 			std::vector<int> _exitcodes;
 
 			/* start retries */
+			// How many times a restart should be attempted before aborting
 			unsigned _startretries;
 
 			/* start time */
+			// How long the program should be running after it’s started for it to be considered "successfully started"
 			unsigned _starttime;
 
 			/* stop signal */
+			// Which signal should be used to stop (i.e. exit gracefully) the program
 			int _stopsignal;
 
 			/* stop time */
+			// How long to wait after a graceful stop before killing the program
 			unsigned _stoptime;
 
+			/* working directory */
+			// A working directory to set before launching the program
+			std::string _workingdir;
+
 			/* stdout redirect */
+			// Options to discard the program’s stdout/stderr or to redirect them to files
 			std::string _stdout;
 
 			/* stderr redirect */
+			// Options to discard the program’s stdout/stderr or to redirect them to files
 			std::string _stderr;
 
 			/* environment */
+			// Environment variables to set before launching the program
 			sm::contiguous_cstr _env;
 
 
@@ -113,6 +126,9 @@ namespace sm {
 
 			/* deleted move constructor */
 			program(self&&) = delete;
+
+			/* destructor */
+			~program(void) noexcept;
 
 
 			// -- public assignment operators ---------------------------------

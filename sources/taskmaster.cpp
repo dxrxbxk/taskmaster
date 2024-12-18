@@ -114,3 +114,9 @@ auto sm::taskmaster::is_running(void) const noexcept -> bool {
 auto sm::taskmaster::stop(void) noexcept -> void {
 	_running = false;
 }
+
+/* reload */
+auto sm::taskmaster::reload(void) -> void {
+
+	sm::logger::warn("taskmaster: reloading not implemented yet");
+}

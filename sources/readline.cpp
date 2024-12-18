@@ -238,7 +238,8 @@ auto sm::readline::_return(sm::taskmaster& tm) -> void {
 		_offset = 0U;
 	}
 
-	_render();
+	if (tm.is_running())
+		_render();
 }
 
 #include "resources/unique_fd.hpp"

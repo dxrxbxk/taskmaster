@@ -65,6 +65,8 @@ namespace sm {
 			/* clear */
 			auto _clear(sm::taskmaster&,  const argv_type&) -> void;
 
+			/* not implemented */
+			auto _not_implemented(sm::taskmaster&,  const argv_type&) -> void;
 
 		public:
 
@@ -74,14 +76,16 @@ namespace sm {
 			executor(void)
 			: _functions{} {
 
-				_functions["stop" ] = &self::_stop;
-				_functions["list" ] = &self::_list;
-				_functions["start"] = &self::_start;
-				_functions["help" ] = &self::_help;
-				_functions["exit" ] = &self::_exit;
-				_functions["fg"   ] = &self::_fg;
-				_functions["clear"] = &self::_clear;
+				_functions["start"]   = &self::_start;
+				_functions["stop" ]   = &self::_stop;
+				_functions["restart"] = &self::_not_implemented;
+				_functions["status" ] = &self::_not_implemented;
+				_functions["help" ]   = &self::_not_implemented;
+				_functions["exit" ]   = &self::_exit;
+				_functions["clear"]   = &self::_clear;
+				_functions["reload"]  = &self::_not_implemented;
 
+				_functions["fg"   ] = &self::_not_implemented;
 			}
 
 

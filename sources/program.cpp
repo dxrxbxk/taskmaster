@@ -12,6 +12,8 @@
 #include <sys/wait.h>
 
 
+
+
 // -- P R O G R A M -----------------------------------------------------------
 
 /* id constructor */
@@ -19,9 +21,8 @@ sm::program::program(std::string&& id)
 : _id{std::move(id)},
   _pid{0},
   _cmd{},
-  _numprocs{sm::core_affinity::max_cores()},
-  _umask{0U},
-  _workingdir{"/"},
+  _numprocs{1U},
+  _umask{0777U},
   _autostart{false},
   _autorestart{FALSE},
   _exitcodes{},
@@ -29,9 +30,23 @@ sm::program::program(std::string&& id)
   _starttime{0U},
   _stopsignal{0},
   _stoptime{0U},
+  _workingdir{"/"},
   _stdout{"/dev/null"},
   _stderr{"/dev/null"},
   _env{} {
+}
+
+/* destructor */
+sm::program::~program(void) noexcept {
+
+
+	if (_pid == 0)
+		return;
+
+	// send signal
+	static_cast<void>(::kill(_pid, SIGTERM));
+
+	// does i send SIGKILL ?
 }
 
 
@@ -67,8 +82,6 @@ auto sm::program::start(sm::taskmaster& tm) -> void {
 			// chdir
 			sm::chdir(_workingdir.data());
 
-			// cpu affinity
-			sm::core_affinity::set(_numprocs);
 
 			// set umask
 			//throw sm::runtime_error("test", "to", "simulate", "an", "error", "in", "the", "program", "execution");

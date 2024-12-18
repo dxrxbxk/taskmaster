@@ -133,6 +133,11 @@ auto sm::executor::_clear(sm::taskmaster& tm, const argv_type& argv) -> void {
 	::write(STDOUT_FILENO, "\x1b[2J\x1b[H", 7U);
 }
 
+/* not implemented */
+auto sm::executor::_not_implemented(sm::taskmaster&, const argv_type&) -> void {
+	sm::logger::warn("not implemented yet");
+}
+
 
 // -- public methods ----------------------------------------------------------
 

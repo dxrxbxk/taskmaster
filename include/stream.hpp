@@ -43,41 +43,41 @@ namespace sm {
 
 				constexpr auto size = sm::limits<T>::digits() + sm::is_signed<T>;
 
-				std::cout << "digits: " << size << std::endl;
-
 				char buffer[size];
-
-				// number of digits
-				sm::usize digits = sizeof(buffer) - 1U;
-
+				char* ptr = buffer + size - 1U;
 
 				T num = value;
 
-				/*
-				bool negative = num < 0;
-				if constexpr (sm::is_signed<T>) {
+				std::cout << "start num: " << num << std::endl;
 
-					if (num < 0) {
 
-						if (num == sm::limits<T>::min()) {
-							;
-						}
-						num = -num;
-					}
-				}
-				*/
+				//*ptr = static_cast<char>((num % 10) ^ 0x30);
+
+
 
 
 				do {
 
 					// get digit
-					buffer[digits] = static_cast<char>((num % 10) ^ 0x30);
+					T digit = num % 10;
+
+					std::cout << "digit: " << digit << std::endl;
+
+					//if (digit < 0) {
+					//	digit = -digit;
+					//}
+
+					*ptr = static_cast<char>(digit + '0');
+
+					//std::cout << "digit: " << (int)*ptr << std::endl;
 
 					// divide by base
 					num /= 10U;
 
+					std::cout << "num: " << num << std::endl;
+
 					// decrement digits
-					--digits;
+					--ptr;
 
 				// check for zero
 				} while (num != 0U);
@@ -87,19 +87,17 @@ namespace sm {
 
 					// check for negative
 					if (value < 0) {
-						buffer[digits] = '-';
-						--digits;
-
+						*ptr = '-';
+					} else {
+						++ptr;
 					}
-
-				}
-				else {
 				}
 
-				char* ptr;
+				// len
+				const sm::usize len = (sm::usize)(buffer + size - ptr);
 
 				// copy buffer to buffer
-				_append_impl(ptr, sizeof(buffer) - digits, offset);
+				_append_impl(ptr, len, offset);
 			}
 
 

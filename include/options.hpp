@@ -26,19 +26,13 @@ namespace sm {
 
 			// -- private data ------------------------------------------------
 
-			/* program */
-			const std::string _program;
-
 			/* config */
 			std::string _config;
 
-			/* port */
-			::in_port_t _port;
 
-			/* daemon */
-			bool _daemon;
+			// -- private classes ---------------------------------------------
 
-
+			/* key function */
 			struct key_function final {
 
 				const char* key;
@@ -47,10 +41,9 @@ namespace sm {
 			};
 
 
-			auto _handle_port(const char*) -> void;
+			// -- private methods ---------------------------------------------
 
-			auto _handle_daemon(const char*) -> void;
-
+			/* handle config */
 			auto _handle_config(const char*) -> void;
 
 
@@ -58,14 +51,6 @@ namespace sm {
 
 			/* keys */
 			static constexpr key_function _table[] {
-
-				// port
-				{"-p",       &self::_handle_port, true},
-				{"--port",   &self::_handle_port, true},
-
-				// daemon
-				{"-d",       &self::_handle_daemon, false},
-				{"--daemon", &self::_handle_daemon, false},
 
 				// config
 				{"-c",       &self::_handle_config, true},
@@ -78,9 +63,6 @@ namespace sm {
 
 			/* retrieve handler */
 			auto _retrieve_handler(const char* const) -> const key_function&;
-
-
-
 
 
 		public:
@@ -113,12 +95,6 @@ namespace sm {
 
 
 			// -- public accessors --------------------------------------------
-
-			/* port */
-			auto port(void) const noexcept -> ::in_port_t;
-
-			/* daemon */
-			auto daemon(void) const noexcept -> bool;
 
 			/* config */
 			auto config(void) const noexcept -> const std::string&;

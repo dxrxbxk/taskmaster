@@ -24,13 +24,13 @@ auto sm::program_manager::add_program(sm::unique_ptr<sm::program>&& program) -> 
 
 // -- public methods ----------------------------------------------------------
 
-/* execute */
-auto sm::program_manager::execute(sm::taskmaster& tm) -> void {
+/* start all */
+auto sm::program_manager::start_all(sm::taskmaster& tm) -> void {
 
 	// loop over programs
 	for (auto& [id, program] : _programs) {
 
 		// execute program
-		program->execute(tm);
+		program->start(tm);
 	}
 }

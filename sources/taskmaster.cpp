@@ -63,6 +63,9 @@ sm::taskmaster::taskmaster(const sm::options& opts)
 
 	// subscribe to signals
 	_monitor.subscribe(sm::signal::shared(), sm::event{EPOLLIN});
+
+	// become group leader
+	::setpgid(0, 0);
 }
 
 /* destructor */

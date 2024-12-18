@@ -861,7 +861,9 @@ namespace sm {
 				if (is_dir(parent.c_str()) == false)
 					throw sm::runtime_error("invalid stdout path");
 
+				std::cout << "stdout: " << _buffer.data() << std::endl;
 				_program->stdout(std::move(_buffer));
+
 			}
 
 			auto _stderr(void) -> void {

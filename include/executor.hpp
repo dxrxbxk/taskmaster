@@ -59,6 +59,12 @@ namespace sm {
 			/* exit */
 			auto _exit(sm::taskmaster&,  const argv_type&) -> void;
 
+			/* fg */
+			auto _fg(sm::taskmaster&,  const argv_type&) -> void;
+
+			/* clear */
+			auto _clear(sm::taskmaster&,  const argv_type&) -> void;
+
 
 		public:
 
@@ -73,6 +79,9 @@ namespace sm {
 				_functions["start"] = &self::_start;
 				_functions["help" ] = &self::_help;
 				_functions["exit" ] = &self::_exit;
+				_functions["fg"   ] = &self::_fg;
+				_functions["clear"] = &self::_clear;
+
 			}
 
 

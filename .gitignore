@@ -22,3 +22,7 @@
 
 # neovim logs
 /.nvimlog
+
+# logs
+/**/*.stdout
+/**/*.stderr

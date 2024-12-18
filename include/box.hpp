@@ -1,10 +1,18 @@
 #ifndef box_hpp
 #define box_hpp
 
-#include "escape.hpp"
+#include "terminal/escape.hpp"
+#include "terminal/terminal.hpp"
 #include <string>
 
+
+// -- S M  N A M E S P A C E --------------------------------------------------
+
 namespace sm {
+
+
+	// -- B O X ---------------------------------------------------------------
+
 	class box final {
 
 
@@ -79,10 +87,14 @@ namespace sm {
 			// -- public modifiers --------------------------------------------
 
 			/* set */
-			auto set(const unsigned short& x,
-					 const unsigned short& y,
-					 const unsigned short& w,
-					 const unsigned short& h) -> void {
+			auto set(void) -> void {
+
+
+				//const size_type x;
+				//const size_type y
+
+				const size_type w = sm::terminal::width();
+				const size_type h = sm::terminal::height();
 
 				// avoid namespace pollution
 				using esc = sm::escape;
@@ -103,8 +115,22 @@ namespace sm {
 				// append top right corner
 				_box.append(_symbols[CORNER_TR], 3U);
 
-				// append move position bottom left corner
-				_box.append(esc::move_position(x, y + h - 1));
+				// append new line
+				_box.append("\r\n", 2U);
+
+				// append left vertical box
+				_box.append(_symbols[LINE_V], 3U);
+
+				// append spaces
+				for (size_type i = 1U; i < w - 1U; ++i)
+					_box.append(" ", 1U);
+
+				// append right vertical box
+				_box.append(_symbols[LINE_V], 3U);
+
+				// append new line
+				_box.append("\r\n", 2U);
+
 
 				// append bottom left corner
 				_box.append(_symbols[CORNER_BL], 3U);
@@ -117,26 +143,13 @@ namespace sm {
 				_box.append(_symbols[CORNER_BR], 3U);
 
 
-				size_type y_pos = y + h - 1U;
+			}
 
-				// append left vertical box
-				for (size_type i = y + 1U; i < y_pos; ++i) {
-					// append move position left box
-					_box.append(esc::move_position(x, i));
-					// append left vertical box
-					_box.append(_symbols[LINE_V], 3U);
-				}
+			/* print */
+			auto print(void) const -> void {
 
-				size_type x_pos = x + w - 1U;
-
-				// append right vertical box
-				for (size_type i = y + 1U; i < y_pos; ++i) {
-					// append move position right box
-					_box.append(esc::move_position(x_pos, i));
-					// append right vertical box
-					_box.append(_symbols[LINE_V], 3U);
-				}
-
+				if (::write(STDOUT_FILENO, _box.data(), _box.size()) == -1)
+					throw sm::system_error("write");
 			}
 
 	}; // class box

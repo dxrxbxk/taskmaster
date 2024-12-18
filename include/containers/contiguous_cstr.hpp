@@ -3,7 +3,7 @@
 
 #include "memory/malloc.hpp"
 #include "memory/memcpy.hpp"
-#include "guards/malloc_guard.hpp"
+#include "memory/malloc_guard.hpp"
 #include "string/strlen.hpp"
 #include "types.hpp"
 

@@ -126,8 +126,8 @@ namespace sm {
 
 			// -- public methods ----------------------------------------------
 
-			/* execute */
-			auto execute(sm::taskmaster&) -> void;
+			/* start */
+			auto start(sm::taskmaster&) -> void;
 
 			/* stop */
 			auto stop(void) -> void;
@@ -219,6 +219,11 @@ namespace sm {
 			/* is running */
 			auto is_running(void) const noexcept -> bool {
 				return _pid != 0;
+			}
+
+			/* pid */
+			auto pid(void) const noexcept -> const ::pid_t& {
+				return _pid;
 			}
 
 

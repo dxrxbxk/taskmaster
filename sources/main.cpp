@@ -11,7 +11,6 @@
 #include "config/parser.hpp"
 #include "stream.hpp"
 
-
 #include "config/parser2.hpp"
 #include <pwd.h>
 
@@ -22,10 +21,14 @@
 
 #include <readline/readline.h>
 
+#include "terminal/terminal.hpp"
+
+#include "box.hpp"
 
 auto main(int ac, char** av) -> int {
 
-
+	//sm::termios_test<true>();
+	//return 0;
 
 	try {
 

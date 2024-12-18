@@ -88,8 +88,8 @@ namespace sm {
 
 			// -- public methods ----------------------------------------------
 
-			/* execute */
-			auto execute(sm::taskmaster&) -> void;
+			/* start all */
+			auto start_all(sm::taskmaster&) -> void;
 
 			/* info */
 			auto info(void) const -> void {

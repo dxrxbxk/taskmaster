@@ -2,6 +2,8 @@
 #include "executor.hpp"
 #include "log/logger.hpp"
 
+#include <sys/wait.h>
+
 
 // -- private methods ---------------------------------------------------------
 
@@ -13,8 +15,15 @@ auto sm::executor::_stop(sm::taskmaster& tm, const argv_type& argv) -> void {
 		return;
 	}
 
-	// not implemented yet...
-	sm::logger::info("stop command");
+	// check if program exists
+	if (not tm.programs().has_program(argv[1])) {
+		sm::logger::warn("program not found");
+		return;
+	}
+
+	// stop the program
+	tm.programs().get_program(argv[1]).stop();
+
 }
 
 /* list */
@@ -31,7 +40,19 @@ auto sm::executor::_list(sm::taskmaster& tm, const argv_type& argv) -> void {
 /* start */
 auto sm::executor::_start(sm::taskmaster& tm, const argv_type& argv) -> void {
 
-	sm::logger::info("start command");
+	if (argv.size() != 2U) {
+		sm::logger::warn("usage: start <program>");
+		return;
+	}
+
+	// check if program exists
+	if (not tm.programs().has_program(argv[1])) {
+		sm::logger::warn("program not found");
+		return;
+	}
+
+	// start the program
+	tm.programs().get_program(argv[1]).start(tm);
 }
 
 /* help */
@@ -50,6 +71,66 @@ auto sm::executor::_exit(sm::taskmaster& tm, const argv_type& argv) -> void {
 
 	// stop the taskmaster
 	tm.stop();
+}
+
+/* fg */
+auto sm::executor::_fg(sm::taskmaster& tm, const argv_type& argv) -> void {
+
+	if (argv.size() != 2U) {
+		sm::logger::warn("usage: fg <program>");
+		return;
+	}
+
+	if (not tm.programs().has_program(argv[1])) {
+		sm::logger::warn("program not found");
+		return;
+	}
+
+	auto& program = tm.programs().get_program(argv[1]);
+
+
+	auto pid = program.pid();
+
+	if (pid == 0) {
+		sm::logger::warn("program not running");
+		return;
+	}
+
+	// get back stdout and stderr
+	int fd = open("/dev/tty", O_RDWR);
+	dup2(fd, STDOUT_FILENO);
+	dup2(fd, STDERR_FILENO);
+
+	// set the program to the foreground
+
+
+	tcsetpgrp(STDIN_FILENO, pid);
+
+	// wait for the program to finish
+	int status;
+	waitpid(pid, &status, WUNTRACED);
+
+	tcsetpgrp(STDIN_FILENO, getpgrp());
+
+	// set the program back to the taskmaster
+
+
+
+
+	// not implemented yet...
+	sm::logger::info("fg command");
+}
+
+/* clear */
+auto sm::executor::_clear(sm::taskmaster& tm, const argv_type& argv) -> void {
+
+	if (argv.size() != 1U) {
+		sm::logger::warn("usage: clear");
+		return;
+	}
+
+	// clear the screen
+	::write(STDOUT_FILENO, "\x1b[2J\x1b[H", 7U);
 }
 
 

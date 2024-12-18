@@ -37,12 +37,11 @@ sm::program::program(std::string&& id)
 
 // -- public methods ----------------------------------------------------------
 
-/* execute */
-auto sm::program::execute(sm::taskmaster& tm) -> void {
+/* start */
+auto sm::program::start(sm::taskmaster& tm) -> void {
 
 	// check if program is running
 	if (_pid != 0) {
-
 		sm::logger::warn("program already running");
 		return;
 	}
@@ -58,6 +57,10 @@ auto sm::program::execute(sm::taskmaster& tm) -> void {
 
 		try {
 
+			// become group leader
+			//if (::setpgid(0, 0) == -1)
+			//	throw sm::system_error("setpgid");
+
 			// test if program is executable
 			sm::access<X_OK>(_cmd[0U]);
 
@@ -68,10 +71,10 @@ auto sm::program::execute(sm::taskmaster& tm) -> void {
 			sm::core_affinity::set(_numprocs);
 
 			// set umask
-			throw sm::runtime_error("test", "to", "simulate", "an", "error", "in", "the", "program", "execution");
+			//throw sm::runtime_error("test", "to", "simulate", "an", "error", "in", "the", "program", "execution");
 
 			// close stdin
-			static_cast<void>(::close(STDIN_FILENO));
+			//static_cast<void>(::close(STDIN_FILENO));
 
 			// redirect standard descriptors
 			sm::unique_fd fds[] {
@@ -127,12 +130,17 @@ auto sm::program::execute(sm::taskmaster& tm) -> void {
 auto sm::program::stop(void) -> void {
 
 	// check if program is running
-	if (_pid == 0)
+	if (_pid == 0) {
+		sm::logger::warn("program not running");
 		return;
+	}
 
 	// send signal
-	if (::kill(_pid, _stopsignal) == -1)
+	//if (::kill(_pid, _stopsignal) == -1)
+	//	throw sm::system_error("kill");
+	if (::kill(_pid, SIGTERM) == -1)
 		throw sm::system_error("kill");
+
 
 	// reset pid
 	_pid = 0;
@@ -150,45 +158,50 @@ auto sm::program::fd(void) const noexcept -> int {
 auto sm::program::on_event(const sm::event& events, sm::taskmaster& tm) -> void {
 
 
+	// check type of event
+	if (not events.is_in())
+		throw sm::runtime_error("program: unexpected event");
+
+
+
+	::siginfo_t info;
+	const auto status = ::waitid(P_PIDFD, (__id_t)_pidfd, &info, WEXITED);
+
 	// check for error
-	if (events.is_err())
-		throw sm::runtime_error("program received epollerr");
+	if (status == -1) {
 
-	// check for hangup
-	if (events & EPOLLHUP) {
+		// throw for fatal error
+		if (errno != ECHILD)
+			throw sm::system_error("waitid");
 
-		// log hangup
-		sm::logger::info("program hangup");
-	}
-
-	// check for input
-	if (events & EPOLLIN) {
-
-		::siginfo_t info;
-		const auto status = ::waitid(P_PIDFD, (__id_t)_pidfd, &info, WEXITED);
-
-		if (status == -1) {
-
-			// check for fatal error
-			if (errno != ECHILD)
-				throw sm::system_error("waitid");
-
-			sm::logger::info("Process already collected or does not exist.");
-			self::disconnect(tm);
-			return;
-		}
-
-		if (info.si_code == CLD_EXITED) {
-			sm::logger::info("Process exited normally");
-		} else if (info.si_code == CLD_KILLED || info.si_code == CLD_DUMPED) {
-			sm::logger::info("Process was terminated by signal");
-		}
-
+		sm::logger::warn("Process already collected or does not exist.");
 		self::disconnect(tm);
-
-		// restart program
-		self::execute(tm);
+		return;
 	}
+
+	switch (info.si_code) {
+		case CLD_EXITED:
+			sm::logger::info("Process exited normally");
+			break;
+		case CLD_KILLED:
+			sm::logger::info("Process was killed by signal");
+			break;
+		case CLD_DUMPED:
+			sm::logger::info("Process terminated abnormally");
+			break;
+		case CLD_TRAPPED:
+			sm::logger::info("Traced child has trapped");
+			break;
+		case CLD_STOPPED:
+			sm::logger::info("Child has stopped");
+			break;
+		default:
+			sm::logger::info("Unknown exit code");
+			break;
+	}
+
+	// disconnect
+	self::disconnect(tm);
 
 }
 

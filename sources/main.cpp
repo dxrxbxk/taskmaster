@@ -26,43 +26,22 @@
 #include "box.hpp"
 #include "utils/limits.hpp"
 
+
 auto main(int ac, char** av) -> int {
+
+	//signal(SIGTERM, SIG_IGN);
+	//
+	//while (true) {
+	//	std::cout << "-" << std::endl;
+	//	sleep(1);
+	//}
+	//
+	//return 0;
 
 	//sm::termios_test<true>();
 	//return 0;
 
 	try {
-
-		//std::cout << -123 << std::endl;
-		//std::cout << -123 % 10 << std::endl;
-		//std::cout << -123 / 10 << std::endl;
-		//
-		//return 0;
-
-		char buffer[1024];
-		sm::stream ss{buffer, sizeof(buffer)};
-
-		//ss.append("hello world", ' ', 42, "is", true, '\n');
-		ss.append((int)-2);
-
-		std::cout << buffer << std::flush;
-
-		return 0;
-
-		std::cout << sm::limits<unsigned short>::max() << std::endl;
-		std::cout << sm::limits<unsigned short>::min() << std::endl;
-
-		std::cout << sm::limits<signed short>::max() << std::endl;
-		std::cout << sm::limits<signed short>::min() << std::endl;
-
-		std::cout << sm::limits<unsigned int>::max() << std::endl;
-		std::cout << sm::limits<unsigned int>::min() << std::endl;
-
-		std::cout << sm::limits<signed int>::max() << std::endl;
-		std::cout << sm::limits<signed int>::min() << std::endl;
-
-		return 0;
-
 
 		// parse command line options
 		sm::options opts{ac, av};
@@ -77,7 +56,7 @@ auto main(int ac, char** av) -> int {
 	catch (const sm::exception& e) {
 
 		// log error
-		sm::logger::error(e.what());
+		sm::logger::error(std::string_view{e.what()});
 
 		return EXIT_FAILURE;
 	}

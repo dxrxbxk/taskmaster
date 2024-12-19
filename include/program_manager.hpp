@@ -25,7 +25,8 @@ namespace sm {
 			/* self type */
 			using self = sm::program_manager;
 
-			using map_prog = std::unordered_map<std::string, sm::unique_ptr<sm::program>>;
+			using map_prog = std::unordered_map<std::string,
+												sm::unique_ptr<sm::program>>;
 			using map_id = std::unordered_map<pid_t, sm::program*>;
 
 

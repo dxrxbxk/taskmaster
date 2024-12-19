@@ -1,5 +1,5 @@
-#ifndef program_hpp
-#define program_hpp
+#ifndef program2_hpp
+#define program2_hpp
 
 #include "resources/unique_fd.hpp"
 #include "containers/contiguous_cstr.hpp"
@@ -9,6 +9,7 @@
 #include "system/execve.hpp"
 #include "system/access.hpp"
 
+#include "time/timer.hpp"
 #include "events/monitor.hpp"
 
 #include <string>
@@ -24,6 +25,11 @@ namespace sm {
 	// -- P R O G R A M -------------------------------------------------------
 
 	class program final : public sm::listener {
+
+
+		public:
+
+			class data;
 
 
 		private:
@@ -111,6 +117,19 @@ namespace sm {
 			sm::contiguous_cstr _env;
 
 
+			/* start timer */
+			sm::timer _starttimer;
+
+			/* is starting */
+			bool _is_starting;
+
+			/* stop timer */
+			sm::timer _stoptimer;
+
+			/* is stopping */
+			bool _is_stopping;
+
+
 		public:
 
 			// -- public lifecycle --------------------------------------------
@@ -146,7 +165,13 @@ namespace sm {
 			auto start(sm::taskmaster&) -> void;
 
 			/* stop */
-			auto stop(void) -> void;
+			auto stop(sm::taskmaster&) -> void;
+
+			/* start event */
+			auto start_event(sm::taskmaster&) -> void;
+
+			/* stop event */
+			auto stop_event(sm::taskmaster&) -> void;
 
 
 			// -- public overrides --------------------------------------------
@@ -269,11 +294,31 @@ namespace sm {
 				std::cout << "------- stderr: " << _stderr << "\r\n";;
 				std::cout << "---------- env: " << _env.data() << "\r\n";;
 
-
 			}
 
+			/* status */
+			auto status(void) const -> void {
+				if (_pid == 0) {
+
+					sm::logger::info("program: ",
+									 std::string_view{_cmd[0U]},
+									 " \x1b[31mnot\x1b[0m running");
+
+				}
+				else {
+
+					sm::logger::info("program: ",
+									 std::string_view{_cmd[0U]},
+									 " \x1b[32mrunning\x1b[0m");
+
+				}
+			}
 
 	}; // class program
+
+
+
+
 
 } // namespace sm
 

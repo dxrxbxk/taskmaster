@@ -117,7 +117,7 @@ namespace sm {
 			};
 
 
-			static auto has_signal(const char *str, unsigned int len) -> int {
+			static auto has_signal(const char *str, const sm::usize& len) -> int {
 
 					static unsigned char asso_values[] = {
 						138, 138, 138, 138, 138, 138, 138, 138, 138, 138,
@@ -148,7 +148,7 @@ namespace sm {
 						138, 138, 138, 138, 138, 138, 138, 138
 					};
 
-					unsigned int hval = len;
+					sm::usize hval = len;
 
 					switch (hval) {
 
@@ -162,7 +162,7 @@ namespace sm {
 							break;
 					}
 
-					unsigned int hash = hval + asso_values[(unsigned char)str[len - 1U]];
+					sm::usize hash = hval + asso_values[(unsigned char)str[len - 1U]];
 
 
 					static constexpr signal_entry table[] {

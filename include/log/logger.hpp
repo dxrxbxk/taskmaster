@@ -3,6 +3,7 @@
 
 #include "log/timestamp.hpp"
 #include "diagnostics/exception.hpp"
+#include "stream.hpp"
 #include "string/strlen.hpp"
 
 #include <unistd.h>
@@ -28,16 +29,14 @@ namespace sm {
 
 			// -- private members ---------------------------------------------
 
-			/* buffer */
-			std::string _buffer;
+			/* stream */
+			sm::stream _stream;
 
 
 			// -- private lifecycle -------------------------------------------
 
 			/* default constructor */
-			logger(void) noexcept
-			: _buffer{} {
-			}
+			logger(void) noexcept = default;
 
 			/* deleted copy constructor */
 			logger(const self&) = delete;
@@ -67,23 +66,18 @@ namespace sm {
 			}
 
 
-			auto _log(const char* level, const char* message) noexcept -> void {
+			template <unsigned N, typename... Ts>
+			auto _log(const char (&level)[N], const Ts&... args) -> void {
 
 				// get timestamp
 				sm::timestamp ts;
 
-				_buffer.clear();
-				_buffer.append(ts.data(), ts.size());
-				_buffer.append(" ", 1);
-				_buffer.append(level, sm::strlen(level));
-				_buffer.append(": ", 2);
-				_buffer.append(message, sm::strlen(message));
-				_buffer.append("\r\n", 2);
+				_stream.append(ts.data(), ' ', std::string_view{level}, ": ", args..., "\r\n");
 
 				// write to stdout
 				static_cast<void>(::write(STDOUT_FILENO,
-							_buffer.data(),
-							_buffer.size()));
+							_stream.data(),
+							_stream.size()));
 			}
 
 
@@ -92,28 +86,33 @@ namespace sm {
 			// -- public static methods ---------------------------------------
 
 			/* info */
-			static auto info(const char* message) -> void {
-				self::_shared()._log("\x1b[32mINFO\x1b[0m", message);
+			template <typename... Ts>
+			static auto info(const Ts&... args) -> void {
+				self::_shared()._log("\x1b[32mINFO\x1b[0m", args...);
 			}
 
 			/* warn */
-			static auto warn(const char* message) -> void {
-				self::_shared()._log("\x1b[33mWARN\x1b[0m", message);
+			template <typename... Ts>
+			static auto warn(const Ts&... args) -> void {
+				self::_shared()._log("\x1b[33mWARN\x1b[0m", args...);
 			}
 
 			/* debug */
-			static auto debug(const char* message) -> void {
-				self::_shared()._log("\x1b[34mDEBG\x1b[0m", message);
+			template <typename... Ts>
+			static auto debug(const Ts&... args) -> void {
+				self::_shared()._log("\x1b[34mDEBG\x1b[0m", args...);
 			}
 
 			/* error */
-			static auto error(const char* message) -> void {
-				self::_shared()._log("\x1b[31mERRO\x1b[0m", message);
+			template <typename... Ts>
+			static auto error(const Ts&... args) -> void {
+				self::_shared()._log("\x1b[31mERRO\x1b[0m", args...);
 			}
 
 			/* signal */
-			static auto signal(const char* message) -> void {
-				self::_shared()._log("\x1b[35mSIGN\x1b[0m", message);
+			template <typename... Ts>
+			static auto signal(const Ts&... args) -> void {
+				self::_shared()._log("\x1b[35mSIGN\x1b[0m", args...);
 			}
 
 	}; // class logger

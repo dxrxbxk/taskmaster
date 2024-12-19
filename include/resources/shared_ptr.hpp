@@ -1,5 +1,5 @@
-#ifndef unique_ptr_hpp
-#define unique_ptr_hpp
+#ifndef shared_ptr_hpp
+#define shared_ptr_hpp
 
 #include "memory/malloc.hpp"
 #include "memory/malloc_guard.hpp"
@@ -10,21 +10,21 @@
 namespace sm {
 
 
-	// -- U N I Q U E  P T R --------------------------------------------------
+	// -- S H A R E D  P T R --------------------------------------------------
 
 	template <typename T>
-	class unique_ptr final {
+	class shared_ptr final {
 
 
 		// -- friends ---------------------------------------------------------
 
-		/* unique_ptr as friend */
+		/* shared_ptr as friend */
 		template <typename U>
-		friend class sm::unique_ptr;
+		friend class sm::shared_ptr;
 
-		/* make unique as friend */
+		/* make shared as friend */
 		template <typename U, typename... Ts>
-		friend auto make_unique(Ts&& ...) -> sm::unique_ptr<U>;
+		friend auto make_shared(Ts&& ...) -> sm::shared_ptr<U>;
 
 
 		private:
@@ -32,7 +32,7 @@ namespace sm {
 			// -- private types -----------------------------------------------
 
 			/* self type */
-			using self = sm::unique_ptr<T>;
+			using self = sm::shared_ptr<T>;
 
 
 			// -- private members ---------------------------------------------
@@ -40,12 +40,15 @@ namespace sm {
 			/* pointer to data */
 			T* _data;
 
+			/* reference counter */
+			sm::usize* _ref;
+
 
 			// -- private lifecycle -------------------------------------------
 
 			/* data constructor */
-			unique_ptr(T* data) noexcept
-			: _data{data} {
+			shared_ptr(T* data, sm::usize* ref) noexcept
+			: _data{data}, _ref{ref} {
 			}
 
 
@@ -58,10 +61,18 @@ namespace sm {
 				if (_data == nullptr)
 					return;
 
+				// check for allocated counter
+				if (--(*_ref) > 0)
+					return;
+
 				// destroy data
 				_data->~T();
-				// deallocate memory
+
+				// deallocate data
 				sm::free(_data);
+
+				// deallocate counter
+				sm::free(_ref);
 			}
 
 
@@ -70,42 +81,66 @@ namespace sm {
 			// -- public lifecycle --------------------------------------------
 
 			/* default constructor */
-			unique_ptr(void) noexcept
-			: _data{nullptr} {
+			shared_ptr(void) noexcept
+			: _data{nullptr},
+			  _ref{nullptr} {
 			}
 
-			/* deleted copy constructor */
-			unique_ptr(const self&) = delete;
+			/* copy constructor */
+			shared_ptr(const self& other) noexcept
+			: _data{other._data}, _ref{other._ref} {
+
+				// check for valid data
+				if (_data == nullptr)
+					return;
+
+				// increment reference counter
+				++(*_ref);
+			}
 
 			/* move constructor */
-			unique_ptr(self&& other) noexcept
-			: _data{other._data} {
+			shared_ptr(self&& other) noexcept
+			: _data{other._data}, _ref{other._ref} {
 
 				// invalidate other
 				other._data = nullptr;
-			}
-
-			/* move constructor (derived) */
-			template <typename D>
-			unique_ptr(sm::unique_ptr<D>&& other) noexcept
-			: _data{static_cast<T*>(other._data)} {
-
-				static_assert(std::is_base_of<T, D>::value, "invalid type conversion");
-
-				// invalidate other
-				other._data = nullptr;
+				other._ref  = nullptr;
 			}
 
 			/* destructor */
-			~unique_ptr(void) noexcept {
-				self::_free();
+			~shared_ptr(void) noexcept {
+
+				// deallocate memory
+				this->_free();
 			}
 
 
 			// -- public assignment operators ---------------------------------
 
-			/* deleted copy assignment operator */
-			auto operator=(const self&) = delete;
+			/* copy assignment operator */
+			auto operator=(const self& other) noexcept -> self& {
+
+				// check for self assignment
+				if (this == &other)
+					return *this;
+
+				// deallocate memory
+				this->_free();
+
+				// assign data
+				_data = other._data;
+				_ref  = other._ref;
+
+				// check for valid data
+				if (_data == nullptr)
+					return *this;
+
+				// increment reference counter
+				++(*_ref);
+
+				// done
+				return *this;
+			}
 
 			/* move assignment operator */
 			auto operator=(self&& other) noexcept -> self& {
@@ -114,12 +149,16 @@ namespace sm {
 				if (this == &other)
 					return *this;
 
-				// deallocate self data
-				self::_free();
+				// deallocate memory
+				this->_free();
 
 				// move data
 				_data = other._data;
+				_ref  = other._ref;
+
+				// invalidate other
 				other._data = nullptr;
+				other._ref  = nullptr;
 
 				// done
 				return *this;
@@ -161,30 +200,41 @@ namespace sm {
 				return *_data;
 			}
 
-	}; // class unique_ptr
+	}; // class shared_ptr
 
 
 	// -- non-member functions ------------------------------------------------
 
-	/* make unique */
+	/* make shared */
 	template <typename T, typename... Ts>
-	auto make_unique(Ts&& ...args) -> sm::unique_ptr<T> {
+	auto make_shared(Ts&& ...args) -> sm::shared_ptr<T> {
 
-		// allocate memory
-		T* data = sm::malloc<T>();
+		// allocate data
+		auto data = sm::malloc<T>();
 
-		// make guard
-		sm::malloc_guard guard{data};
+		// make data guard
+		sm::malloc_guard dguard{data};
+
+		// allocate reference counter
+		auto ref = sm::malloc<sm::usize>();
+
+		// make reference guard
+		sm::malloc_guard rguard{ref};
 
 		// construct object
-		::new(data) T{std::forward<Ts>(args)...};
+		new (data) T{std::forward<Ts>(args)...};
 
-		// release guard
-		guard.complete();
+		// initialize reference counter
+		*ref = 1U;
 
-		return sm::unique_ptr<T>{data};
+		// release guards
+		dguard.complete();
+		rguard.complete();
+
+		// return shared pointer
+		return sm::shared_ptr<T>{data, ref};
 	}
 
 } // namespace sm
 
-#endif // unique_ptr_hpp
+#endif // shared_ptr_hpp

@@ -22,12 +22,12 @@ auto sm::executor::_stop(sm::taskmaster& tm, const argv_type& argv) -> void {
 	}
 
 	// stop the program
-	tm.programs().get_program(argv[1]).stop();
+	tm.programs().get_program(argv[1]).stop(tm);
 
 }
 
 /* list */
-auto sm::executor::_list(sm::taskmaster& tm, const argv_type& argv) -> void {
+auto sm::executor::_info(sm::taskmaster& tm, const argv_type& argv) -> void {
 
 	if (argv.size() != 1U) {
 		sm::logger::warn("usage: list");
@@ -35,6 +35,24 @@ auto sm::executor::_list(sm::taskmaster& tm, const argv_type& argv) -> void {
 	}
 
 	tm.programs().info();
+}
+
+/* status */
+auto sm::executor::_status(sm::taskmaster& tm, const argv_type& argv) -> void {
+
+	if (argv.size() != 2U) {
+		sm::logger::warn("usage: status <program>");
+		return;
+	}
+
+	// check if program exists
+	if (not tm.programs().has_program(argv[1])) {
+		sm::logger::warn("program not found");
+		return;
+	}
+
+	// get the program status
+	tm.programs().get_program(argv[1]).status();
 }
 
 /* start */

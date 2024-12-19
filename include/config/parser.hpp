@@ -846,9 +846,8 @@ namespace sm {
 			}
 
 			auto _stopsignal(void) -> void {
-				/* need implementation */
-				if (sm::signal::to_int(_buffer.data()) == -1)
-					throw sm::runtime_error("invalid signal");
+
+				_program->stopsignal(sm::signal::to_int(_buffer.data()));
 			}
 
 			auto _stoptime(void) -> void {
@@ -861,7 +860,6 @@ namespace sm {
 				if (is_dir(parent.c_str()) == false)
 					throw sm::runtime_error("invalid stdout path");
 
-				std::cout << "stdout: " << _buffer.data() << std::endl;
 				_program->stdout(std::move(_buffer));
 
 			}

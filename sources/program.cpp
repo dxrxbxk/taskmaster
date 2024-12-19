@@ -27,13 +27,17 @@ sm::program::program(std::string&& id)
   _autorestart{FALSE},
   _exitcodes{},
   _startretries{0U},
-  _starttime{0U},
-  _stopsignal{0},
+  _starttime{2U},
+  _stopsignal{2U},
   _stoptime{0U},
   _workingdir{"/"},
   _stdout{"/dev/null"},
   _stderr{"/dev/null"},
-  _env{} {
+  _env{},
+  _starttimer{},
+  _is_starting{false},
+  _stoptimer{},
+  _is_stopping{false} {
 }
 
 /* destructor */
@@ -44,7 +48,7 @@ sm::program::~program(void) noexcept {
 		return;
 
 	// send signal
-	static_cast<void>(::kill(_pid, SIGTERM));
+	static_cast<void>(::kill(_pid, SIGKILL));
 
 	// does i send SIGKILL ?
 }
@@ -71,10 +75,6 @@ auto sm::program::start(sm::taskmaster& tm) -> void {
 	if (_pid == 0) {
 
 		try {
-
-			// become group leader
-			//if (::setpgid(0, 0) == -1)
-			//	throw sm::system_error("setpgid");
 
 			// test if program is executable
 			sm::access<X_OK>(_cmd[0U]);
@@ -119,7 +119,7 @@ auto sm::program::start(sm::taskmaster& tm) -> void {
 	if (pipe.read() != 0U) {
 
 		// log error
-		sm::logger::error(pipe.data());
+		sm::logger::error(std::string_view{pipe.data()});
 
 		// wait for child
 		::waitpid(_pid, nullptr, 0);
@@ -129,10 +129,18 @@ auto sm::program::start(sm::taskmaster& tm) -> void {
 	}
 	else {
 
-		sm::logger::info(_cmd[0U]);
-
 		// get monitor
 		auto& monitor = tm.monitor();
+
+		// launch start timer
+		_starttimer = sm::timer{*this,
+			&sm::program::start_event,
+			_starttime * 1000U};
+
+		monitor.subscribe(_starttimer, sm::event{EPOLLIN});
+
+		sm::logger::info(std::string_view{_cmd[0U]});
+
 		_pidfd = static_cast<int>(sm::syscall(SYS_pidfd_open, _pid, 0));
 
 		monitor.subscribe(*this, sm::event{EPOLLIN});
@@ -140,7 +148,7 @@ auto sm::program::start(sm::taskmaster& tm) -> void {
 }
 
 /* stop */
-auto sm::program::stop(void) -> void {
+auto sm::program::stop(sm::taskmaster& tm) -> void {
 
 	// check if program is running
 	if (_pid == 0) {
@@ -148,15 +156,62 @@ auto sm::program::stop(void) -> void {
 		return;
 	}
 
+	if (_is_stopping) {
+		sm::logger::warn("program already stopping");
+		return;
+	}
+
 	// send signal
-	//if (::kill(_pid, _stopsignal) == -1)
-	//	throw sm::system_error("kill");
-	if (::kill(_pid, SIGTERM) == -1)
+	if (::kill(_pid, _stopsignal) == -1)
 		throw sm::system_error("kill");
 
+	// get monitor
+	auto& monitor = tm.monitor();
 
-	// reset pid
-	_pid = 0;
+	// launch stop timer
+	_stoptimer = sm::timer{*this,
+		&sm::program::stop_event,
+		_stoptime * 1000U};
+
+	monitor.subscribe(_stoptimer, sm::event{EPOLLIN});
+
+	_is_stopping = true;
+}
+
+/* start event */
+auto sm::program::start_event(sm::taskmaster& tm) -> void {
+
+	// log message
+	sm::logger::info("program: ",
+					 std::string_view{_cmd[0U]},
+					 " successfully launched [",
+					 _pid, "]");
+
+	// remove timer
+	tm.monitor().unsubscribe(_starttimer);
+}
+
+/* stop event */
+auto sm::program::stop_event(sm::taskmaster& tm) -> void {
+
+	if (_pid == 0) {
+		sm::logger::warn("program: ",
+						 std::string_view{_cmd[0U]},
+						 " gracefully stopped");
+		return;
+	}
+
+	// send signal
+	if (::kill(_pid, SIGKILL) == -1)
+		throw sm::system_error("kill");
+
+	// log message
+	sm::logger::warn("program: ",
+					 std::string_view{_cmd[0U]},
+					 " forcefully stopped (killed)");
+
+	// disconnect
+	//self::disconnect(tm);
 }
 
 
@@ -193,21 +248,27 @@ auto sm::program::on_event(const sm::event& events, sm::taskmaster& tm) -> void 
 	}
 
 	switch (info.si_code) {
+
 		case CLD_EXITED:
 			sm::logger::info("Process exited normally");
 			break;
+
 		case CLD_KILLED:
 			sm::logger::info("Process was killed by signal");
 			break;
+
 		case CLD_DUMPED:
 			sm::logger::info("Process terminated abnormally");
 			break;
+
 		case CLD_TRAPPED:
 			sm::logger::info("Traced child has trapped");
 			break;
+
 		case CLD_STOPPED:
 			sm::logger::info("Child has stopped");
 			break;
+
 		default:
 			sm::logger::info("Unknown exit code");
 			break;
@@ -220,6 +281,10 @@ auto sm::program::on_event(const sm::event& events, sm::taskmaster& tm) -> void 
 
 auto sm::program::disconnect(sm::taskmaster& tm) -> void {
 
+	// remove timers
+	tm.monitor().unsubscribe(_starttimer);
+	tm.monitor().unsubscribe(_stoptimer);
+
 	// unsubscribe
 	tm.monitor().unsubscribe(*this);
 
@@ -228,4 +293,12 @@ auto sm::program::disconnect(sm::taskmaster& tm) -> void {
 
 	// reset pid
 	_pid = 0;
+
+	// reset timers
+	_is_starting = false;
+	_is_stopping = false;
 }
+
+
+
+

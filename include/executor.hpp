@@ -47,8 +47,11 @@ namespace sm {
 			/* stop */
 			auto _stop(sm::taskmaster&,  const argv_type&) -> void;
 
-			/* list */
-			auto _list(sm::taskmaster&,  const argv_type&) -> void;
+			/* info */
+			auto _info(sm::taskmaster&,  const argv_type&) -> void;
+
+			/* status */
+			auto _status(sm::taskmaster&,  const argv_type&) -> void;
 
 			/* start */
 			auto _start(sm::taskmaster&, const argv_type&) -> void;
@@ -79,11 +82,12 @@ namespace sm {
 				_functions["start"]   = &self::_start;
 				_functions["stop" ]   = &self::_stop;
 				_functions["restart"] = &self::_not_implemented;
-				_functions["status" ] = &self::_not_implemented;
+				_functions["status" ] = &self::_status;
 				_functions["help" ]   = &self::_not_implemented;
 				_functions["exit" ]   = &self::_exit;
 				_functions["clear"]   = &self::_clear;
 				_functions["reload"]  = &self::_not_implemented;
+				_functions["info"  ]  = &self::_info;
 
 				_functions["fg"   ] = &self::_not_implemented;
 			}

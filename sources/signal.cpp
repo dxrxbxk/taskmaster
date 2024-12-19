@@ -187,9 +187,12 @@ auto sm::signal::on_event(const sm::event& events, sm::taskmaster& tm) -> void {
 	tm.stop();
 }
 
+
 // -- public methods ----------------------------------------------------------
 
 auto sm::signal::to_int(const std::string& sig) -> int {
+
+	return self::has_signal(sig.data(), sig.size());
 
 	auto it = shared()._signals.find(sig);
 

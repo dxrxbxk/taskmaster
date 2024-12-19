@@ -66,6 +66,9 @@ sm::taskmaster::taskmaster(const sm::options& opts)
 
 	// become group leader
 	::setpgid(0, 0);
+
+
+	sm::logger::info("taskmaster: starting with pid: ", ::getpid());
 }
 
 /* destructor */

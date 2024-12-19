@@ -6,6 +6,8 @@
 # include "types.hpp"
 # include "utils/limits.hpp"
 
+# include "diagnostics/exception.hpp"
+
 namespace sm {
 
 template <typename IntegerType>
@@ -98,6 +100,62 @@ constexpr bool valid_mul(T a, T b) noexcept {
 	return is_mul_overflow<T>::run(a, b);
 #endif
 }
+
+
+
+
+	template <typename T> requires sm::is_integral<T>
+	constexpr auto add_overflow(const T& a, const T& b) -> T {
+
+		if  constexpr (sm::is_signed<T>) {
+
+			if ((a > 0) && (a > (sm::limits<T>::max() - b)))
+				throw sm::runtime_error("addition overflow");
+		}
+		else {
+			if (a > (sm::limits<T>::max() - b))
+				throw sm::runtime_error("addition overflow");
+		}
+
+		return T{a + b};
+	}
+
+	template <typename T> requires sm::is_integral<T>
+	constexpr auto sub_overflow(const T& a, const T& b) -> T {
+
+		if  constexpr (sm::is_signed<T>) {
+
+			if ((a > 0) && (a < (sm::limits<T>::min() + b)))
+				throw sm::runtime_error("subtraction overflow");
+		}
+		else {
+			if (a < (sm::limits<T>::min() + b))
+				throw sm::runtime_error("subtraction overflow");
+		}
+
+		return T{a - b};
+	}
+
+	template <typename T> requires sm::is_integral<T>
+	constexpr auto mul_overflow(const T& a, const T& b) -> T {
+
+		if (a > (sm::limits<T>::max() / b))
+			throw sm::runtime_error("multiplication overflow");
+
+		return T{a * b};
+	}
+
+	template <typename T> requires sm::is_integral<T>
+	constexpr auto div_overflow(const T& a, const T& b) -> T {
+
+		if constexpr (sm::is_signed<T>) {
+
+			if ((b == -1) && (a == sm::limits<T>::min()))
+				throw sm::runtime_error("division overflow");
+		}
+
+		return T{a / b};
+	}
 
 } // namespace sm
 

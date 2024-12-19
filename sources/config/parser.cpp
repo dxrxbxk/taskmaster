@@ -12,7 +12,7 @@
 /* default constructor */
 sm::parser::parser(void) noexcept 
 : _it{nullptr}, _end{nullptr}, _tr{&_machine[S_START][C_EOB]},
-  _count{0U}, _line{1U}, _action{nullptr}, _buffer{}, _pm{nullptr}, _profile{} {
+  _count{0U}, _line{1U}, _action{nullptr}, _buffer{}, _values{}, _pm{nullptr}, _profile{} {
 }
 
 
@@ -75,6 +75,7 @@ auto sm::parser::_add_key(void) -> void {
 /* add value */
 auto sm::parser::_add_value(void) -> void {
 	self::_flush();
+	//_values.push_back(_buffer);
 	(this->*_action)();
 	_buffer.clear();
 }
@@ -88,30 +89,4 @@ auto sm::parser::_flush(void) -> void {
 /* error */
 auto sm::parser::_error(void) -> void {
 	throw sm::runtime_error("parser error");
-}
-
-
-#include "resources/unique_fd.hpp"
-#include "reader.hpp"
-#include "system/open.hpp"
-
-
-auto sm::parser_tester(void) -> void {
-
-	sm::unique_fd file = sm::open("./tools/taskmaster.conf", O_RDONLY);
-
-	sm::reader<32U> reader;
-	sm::parser parser;
-
-	sm::program_manager pm;
-
-	do {
-
-		reader.read(file);
-		parser.parse(reader, pm);
-
-	} while (reader.size() > 0);
-
-
-	std::cout << "number of programs: " << pm.size() << std::endl;
 }

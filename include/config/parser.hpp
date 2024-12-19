@@ -64,6 +64,9 @@ namespace sm {
 			/* buffer */
 			std::string _buffer;
 
+			/* values */
+			std::vector<std::string> _values;
+
 
 			/* program manager */
 			sm::program_manager* _pm;
@@ -565,7 +568,7 @@ namespace sm {
 					// INVALID
 					{S_ERROR,         &parser::_error},
 					// NEWLINE
-					{S_ERROR,         &parser::_error},
+					{S_DEFAULT,       &parser::_add_value},
 					// WHITESPACE
 					{S_WAIT_VALUE,    &parser::_skip},
 					// DIGIT
@@ -605,7 +608,7 @@ namespace sm {
 					// NEWLINE
 					{S_DEFAULT,       &parser::_add_value}, // need to add newline
 					// WHITESPACE
-					{S_WAIT_NEWLINE,  &parser::_add_value},
+					{S_WAIT_VALUE,    &parser::_skip},
 					// DIGIT
 					{S_IN_VALUE,      &parser::_increment},
 					// ALPHA
@@ -804,6 +807,9 @@ namespace sm {
 
 			auto _umask(void) -> void {
 
+				//if (_vector.size() > 1)
+				//	throw sm::runtime_error("too many arguments");
+
 
 				// check if value is in valid range
 				auto umask = sm::atoi<::mode_t, sm::oct>(_buffer.data());
@@ -871,7 +877,13 @@ namespace sm {
 			}
 
 			auto _env(void) -> void {
+
+				//for (auto& value : _values) {
+				//	std::cout << value << std::endl;
+				//}
+
 				_profile->_env.push(_buffer.data());
+				_values.clear();
 			}
 
 

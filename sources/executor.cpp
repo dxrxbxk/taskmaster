@@ -43,6 +43,8 @@ auto sm::executor::_info(sm::taskmaster& tm, const argv_type& argv) -> void {
 	tm.programs().info();
 }
 
+#include "string/split.hpp"
+
 /* status */
 auto sm::executor::_status(sm::taskmaster& tm, const argv_type& argv) -> void {
 
@@ -50,6 +52,8 @@ auto sm::executor::_status(sm::taskmaster& tm, const argv_type& argv) -> void {
 		sm::logger::warn("usage: status <program>");
 		return;
 	}
+
+	//auto vec = sm::split(argv[1U], "%");
 
 	// check if program exists
 	if (not tm.programs().has_program(argv[1U])) {

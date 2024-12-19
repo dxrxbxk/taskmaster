@@ -6,9 +6,10 @@
 
 // -- public lifecycle --------------------------------------------------------
 
-/* default constructor */
-sm::profile::profile(void)
-: _cmd{},
+/* id constructor */
+sm::profile::profile(std::string&& id)
+: _id{std::move(id)},
+  _cmd{},
   _numprocs{1U},
   _umask{0777U},
   _autostart{false},
@@ -27,7 +28,17 @@ sm::profile::profile(void)
 
 // -- public accessors --------------------------------------------------------
 
+/* id */
+auto sm::profile::id(void) const noexcept -> const std::string& {
+	return _id;
+}
+
 /* cmd */
+auto sm::profile::cmd(void) noexcept -> sm::contiguous_cstr& {
+	return _cmd;
+}
+
+/* const cmd */
 auto sm::profile::cmd(void) const noexcept -> const sm::contiguous_cstr& {
 	return _cmd;
 }
@@ -93,6 +104,11 @@ auto sm::profile::stderr(void) const noexcept -> const std::string& {
 }
 
 /* env */
+auto sm::profile::env(void) noexcept -> sm::contiguous_cstr& {
+	return _env;
+}
+
+/* const env */
 auto sm::profile::env(void) const noexcept -> const sm::contiguous_cstr& {
 	return _env;
 }

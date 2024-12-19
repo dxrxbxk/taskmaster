@@ -47,6 +47,21 @@ namespace sm {
 			  _size{0U} {
 			}
 
+			/* deleted copy constructor */
+			stream(const self&) = delete;
+
+			/* deleted move constructor */
+			stream(self&&) = delete;
+
+			/* destructor */
+			~stream(void) noexcept {
+
+				if (_buffer == nullptr)
+					return;
+
+				sm::free(_buffer);
+			}
+
 
 		private:
 

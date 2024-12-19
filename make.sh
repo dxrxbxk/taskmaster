@@ -415,7 +415,7 @@ function _launch_test() {
 	tmux split-window -h -t 'taskmaster'
 
 	# send first command
-	tmux send-keys -t 'taskmaster:0.0' "$taskmaster && clear && tail --follow $logfile" C-m
+	tmux send-keys -t 'taskmaster:0.0' "$executable && clear && tail --follow $logfile" C-m
 
 	# send second command
 	tmux send-keys -t 'taskmaster:0.1' "sleep 1 && $taskcontrol" C-m
@@ -512,7 +512,7 @@ function _leak() {
 	)
 
 	# run valgrind
-	valgrind $valgrind_flags $taskmaster
+	valgrind $valgrind_flags $executable
 }
 
 

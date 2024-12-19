@@ -1,5 +1,4 @@
 #include "config/parser.hpp"
-#include "program.hpp"
 
 
 //const char* states[] {
@@ -13,7 +12,7 @@
 /* default constructor */
 sm::parser::parser(void) noexcept 
 : _it{nullptr}, _end{nullptr}, _tr{&_machine[S_START][C_EOB]},
-  _count{0U}, _line{1U}, _action{nullptr}, _buffer{}, _pm{nullptr}, _program{} {
+  _count{0U}, _line{1U}, _action{nullptr}, _buffer{}, _pm{nullptr}, _profile{} {
 }
 
 
@@ -56,11 +55,11 @@ auto sm::parser::_add_id(void) -> void {
 
 	self::_flush();
 
-	if (_program)
-		_pm->add_program(std::move(_program));
+	if (_profile)
+		_pm->add_profile(std::move(_profile));
 
 	// create new program
-	_program = sm::make_unique<sm::program>(std::move(_buffer));
+	_profile = sm::make_shared<sm::profile>(std::move(_buffer));
 
 	_buffer.clear();
 }

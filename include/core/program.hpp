@@ -26,9 +26,6 @@ namespace sm {
 
 			// -- private members ---------------------------------------------
 
-			/* id */
-			std::string _id;
-
 			/* profile */
 			sm::shared_ptr<sm::profile> _profile;
 
@@ -43,8 +40,8 @@ namespace sm {
 			/* deleted default constructor */
 			program2(void) = delete;
 
-			/* id / profile constructor */
-			program2(std::string&&, sm::shared_ptr<sm::profile>&&);
+			/* profile constructor */
+			program2(sm::shared_ptr<sm::profile>&&);
 
 			/* deleted copy constructor */
 			program2(const self&) = delete;
@@ -69,6 +66,9 @@ namespace sm {
 
 			/* profile */
 			auto profile(void) noexcept -> sm::profile&;
+
+			/* processes */
+			auto processes(void) noexcept -> std::vector<sm::process>&;
 
 	}; // class program
 

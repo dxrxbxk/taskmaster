@@ -12,7 +12,7 @@
 
 /* default constructor */
 sm::readline::readline(void)
-: _prompt{}, _buffer{}, _input{},
+: _history{}, _prompt{}, _buffer{}, _input{},
   _input_pos{0U}, _cursor_pos{0U}, _offset{0U},
   _term_width{sm::terminal::width() - 13U} {
 
@@ -22,7 +22,7 @@ sm::readline::readline(void)
 	//_box.print();
 	//// move up
 	//::write(STDOUT_FILENO, "\x1b[1A", 4U);
-	_render();
+	//_render();
 }
 
 /* destructor */
@@ -107,6 +107,14 @@ auto sm::readline::on_event(const sm::event& events, sm::taskmaster& tm) -> void
 			else if (reader[2U] == 'D')
 				self::_move_left();
 
+			// move cursor up
+			else if (reader[2U] == 'A')
+				self::_move_up();
+
+			// move cursor down
+			else if (reader[2U] == 'B')
+				self::_move_down();
+
 		}
 	}
 
@@ -116,7 +124,7 @@ auto sm::readline::on_event(const sm::event& events, sm::taskmaster& tm) -> void
 // -- private methods ---------------------------------------------------------
 
 /* render */
-auto sm::readline::_render(void) -> void {
+auto sm::readline::_render(void) const -> void {
 
 	_buffer.clear();
 
@@ -125,22 +133,22 @@ auto sm::readline::_render(void) -> void {
 
 
 	// Calcul de la portion visible
-    const char* ptr = _input.data() + _offset;
-    const sm::usize visible_size = std::min(_term_width, _input.size() - _offset);
+	const char* ptr = _input.data() + _offset;
+	const sm::usize visible_size = std::min(_term_width, _input.size() - _offset);
 
-    // Ajouter la portion visible au buffer
-    _buffer.append(ptr, visible_size);
+	// Ajouter la portion visible au buffer
+	_buffer.append(ptr, visible_size);
 
-    // Replacer le curseur
-    _buffer.append("\r");
-    const sm::usize visible_cursor_pos = _input_pos - _offset;
+	// Replacer le curseur
+	_buffer.append("\r");
+	const sm::usize visible_cursor_pos = _input_pos - _offset;
 
-    if (visible_cursor_pos < _term_width) {
-        _buffer.append(sm::escape::move_right(
+	if (visible_cursor_pos < _term_width) {
+		_buffer.append(sm::escape::move_right(
 					static_cast<unsigned short>(visible_cursor_pos + 13U)));
-    }
+	}
 
-    ::write(STDOUT_FILENO, _buffer.data(), _buffer.size());
+	::write(STDOUT_FILENO, _buffer.data(), _buffer.size());
 }
 
 
@@ -208,6 +216,47 @@ auto sm::readline::_move_right(void) -> void {
     _render();
 }
 
+/* move up */
+auto sm::readline::_move_up(void) -> void {
+
+	if (_history.empty())
+		return;
+
+	--_history;
+
+	_input = _history.current();
+	_input_pos = _input.size();
+	_cursor_pos = _input_pos;
+	_offset = 0U;
+
+	_render();
+}
+
+/* move down */
+auto sm::readline::_move_down(void) -> void {
+
+	if (_history.empty())
+		return;
+
+	++_history;
+
+	if (_history.at_begin()) {
+		_input.clear();
+		_cursor_pos = 0U;
+		_input_pos = 0U;
+		_offset = 0U;
+	}
+	else {
+		_input = _history.current();
+		_input_pos = _input.size();
+		_cursor_pos = _input_pos;
+		_offset = 0U;
+	}
+
+	_render();
+
+}
+
 /* delete */
 auto sm::readline::_delete(void) -> void {
 
@@ -232,6 +281,9 @@ auto sm::readline::_return(sm::taskmaster& tm) -> void {
 		// execute command
 		tm.executor().execute(tm, std::move(argv));
 
+		// add to history
+		_history.add(_input);
+
 		_input.clear();
 		_cursor_pos = 0U;
 		_input_pos = 0U;
@@ -243,6 +295,7 @@ auto sm::readline::_return(sm::taskmaster& tm) -> void {
 }
 
 #include "resources/unique_fd.hpp"
+#include "system/open.hpp"
 
 /* debug */
 auto sm::readline::_debug(void) -> void {

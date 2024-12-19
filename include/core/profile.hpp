@@ -34,6 +34,9 @@ namespace sm {
 
 			// -- private members ---------------------------------------------
 
+			/* id */
+			std::string _id;
+
 			/* command */
 			sm::contiguous_cstr _cmd;
 
@@ -81,8 +84,11 @@ namespace sm {
 
 			// -- public lifecycle --------------------------------------------
 
-			/* default constructor */
-			profile(void);
+			/* deleted default constructor */
+			profile(void) = delete;
+
+			/* id constructor */
+			profile(std::string&&);
 
 			/* deleted copy constructor */
 			profile(const profile&) = delete;
@@ -105,7 +111,13 @@ namespace sm {
 
 			// -- public accessors --------------------------------------------
 
+			/* id */
+			auto id(void) const noexcept -> const std::string&;
+
 			/* cmd */
+			auto cmd(void) noexcept -> sm::contiguous_cstr&;
+
+			/* const cmd */
 			auto cmd(void) const noexcept -> const sm::contiguous_cstr&;
 
 			/* numprocs */
@@ -145,6 +157,9 @@ namespace sm {
 			auto stderr(void) const noexcept -> const std::string&;
 
 			/* env */
+			auto env(void) noexcept -> sm::contiguous_cstr&;
+
+			/* const env */
 			auto env(void) const noexcept -> const sm::contiguous_cstr&;
 
 	}; // class profile

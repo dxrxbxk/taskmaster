@@ -2,8 +2,7 @@
 #define parser_hpp
 
 #include "reader.hpp"
-#include "resources/unique_ptr.hpp"
-#include "program.hpp"
+#include "resources/shared_ptr.hpp"
 #include "program_manager.hpp"
 #include "utils/atoi.hpp"
 #include "utils/is_dir.hpp"
@@ -69,8 +68,8 @@ namespace sm {
 			/* program manager */
 			sm::program_manager* _pm;
 
-			/* program */
-			sm::unique_ptr<sm::program> _program;
+			/* profile */
+			sm::shared_ptr<sm::profile> _profile;
 
 
 		public:
@@ -107,8 +106,8 @@ namespace sm {
 				// check for end of file
 				if (buffer.eof()) {
 
-					if (_program)
-						_pm->add_program(std::move(_program));
+					if (_profile)
+						_pm->add_profile(std::move(_profile));
 
 					return;
 				}
@@ -790,7 +789,7 @@ namespace sm {
 				if (sm::is_command(_buffer.data()) == false)
 					throw sm::runtime_error("invalid command");
 
-				_program->cmd_push(std::move(_buffer.data()));
+				_profile->_cmd.push(_buffer.data());
 			}
 
 			auto _numprocs(void) -> void {
@@ -800,7 +799,7 @@ namespace sm {
 				if (numprocs == 0U)
 					throw sm::runtime_error("invalid numprocs");
 
-				_program->numprocs(numprocs);
+				_profile->_numprocs = numprocs;
 			}
 
 			auto _umask(void) -> void {
@@ -812,8 +811,7 @@ namespace sm {
 				if ((umask & 0777) != umask)
 					throw sm::runtime_error("invalid umask");
 
-				_program->umask(umask);
-
+				_profile->_umask = umask;
 			}
 
 			auto _workingdir(void) -> void {
@@ -821,59 +819,59 @@ namespace sm {
 				if (sm::is_dir(_buffer.data()) == false)
 					throw sm::runtime_error("invalid working directory");
 
-				_program->workingdir(std::move(_buffer));
+				_profile->_workingdir.assign(std::move(_buffer));
 			}
 
 			auto _autostart(void) -> void {
-				_program->autostart(sm::atoi<bool>(_buffer.data()));
+				_profile->_autostart = sm::atoi<bool>(_buffer.data());
 			}
 
 			auto _autorestart(void) -> void {
-				_program->autorestart(sm::atoi<bool>(_buffer.data()));
+				_profile->_autorestart = sm::atoi<bool>(_buffer.data());
 			}
 
 			auto _exitcodes(void) -> void {
-				_program->exitcodes(sm::atoi<int>(_buffer.data()));
+				_profile->_exitcodes.push_back(sm::atoi<int>(_buffer.data()));
 			}
 
 			auto _startretries(void) -> void {
-				_program->startretries(sm::atoi<unsigned>(_buffer.data()));
+				_profile->_startretries = sm::atoi<unsigned>(_buffer.data());
 			}
 
 
 			auto _starttime(void) -> void {
-				_program->starttime(sm::atoi<unsigned>(_buffer.data()));
+				_profile->_starttime = sm::atoi<unsigned>(_buffer.data());
 			}
 
 			auto _stopsignal(void) -> void {
-
-				_program->stopsignal(sm::signal::to_int(_buffer.data()));
+				_profile->_stopsignal = sm::signal::to_int(_buffer.data());
 			}
 
 			auto _stoptime(void) -> void {
-				_program->stoptime(sm::atoi<unsigned>(_buffer.data()));
+				_profile->_stoptime = sm::atoi<unsigned>(_buffer.data());
 			}
 
 			auto _stdout(void) -> void {
-				std::filesystem::path parent = std::filesystem::path{_buffer.data()}.parent_path();
+				auto parent = std::filesystem::path{_buffer.data()}.parent_path();
 
 				if (is_dir(parent.c_str()) == false)
 					throw sm::runtime_error("invalid stdout path");
 
-				_program->stdout(std::move(_buffer));
+				_profile->_stdout.assign(std::move(_buffer));
 
 			}
 
 			auto _stderr(void) -> void {
 
-				std::filesystem::path parent = std::filesystem::path{_buffer.data()}.parent_path();
+				auto parent = std::filesystem::path{_buffer.data()}.parent_path();
 				if (is_dir(parent.c_str()) == false)
 					throw sm::runtime_error("invalid stderr path");
-				_program->stderr(std::move(_buffer));
+
+				_profile->_stderr.assign(std::move(_buffer));
 			}
 
 			auto _env(void) -> void {
-				_program->env_push(_buffer.data());
+				_profile->_env.push(_buffer.data());
 			}
 
 

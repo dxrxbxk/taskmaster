@@ -2,7 +2,6 @@
 #include "taskmaster.hpp"
 #include "log/logger.hpp"
 #include "signal.hpp"
-#include "readline.hpp"
 
 #include "time/timer.hpp"
 
@@ -24,16 +23,7 @@ auto sm::taskmaster::_shared(const sm::options& opts) -> self& {
 /* run */
 auto sm::taskmaster::_run(void) -> void {
 
-
-	//::pthread_t th{};
-	//sm::readline rl{};
-	//_monitor.subscribe(rl, sm::event{EPOLLIN});
-
-	sm::readline rl{};
-	_monitor.subscribe(rl, sm::event{EPOLLIN});
-
-	//sm::timer tm{3'000, 300};
-	//_monitor.subscribe(tm, sm::event{EPOLLIN});
+	_readline.prompt();
 
 	// poll
 	while (_running == true) {
@@ -51,7 +41,8 @@ sm::taskmaster::taskmaster(const sm::options& opts)
   _running{true},
   _monitor{},
   _programs{},
-  _executor{} {
+  _executor{},
+  _readline{} {
 
 
 	// set config from options
@@ -63,6 +54,9 @@ sm::taskmaster::taskmaster(const sm::options& opts)
 
 	// subscribe to signals
 	_monitor.subscribe(sm::signal::shared(), sm::event{EPOLLIN});
+
+	// subscribe to readline
+	_monitor.subscribe(_readline, sm::event{EPOLLIN});
 
 	// become group leader
 	::setpgid(0, 0);
@@ -103,6 +97,11 @@ auto sm::taskmaster::programs(void) noexcept -> sm::program_manager& {
 /* executor */
 auto sm::taskmaster::executor(void) noexcept -> sm::executor& {
 	return _executor;
+}
+
+/* readline */
+auto sm::taskmaster::readline(void) const noexcept -> const sm::readline& {
+	return _readline;
 }
 
 /* is running */

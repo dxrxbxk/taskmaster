@@ -5,6 +5,7 @@
 #include "events/monitor.hpp"
 #include "config/config.hpp"
 #include "executor.hpp"
+#include "readline.hpp"
 
 
 // -- S M  N A M E S P A C E --------------------------------------------------
@@ -47,6 +48,9 @@ namespace sm {
 
 			/* executor */
 			sm::executor _executor;
+
+			/* readline */
+			sm::readline _readline;
 
 
 			// -- private static methods --------------------------------------
@@ -106,6 +110,9 @@ namespace sm {
 
 			/* executor */
 			auto executor(void) noexcept -> sm::executor&;
+
+			/* readline */
+			auto readline(void) const noexcept -> const sm::readline&;
 
 			/* is running */
 			auto is_running(void) const noexcept -> bool;

@@ -10,7 +10,7 @@ namespace sm {
 
 template <typename IntegerType>
 struct position_of_sign_bit {
-	static_assert(std::is_integral_v<IntegerType>,
+	static_assert(sm::is_integral<IntegerType>,
 		"position_of_sign_bit: IntegralType must be an integral type");
 
 	static const std::size_t value = sizeof(IntegerType) * 8 - 1;
@@ -32,9 +32,9 @@ constexpr bool valid_add(T a, T b) noexcept {
 	T dummy;
 	return __builtin_add_overflow(a, b, &dummy);
 #else
-	std::make_unsigned_t<T> ua = a;
-	std::make_unsigned_t<T> ub = b;
-	std::make_unsigned_t<T> result = ua + ub;
+	sm::make_unsigned_t<T> ua = a;
+	sm::make_unsigned_t<T> ub = b;
+	sm::make_unsigned_t<T> result = ua + ub;
 
 	return std::is_signed_v<T>
 		?  has_sign_bit(binary_complement(T((result ^ a) & (result ^ b))))
@@ -48,9 +48,9 @@ constexpr bool valid_sub(T a, T b) noexcept {
 	T dummy;
 	return __builtin_sub_overflow(a, b, &dummy);
 #else
-	std::make_unsigned_t<T> ua = a;
-	std::make_unsigned_t<T> ub = b;
-	std::make_unsigned_t<T> result = ua - ub;
+	sm::make_unsigned_t<T> ua = a;
+	sm::make_unsigned_t<T> ub = b;
+	sm::make_unsigned_t<T> result = ua - ub;
 
 	return std::is_signed_v<T>
 		?  has_sign_bit(binary_complement(T((result ^ a) & (a ^ b))))
@@ -59,7 +59,7 @@ constexpr bool valid_sub(T a, T b) noexcept {
 #endif
 }
 
-template <typename T, bool IsSigned = std::is_signed_v<T>>
+template <typename T, bool IsSigned = sm::is_signed<T>>
 struct is_mul_overflow;
 
 template <typename T>

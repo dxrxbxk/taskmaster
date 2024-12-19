@@ -7,6 +7,7 @@
 #include "type_traits/type_traits.hpp"
 #include "diagnostics/exception.hpp"
 #include <iostream>
+#include "utils/overflow.hpp"
 
 
 // -- S M  N A M E S P A C E --------------------------------------------------
@@ -50,8 +51,10 @@ namespace sm {
 				throw sm::runtime_error{"not a number"};
 
 			// check for multiplication overflow
-			if (result > limit)
-				throw sm::runtime_error{"overflow"};
+			//if (result > limit)
+			//	throw sm::runtime_error{"overflow"};
+			if (valid_mul<T>(result, B::value))
+				throw sm::runtime_error{"overflow mul"};
 
 			// multiply by base
 			result *= B::value;
@@ -60,9 +63,10 @@ namespace sm {
 			const auto digit = static_cast<T>(*str - '0');
 
 			// check for addition overflow
-			if (result > (max - digit))
-				throw sm::runtime_error{"overflow"};
-
+			//if (result > (max - digit))
+			//	throw sm::runtime_error{"overflow"};
+			if (valid_add(result, digit))
+				throw sm::runtime_error{"overflow add"};
 			// add digit
 			result += digit;
 		}
@@ -84,15 +88,19 @@ namespace sm {
 
 				constexpr auto min = std::numeric_limits<T>::min();
 
-				if (result < (min / static_cast<T>(U::value)))
-					throw sm::runtime_error{"overflow"};
+				//if (result < (min / static_cast<T>(U::value)))
+				//	throw sm::runtime_error{"overflow"};
+				if (valid_mul<T>(result, U::value))
+					throw sm::runtime_error{"overflow mul"};
 
 				result *= U::value;
 
 				const auto digit = static_cast<T>(*str - '0');
 
-				if (result < (min + digit))
-					throw sm::runtime_error{"overflow"};
+				//if (result < (min + digit))
+				//	throw sm::runtime_error{"overflow"};
+				if (valid_sub(result, digit))
+					throw sm::runtime_error{"overflow sub"};
 
 				result -= digit;
 			}
@@ -104,15 +112,19 @@ namespace sm {
 
 				constexpr auto max = std::numeric_limits<T>::max();
 
-				if (result > (max / static_cast<T>(10)))
-					throw sm::runtime_error{"overflow"};
+				//if (result > (max / static_cast<T>(10)))
+				//	throw sm::runtime_error{"overflow"};
+				if (valid_mul<T>(result, U::value))
+					throw sm::runtime_error{"overflow mul"};
 
 				result *= 10;
 
 				const auto digit = static_cast<T>(*str - '0');
 
-				if (result > (max - digit))
-					throw sm::runtime_error{"overflow"};
+				//if (result > (max - digit))
+				//	throw sm::runtime_error{"overflow"};
+				if (valid_add(result, digit))
+					throw sm::runtime_error{"overflow add"};
 
 				result += digit;
 

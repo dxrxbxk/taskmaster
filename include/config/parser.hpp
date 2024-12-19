@@ -608,7 +608,7 @@ namespace sm {
 					// NEWLINE
 					{S_DEFAULT,       &parser::_add_value}, // need to add newline
 					// WHITESPACE
-					{S_WAIT_VALUE,    &parser::_skip},
+					{S_WAIT_VALUE,    &parser::_add_value},
 					// DIGIT
 					{S_IN_VALUE,      &parser::_increment},
 					// ALPHA
@@ -789,13 +789,24 @@ namespace sm {
 
 			auto _cmd(void) -> void {
 
-				if (sm::is_command(_buffer.data()) == false)
+				if (_values.size() == 0U)
+					throw sm::runtime_error("empty command");
+
+				if (sm::is_command(_values[0].data()) == false)
 					throw sm::runtime_error("invalid command");
 
-				_profile->_cmd.push(_buffer.data());
+				for (auto& value : _values) {
+					_profile->_cmd.push(value.data());
+				}
 			}
 
 			auto _numprocs(void) -> void {
+
+				if (_buffer.size() == 0U)
+					throw sm::runtime_error("empty numprocs");
+
+				if (_values.size() != 1U)
+					throw sm::runtime_error("invalid numprocs");
 
 				auto numprocs = sm::atoi<unsigned>(_buffer.data());
 
@@ -807,8 +818,8 @@ namespace sm {
 
 			auto _umask(void) -> void {
 
-				//if (_vector.size() > 1)
-				//	throw sm::runtime_error("too many arguments");
+				if (_values.size() != 1U)
+					throw sm::runtime_error("invalid umask");
 
 
 				// check if value is in valid range

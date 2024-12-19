@@ -75,7 +75,8 @@ auto sm::parser::_add_key(void) -> void {
 /* add value */
 auto sm::parser::_add_value(void) -> void {
 	self::_flush();
-	//_values.push_back(_buffer);
+	std::cout << std::hex << _buffer << '\r' << std::endl;
+	_values.push_back(_buffer);
 	(this->*_action)();
 	_buffer.clear();
 }

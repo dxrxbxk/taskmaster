@@ -13,7 +13,9 @@
 
 /* default constructor */
 sm::config::config(void)
-: _path{"/home/richtofen/Code/taskmaster/tools/taskmaster.conf"} {
+//: _path{"/home/richtofen/Code/taskmaster/tools/taskmaster.conf"} {
+: _path{"/root/data/taskmaster/tools/taskmaster.conf"} {
+
 }
 
 /* path constructor */

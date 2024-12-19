@@ -1,5 +1,5 @@
 #include "time/timer.hpp"
-#include "program.hpp"
+#include "core/process.hpp"
 
 
 // -- T I M E R ---------------------------------------------------------------
@@ -7,13 +7,13 @@
 // -- public lifecycle --------------------------------------------------------
 
 /* time constructor */
-sm::timer::timer(sm::program& prg, method_type method,
+sm::timer::timer(sm::process& prg, method_type method,
 								const sm::isize& ms)
 : sm::timer{prg, method, ms, 0} {
 }
 
 /* interval constructor */
-sm::timer::timer(sm::program& prg, method_type method,
+sm::timer::timer(sm::process& prg, method_type method,
 		const sm::isize& ms_value, const sm::isize& ms_interval)
 : sm::listener{}, _fd{self::_create()}, _program{&prg}, _method{method} {
 

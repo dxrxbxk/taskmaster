@@ -94,6 +94,7 @@ constexpr bool valid_mul(T a, T b) noexcept {
 	T dummy;
 	return __builtin_mul_overflow(a, b, &dummy);
 #else
+
 	return is_mul_overflow<T>::run(a, b);
 #endif
 }

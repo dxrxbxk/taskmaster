@@ -1,6 +1,7 @@
 #ifndef process_hpp
 #define process_hpp
 
+#include "time/timer.hpp"
 #include "events/monitor.hpp"
 #include "resources/shared_ptr.hpp"
 
@@ -78,6 +79,12 @@ namespace sm {
 			/* pid descriptor */
 			sm::unique_fd _pidfd;
 
+			/* start timer */
+			sm::timer _starttimer;
+
+			/* stop timer */
+			sm::timer _stoptimer;
+
 
 		public:
 
@@ -92,8 +99,8 @@ namespace sm {
 			/* deleted copy constructor */
 			process(const self&) = delete;
 
-			/* deleted move constructor */
-			process(self&&) = delete;
+			/* move constructor */
+			process(self&&) noexcept;
 
 			/* destructor */
 			~process(void) noexcept;
@@ -125,11 +132,23 @@ namespace sm {
 			/* stop */
 			auto stop(sm::taskmaster&) -> void;
 
-			/* status */
-			auto status(void) const -> void;
+			/* restart */
+			auto restart(sm::taskmaster&) -> void;
 
 			/* disconnect */
 			auto disconnect(sm::taskmaster&) -> void;
+
+			/* status */
+			auto status(void) const -> void;
+
+
+			// -- public callbacks --------------------------------------------
+
+			/* start event */
+			auto start_event(sm::taskmaster&) -> void;
+
+			/* stop event */
+			auto stop_event(sm::taskmaster&) -> void;
 
 
 			// -- public accessors --------------------------------------------

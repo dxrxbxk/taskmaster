@@ -1,8 +1,8 @@
 #ifndef program_manager_hpp
 #define program_manager_hpp
 
-#include "resources/unique_ptr.hpp"
-#include "program.hpp"
+#include "resources/shared_ptr.hpp"
+#include "core/program.hpp"
 
 #include <unordered_map>
 #include <string>
@@ -26,8 +26,8 @@ namespace sm {
 			using self = sm::program_manager;
 
 			using map_prog = std::unordered_map<std::string,
-												sm::unique_ptr<sm::program>>;
-			using map_id = std::unordered_map<pid_t, sm::program*>;
+												sm::program2>;
+
 
 
 			// -- private members ---------------------------------------------
@@ -64,8 +64,8 @@ namespace sm {
 
 			// -- public modifiers --------------------------------------------
 
-			/* add program */
-			auto add_program(sm::unique_ptr<sm::program>&&) -> void;
+			/* add profile */
+			auto add_profile(sm::shared_ptr<sm::profile>&&) -> void;
 
 
 			// -- public accessors --------------------------------------------
@@ -79,11 +79,11 @@ namespace sm {
 			}
 
 			/* get program */
-			auto get_program(const std::string& id) -> sm::program& {
+			auto get_program(const std::string& id) -> sm::program2& {
 
 				auto it = _programs.find(id);
 
-				return *it->second;
+				return it->second;
 			}
 
 
@@ -94,9 +94,9 @@ namespace sm {
 
 			/* info */
 			auto info(void) const -> void {
-				for (const auto& [id, program] : _programs) {
-					program->info();
-				}
+				//for (const auto& [id, program] : _programs) {
+				//	program.info();
+				//}
 			}
 
 	}; // class program_manager

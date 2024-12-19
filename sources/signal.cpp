@@ -26,8 +26,13 @@ auto sm::signal::_handler(const int sig) noexcept -> void {
 /* record */
 auto sm::signal::_record(const int& sig) -> void {
 
-	if (::signal(sig, self::_handler) == SIG_ERR)
-		throw sm::system_error("signal");
+	struct ::sigaction sa;
+	sa.sa_handler = self::_handler;
+	sa.sa_mask = __sigset_t{};
+	sa.sa_flags = SA_RESTART;
+
+	if (::sigaction(sig, &sa, nullptr) == -1)
+		throw sm::system_error("sigaction");
 }
 
 // -- private methods ---------------------------------------------------------

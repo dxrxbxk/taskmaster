@@ -12,13 +12,13 @@ auto sm::program_manager::size(void) const noexcept -> std::size_t {
 
 // -- public modifiers --------------------------------------------------------
 
-/* add program */
-auto sm::program_manager::add_program(sm::unique_ptr<sm::program>&& program) -> void {
+/* add profile */
+auto sm::program_manager::add_profile(sm::shared_ptr<sm::profile>&& profile) -> void {
 
 	//program->info();
 
 	// insert program by moving
-	_programs.emplace(program->id(), std::move(program));
+	_programs.emplace(profile->id(), std::move(profile));
 }
 
 
@@ -31,6 +31,6 @@ auto sm::program_manager::start_all(sm::taskmaster& tm) -> void {
 	for (auto& [id, program] : _programs) {
 
 		// execute program
-		program->start(tm);
+		//program->start(tm);
 	}
 }

@@ -133,11 +133,11 @@ auto sm::program::start(sm::taskmaster& tm) -> void {
 		auto& monitor = tm.monitor();
 
 		// launch start timer
-		_starttimer = sm::timer{*this,
-			&sm::program::start_event,
-			_starttime * 1000U};
+		//_starttimer = sm::timer{*this,
+		//	&sm::program::start_event,
+		//	_starttime * 1000U};
 
-		monitor.subscribe(_starttimer, sm::event{EPOLLIN});
+		//monitor.subscribe(_starttimer, sm::event{EPOLLIN});
 
 		sm::logger::info(std::string_view{_cmd[0U]});
 
@@ -169,11 +169,11 @@ auto sm::program::stop(sm::taskmaster& tm) -> void {
 	auto& monitor = tm.monitor();
 
 	// launch stop timer
-	_stoptimer = sm::timer{*this,
-		&sm::program::stop_event,
-		_stoptime * 1000U};
-
-	monitor.subscribe(_stoptimer, sm::event{EPOLLIN});
+	//_stoptimer = sm::timer{*this,
+	//	&sm::program::stop_event,
+	//	_stoptime * 1000U};
+	//
+	//monitor.subscribe(_stoptimer, sm::event{EPOLLIN});
 
 	_is_stopping = true;
 }

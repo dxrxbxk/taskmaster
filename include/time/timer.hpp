@@ -17,8 +17,8 @@ namespace sm {
 
 	// -- forward declarations ------------------------------------------------
 
-	/* program */
-	class program;
+	/* process */
+	class process;
 
 
 	class timer : public sm::listener {
@@ -31,7 +31,7 @@ namespace sm {
 			using self = sm::timer;
 
 			/* method type */
-			using method_type = auto (sm::program::*)(sm::taskmaster&) -> void;
+			using method_type = auto (sm::process::*)(sm::taskmaster&) -> void;
 
 			// -- private members ---------------------------------------------
 
@@ -39,7 +39,7 @@ namespace sm {
 			sm::unique_fd _fd;
 
 			/* program */
-			sm::program* _program;
+			sm::process* _program;
 
 			/* method */
 			method_type _method;
@@ -70,10 +70,10 @@ namespace sm {
 			timer(void) noexcept = default;
 
 			/* time constructor */
-			timer(sm::program&, method_type, const sm::isize&);
+			timer(sm::process&, method_type, const sm::isize&);
 
 			/* interval constructor */
-			timer(sm::program&, method_type,
+			timer(sm::process&, method_type,
 					const sm::isize&, const sm::isize&);
 
 			/* deleted copy constructor */

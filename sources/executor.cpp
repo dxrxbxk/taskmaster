@@ -21,9 +21,15 @@ auto sm::executor::_stop(sm::taskmaster& tm, const argv_type& argv) -> void {
 		return;
 	}
 
-	// stop the program
-	tm.programs().get_program(argv[1]).stop(tm);
+	// get the program
+	auto& prog = tm.programs().get_program(argv[1U]);
 
+	// get processes
+	auto& procs = prog.processes();
+
+	// stop all processes
+	for (auto& proc : procs)
+		proc.stop(tm);
 }
 
 /* list */
@@ -46,13 +52,20 @@ auto sm::executor::_status(sm::taskmaster& tm, const argv_type& argv) -> void {
 	}
 
 	// check if program exists
-	if (not tm.programs().has_program(argv[1])) {
+	if (not tm.programs().has_program(argv[1U])) {
 		sm::logger::warn("program not found");
 		return;
 	}
 
-	// get the program status
-	tm.programs().get_program(argv[1]).status();
+	// get the program
+	auto& prog = tm.programs().get_program(argv[1U]);
+
+	// get processes
+	auto& procs = prog.processes();
+
+	// get the status of all processes
+	for (auto& proc : procs)
+		proc.status();
 }
 
 /* start */
@@ -69,8 +82,15 @@ auto sm::executor::_start(sm::taskmaster& tm, const argv_type& argv) -> void {
 		return;
 	}
 
-	// start the program
-	tm.programs().get_program(argv[1]).start(tm);
+	// get the program
+	auto& prog = tm.programs().get_program(argv[1U]);
+
+	// get processes
+	auto& procs = prog.processes();
+
+	// start all processes
+	for (auto& proc : procs)
+		proc.start(tm);
 }
 
 /* help */
@@ -98,7 +118,9 @@ auto sm::executor::_fg(sm::taskmaster& tm, const argv_type& argv) -> void {
 		sm::logger::warn("usage: fg <program>");
 		return;
 	}
+	sm::logger::warn("not implemented yet");
 
+	/*
 	if (not tm.programs().has_program(argv[1])) {
 		sm::logger::warn("program not found");
 		return;
@@ -133,10 +155,9 @@ auto sm::executor::_fg(sm::taskmaster& tm, const argv_type& argv) -> void {
 	// set the program back to the taskmaster
 
 
-
-
 	// not implemented yet...
 	sm::logger::info("fg command");
+	*/
 }
 
 /* clear */
@@ -167,11 +188,11 @@ auto sm::executor::execute(sm::taskmaster& tm, const argv_type& argv) -> void {
 		return;
 	}
 
-	auto it = _functions.find(argv[0]);
+	auto it = _functions.find(argv[0U]);
 
 	// if the command is found
 	if (it == _functions.end()) {
-		sm::logger::warn("command not found");
+		sm::logger::warn("command not found: ", argv[0U]);
 		return;
 	}
 

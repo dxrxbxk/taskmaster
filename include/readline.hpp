@@ -4,7 +4,7 @@
 #include "types.hpp"
 #include "terminal/terminal.hpp"
 #include "events/monitor.hpp"
-#include "box.hpp"
+#include "history.hpp"
 
 #include <string>
 
@@ -30,14 +30,14 @@ namespace sm {
 
 			// -- private members ---------------------------------------------
 
-			/* box */
-			sm::box _box;
+			/* history */
+			sm::history _history;
 
 			/* prompt */
 			std::string _prompt;
 
 			/* buffer */
-			std::string _buffer;
+			mutable std::string _buffer;
 
 			/* input */
 			std::string _input;
@@ -58,7 +58,7 @@ namespace sm {
 			// -- private methods ---------------------------------------------
 
 			/* render */
-			auto _render(void) -> void;
+			auto _render(void) const -> void;
 
 			/* insert */
 			auto _insert(const char&) -> void;
@@ -68,6 +68,12 @@ namespace sm {
 
 			/* move right */
 			auto _move_right(void) -> void;
+
+			/* move up */
+			auto _move_up(void) -> void;
+
+			/* move down */
+			auto _move_down(void) -> void;
 
 			/* delete */
 			auto _delete(void) -> void;
@@ -117,6 +123,14 @@ namespace sm {
 			/* on resize */
 			auto on_resize(const unsigned short&,
 						   const unsigned short& cols) noexcept -> void override;
+
+
+			// -- public methods ----------------------------------------------
+
+			/* prompt */
+			auto prompt(void) const -> void {
+				_render();
+			}
 
 	}; // class readline
 

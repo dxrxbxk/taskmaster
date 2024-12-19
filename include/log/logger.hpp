@@ -72,7 +72,7 @@ namespace sm {
 				// get timestamp
 				sm::timestamp ts;
 
-				_stream.append(ts.data(), ' ', std::string_view{level}, ": ", args..., "\r\n");
+				_stream.append('\r', ts.data(), ' ', std::string_view{level}, ": ", args..., "\r\n");
 
 				// write to stdout
 				static_cast<void>(::write(STDOUT_FILENO,

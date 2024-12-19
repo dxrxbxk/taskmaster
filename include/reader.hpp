@@ -99,9 +99,15 @@ namespace sm {
 
 				const auto bytes = ::read(fd, _buffer, N);
 
-				if (bytes == -1)
+				if (bytes == -1) {
+
+					_size = 0U;
+
+					//if (errno != EINTR)
 					throw sm::system_error("read");
 
+					return;
+				}
 
 				_size = static_cast<sm::usize>(bytes);
 			}

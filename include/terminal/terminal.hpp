@@ -74,6 +74,9 @@ namespace sm {
 
 			// -- private members ---------------------------------------------
 
+			/* pid */
+			::pid_t _pid;
+
 			/* terminal attributes */
 			const struct ::termios _origin;
 				  struct ::termios _raw;

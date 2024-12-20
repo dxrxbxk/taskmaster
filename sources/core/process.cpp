@@ -69,7 +69,7 @@ auto sm::process::on_event(const sm::event& events, sm::taskmaster& tm) -> void 
 
 	// check type of event
 	if (not events.is_in())
-		throw sm::runtime_error("program: unexpected event");
+		throw sm::runtime_error("process: unexpected event");
 
 
 
@@ -83,7 +83,7 @@ auto sm::process::on_event(const sm::event& events, sm::taskmaster& tm) -> void 
 		if (errno != ECHILD)
 			throw sm::system_error("waitid");
 
-		sm::logger::warn("Process already collected or does not exist.");
+		sm::logger::warn("process: already collected or does not exist.");
 		self::disconnect(tm);
 		return;
 	}
@@ -91,27 +91,27 @@ auto sm::process::on_event(const sm::event& events, sm::taskmaster& tm) -> void 
 	switch (info.si_code) {
 
 		case CLD_EXITED:
-			sm::logger::info("Process exited normally");
+			sm::logger::info("process: exited normally");
 			break;
 
 		case CLD_KILLED:
-			sm::logger::info("Process was killed by signal");
+			sm::logger::info("process: was killed by signal [", info.si_status, "]");
 			break;
 
 		case CLD_DUMPED:
-			sm::logger::info("Process terminated abnormally");
+			sm::logger::info("process: terminated abnormally");
 			break;
 
 		case CLD_TRAPPED:
-			sm::logger::info("Traced child has trapped");
+			sm::logger::info("process: traced child has trapped");
 			break;
 
 		case CLD_STOPPED:
-			sm::logger::info("Child has stopped");
+			sm::logger::info("process: child has stopped");
 			break;
 
 		default:
-			sm::logger::info("Unknown exit code");
+			sm::logger::info("process: unknown exit code");
 			break;
 	}
 
@@ -170,7 +170,7 @@ auto sm::process::start(sm::taskmaster& tm) -> void {
 
 
 			// set umask
-			//throw sm::runtime_error("test", "to", "simulate", "an", "error", "in", "the", "program", "execution");
+			throw sm::runtime_error("test", "to", "simulate", "an", "error", "in", "the", "program", "execution");
 
 			// close stdin
 			//static_cast<void>(::close(STDIN_FILENO));
@@ -241,13 +241,20 @@ auto sm::process::start(sm::taskmaster& tm) -> void {
 auto sm::process::stop(sm::taskmaster& tm) -> void {
 
 	// check if program is running
-	if (_pid == 0) {
-		sm::logger::warn("program not running");
-		return;
-	}
+	if (_pid == 0)
+		return sm::logger::warn("process: not running");
 
-	if (_state == S_STOPPING) {
-		sm::logger::warn("program already stopping");
+	if (_state == S_STOPPING)
+		return sm::logger::warn("process: already stopping");
+
+	_state = S_STOPPING;
+
+	if (_profile->stoptime() == 0U) {
+		
+		// send signal (SIGKILL)
+		if (::kill(_pid, SIGKILL) == -1)
+			throw sm::system_error("kill");
+
 		return;
 	}
 
@@ -265,7 +272,6 @@ auto sm::process::stop(sm::taskmaster& tm) -> void {
 
 	monitor.subscribe(_stoptimer, sm::event{EPOLLIN});
 
-	_state = S_STOPPING;
 }
 
 /* restart */
@@ -275,12 +281,11 @@ auto sm::process::restart(sm::taskmaster& tm) -> void {
 /* disconnect */
 auto sm::process::disconnect(sm::taskmaster& tm) -> void {
 
-	// remove timers
-	tm.monitor().unsubscribe(_starttimer);
-	tm.monitor().unsubscribe(_stoptimer);
+	// get monitor
+	auto& monitor = tm.monitor();
 
-	// unsubscribe
-	tm.monitor().unsubscribe(*this);
+	// remove timers, pidfd
+	monitor.unsubscribe(_starttimer, _stoptimer, *this);
 
 	// close pidfd
 	_pidfd.close();

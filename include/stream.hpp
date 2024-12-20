@@ -16,6 +16,8 @@
 namespace sm {
 
 
+	// -- S T R E A M ---------------------------------------------------------
+
 	class stream final {
 
 
@@ -41,6 +43,9 @@ namespace sm {
 
 		public:
 
+			// -- public lifecycle --------------------------------------------
+
+			/* default constructor */
 			stream(void) noexcept
 			: _buffer{nullptr},
 			  _capacity{0U},
@@ -56,11 +61,22 @@ namespace sm {
 			/* destructor */
 			~stream(void) noexcept {
 
+				// check for valid buffer
 				if (_buffer == nullptr)
 					return;
 
+				// deallocate buffer
 				sm::free(_buffer);
 			}
+
+
+			// -- public assignment operators ---------------------------------
+
+			/* deleted copy assignment operator */
+			auto operator=(const self&) -> self& = delete;
+
+			/* deleted move assignment operator */
+			auto operator=(self&&) -> self& = delete;
 
 
 		private:
@@ -69,7 +85,8 @@ namespace sm {
 			template <typename T> requires (sm::is_integral<T> && !sm::is_same<T, char>)
 			auto _append(const T& value, size_t& offset) -> void {
 
-				constexpr auto size = sm::limits<T>::digits() + sm::is_signed<T>;
+				constexpr auto size = sm::limits<T>::digits()
+									+ (sm::is_signed<T> ? 1U : 0U);
 
 				char buffer[size];
 				char* ptr = buffer + size - 1U;
@@ -98,7 +115,7 @@ namespace sm {
 				}
 
 				while (num != 0U) {
-					*ptr = static_cast<char>((num % static_cast<T>(10)) + '0');
+					*ptr = static_cast<char>((num % static_cast<T>(10))) + '0';
 					num /= static_cast<T>(10);
 					--ptr;
 				}
@@ -111,11 +128,8 @@ namespace sm {
 						++ptr;
 				}
 
-				// len
-				const sm::usize len = static_cast<sm::usize>(buffer + size - ptr);
-
 				// copy buffer to buffer
-				_append_impl(ptr, len, offset);
+				_append_impl(ptr, static_cast<sm::usize>(buffer + size - ptr), offset);
 			}
 
 
@@ -212,11 +226,5 @@ namespace sm {
 	}; // class stream
 
 } // namespace sm
-
-/*
-auto operator new(size_t) -> void* {
-	return sm::malloc<int>(1U);
-}
-*/
 
 #endif // stream_hpp

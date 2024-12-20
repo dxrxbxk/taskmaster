@@ -229,6 +229,12 @@ namespace sm {
 			/* unsubscribe */
 			auto unsubscribe(sm::listener&) noexcept -> void;
 
+			/* unsubscribe (multiple) */
+			template <typename... Ts> requires (sizeof...(Ts) > 1U)
+			auto unsubscribe(Ts&... listeners) noexcept -> void {
+				(self::unsubscribe(listeners), ...);
+			}
+
 			/* wait */
 			auto wait(sm::taskmaster&) -> void;
 

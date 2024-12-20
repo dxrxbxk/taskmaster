@@ -76,8 +76,8 @@ namespace sm {
 
 				// write to stdout
 				static_cast<void>(::write(STDOUT_FILENO,
-							_stream.data(),
-							_stream.size()));
+										 _stream.data(),
+										 _stream.size()));
 			}
 
 

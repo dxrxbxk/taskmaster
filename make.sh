@@ -131,8 +131,7 @@ fi
 
 # cxx flags
 declare -rg cxxflags=('-std=c++2a' '-O0'
-					  '-g3' '-gdwarf-4'
-					  #'-fsanitize=address'
+					  '-g3' '-gdwarf-4' '-fsanitize=address'
 					  '-DENGINE_VL_DEBUG'
 					  '-Wall' '-Wextra' '-Werror' '-Wpedantic' '-Weffc++'
 					  '-ferror-limit=1'
@@ -149,8 +148,7 @@ declare -rg cxxflags=('-std=c++2a' '-O0'
 				)
 
 # linker flags
-declare -rg ldflags=( -lreadline
-				#-fsanitize=address
+declare -rg ldflags=( -lreadline -fsanitize=address
 			)
 
 

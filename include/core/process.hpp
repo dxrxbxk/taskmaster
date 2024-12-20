@@ -174,46 +174,9 @@ namespace sm {
 				// user send a restart request
 				C_RESTART,
 
+				// maximum number of command types
 				ACTION_TYPE_MAX,
 			};
-
-
-			struct transition final {
-				state_type state;
-				const char* action;
-				//auto (process::*action)(void) -> void;
-			};
-
-
-			//static constexpr transition _machine[STATE_TYPE_MAX][ACTION_TYPE_MAX] {
-			//
-			//
-			//	// -- STOPPED -------------------------------------------------
-			//
-			//	{
-			//		// C_START
-			//		{ S_STARTING,  "start"   },
-			//		// C_STOP
-			//		{ S_STOPPED,   "skip"    },
-			//		// C_RESTART
-			//		{ S_STARTING,  "start" }
-			//	},
-			//
-			//
-			//	// -- STARTING ------------------------------------------------
-			//
-			//	{
-			//		// C_START
-			//		{ S_STARTING,  "skip"    },
-			//		// C_STOP
-			//		{ S_STOPPING,  "stop"    },
-			//		// C_RESTART
-			//		{ S_STARTING,  "skip"    }
-			//	},
-			//};
-
-
-
 
 	}; // class process
 

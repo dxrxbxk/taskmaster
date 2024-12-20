@@ -29,7 +29,7 @@ sm::readline::readline(void)
 sm::readline::~readline(void) noexcept {
 
 	// restore terminal
-	sm::terminal::restore();
+	//sm::terminal::restore();
 }
 
 

@@ -21,6 +21,8 @@ namespace sm {
 	class process;
 
 
+	// -- T I M E R -----------------------------------------------------------
+
 	class timer : public sm::listener {
 
 		private:
@@ -32,6 +34,7 @@ namespace sm {
 
 			/* method type */
 			using method_type = auto (sm::process::*)(sm::taskmaster&) -> void;
+
 
 			// -- private members ---------------------------------------------
 

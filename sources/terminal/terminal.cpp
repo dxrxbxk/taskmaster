@@ -1,5 +1,6 @@
 #include "terminal/terminal.hpp"
 #include "diagnostics/exception.hpp"
+#include "log/logger.hpp"
 
 #include <signal.h>
 #include <unistd.h>
@@ -18,7 +19,7 @@ auto sm::terminal::_get(void) -> struct ::termios {
 
 	// get terminal attributes
 	if (::tcgetattr(STDIN_FILENO, &term) == -1)
-		throw sm::system_error("tcgetattr");
+		throw sm::system_error{"tcgetattr"};
 
 	return term;
 }
@@ -28,13 +29,11 @@ auto sm::terminal::_set(const struct ::termios& term) -> void {
 
 	// set terminal attributes
 	if (::tcsetattr(STDIN_FILENO, TCSANOW, &term) == -1)
-		throw sm::system_error("tcsetattr");
+		throw sm::system_error{"tcsetattr"};
 }
 
 /* setup raw */
 auto sm::terminal::_setup_raw(struct ::termios& term) noexcept -> void {
-
-	//::cfmakeraw(&term);
 
 	// disable input flags
 	term.c_iflag &= ~static_cast<::tcflag_t>(
@@ -96,7 +95,7 @@ auto sm::terminal::_resize_handler(int) noexcept -> void {
 
 /* default constructor */
 sm::terminal::terminal(void)
-: _origin{self::_get()}, _raw{_origin}, _observers{} {
+: _pid{::getpid()}, _origin{self::_get()}, _raw{_origin}, _observers{} {
 
 	// setup raw mode
 	self::_setup_raw(_raw);
@@ -112,6 +111,9 @@ sm::terminal::terminal(void)
 
 /* destructor */
 sm::terminal::~terminal(void) noexcept {
+
+	if (_pid != ::getpid())
+		return;
 
 	// restore terminal attributes
 	static_cast<void>(::tcsetattr(STDIN_FILENO, TCSANOW, &_origin));

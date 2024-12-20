@@ -153,6 +153,12 @@ namespace sm {
 			/* add value */
 			auto _add_value(void) -> void;
 
+			/* call action */
+			auto _call_action(void) -> void;
+
+			/* add value and call action */
+			auto _add_value_and_call_action(void) -> void;
+
 			/* error */
 			auto _error(void) -> void;
 
@@ -568,7 +574,7 @@ namespace sm {
 					// INVALID
 					{S_ERROR,         &parser::_error},
 					// NEWLINE
-					{S_DEFAULT,       &parser::_add_value},
+					{S_DEFAULT,       &parser::_call_action},
 					// WHITESPACE
 					{S_WAIT_VALUE,    &parser::_skip},
 					// DIGIT
@@ -606,7 +612,7 @@ namespace sm {
 					// INVALID
 					{S_ERROR,         &parser::_error},
 					// NEWLINE
-					{S_DEFAULT,       &parser::_add_value}, // need to add newline
+					{S_DEFAULT,       &parser::_add_value_and_call_action},
 					// WHITESPACE
 					{S_WAIT_VALUE,    &parser::_add_value},
 					// DIGIT
@@ -798,17 +804,19 @@ namespace sm {
 				for (auto& value : _values) {
 					_profile->_cmd.push(value.data());
 				}
+
+				//_values.clear();
 			}
 
 			auto _numprocs(void) -> void {
 
-				if (_buffer.size() == 0U)
-					throw sm::runtime_error("empty numprocs");
+				//if (_buffer.size() == 0U)
+				//	throw sm::runtime_error("empty numprocs");
 
-				if (_values.size() != 1U)
-					throw sm::runtime_error("invalid numprocs");
+				//if (_values.size() != 1U)
+				//	throw sm::runtime_error("invalid numprocs");
 
-				auto numprocs = sm::atoi<unsigned>(_buffer.data());
+				auto numprocs = sm::atoi<unsigned>(_values[0].data());
 
 				if (numprocs == 0U)
 					throw sm::runtime_error("invalid numprocs");
@@ -818,9 +826,8 @@ namespace sm {
 
 			auto _umask(void) -> void {
 
-				if (_values.size() != 1U)
-					throw sm::runtime_error("invalid umask");
-
+				//if (_values.size() != 1U)
+				//	throw sm::runtime_error("invalid umask");
 
 				// check if value is in valid range
 				auto umask = sm::atoi<::mode_t, sm::oct>(_buffer.data());
@@ -833,68 +840,123 @@ namespace sm {
 
 			auto _workingdir(void) -> void {
 
-				if (sm::is_dir(_buffer.data()) == false)
+				if (sm::is_dir(_values[0].data()) == false)
 					throw sm::runtime_error("invalid working directory");
 
-				_profile->_workingdir.assign(std::move(_buffer));
+				_profile->_workingdir.assign(std::move(_values[0]));
 			}
 
 			auto _autostart(void) -> void {
-				_profile->_autostart = sm::atoi<bool>(_buffer.data());
+
+				if (_values.empty())
+					return;
+
+				if (_values.size() != 1U)
+					throw sm::runtime_error("parser: too many arguments for autostart");
+
+				_profile->_autostart = sm::atoi<bool>(_values.front().data());
 			}
 
 			auto _autorestart(void) -> void {
-				_profile->_autorestart = sm::atoi<bool>(_buffer.data());
+
+				if (_values.empty())
+					return;
+
+				if (_values.size() != 1U)
+					throw sm::runtime_error("parser: too many arguments for autorestart");
+
+				_profile->_autorestart = sm::atoi<bool>(_values.front().data());
 			}
 
 			auto _exitcodes(void) -> void {
-				_profile->_exitcodes.push_back(sm::atoi<int>(_buffer.data()));
+
+				for (auto& value : _values) {
+					_profile->_exitcodes.push_back(sm::atoi<int>(value.data()));
+				}
 			}
 
 			auto _startretries(void) -> void {
-				_profile->_startretries = sm::atoi<unsigned>(_buffer.data());
+
+				if (_values.empty())
+					return;
+
+				if (_values.size() != 1U)
+					throw sm::runtime_error("parser: too many arguments for startretries");
+
+				_profile->_startretries = sm::atoi<unsigned>(_values.front().data());
 			}
 
 
 			auto _starttime(void) -> void {
-				_profile->_starttime = sm::atoi<unsigned>(_buffer.data());
+
+				if (_values.empty())
+					return;
+
+				if (_values.size() != 1U)
+					throw sm::runtime_error("parser: too many arguments for starttime");
+
+				_profile->_starttime = sm::atoi<unsigned>(_values.front().data());
 			}
 
 			auto _stopsignal(void) -> void {
-				_profile->_stopsignal = sm::signal::to_int(_buffer.data());
+
+				if (_values.empty())
+					return;
+
+				if (_values.size() != 1U)
+					throw sm::runtime_error("parser: too many arguments for stopsignal");
+
+				_profile->_stopsignal = sm::signal::to_int(_values.front().data());
 			}
 
 			auto _stoptime(void) -> void {
-				_profile->_stoptime = sm::atoi<unsigned>(_buffer.data());
+
+				if (_values.empty())
+					return;
+
+				if (_values.size() != 1U)
+					throw sm::runtime_error("parser: too many arguments for stoptime");
+
+				_profile->_stoptime = sm::atoi<unsigned>(_values[0].data());
+
 			}
 
 			auto _stdout(void) -> void {
-				auto parent = std::filesystem::path{_buffer.data()}.parent_path();
+
+				if (_values.empty())
+					return;
+
+				if (_values.size() != 1U)
+					throw sm::runtime_error("parser: too many arguments for stdout");
+
+				// path relative or absolute
+				// if relative, prepend working directory
+
+				auto parent = std::filesystem::path{_values.front().data()}.parent_path();
+
+				if (parent.empty())
+					parent.assign(".");
 
 				if (is_dir(parent.c_str()) == false)
-					throw sm::runtime_error("invalid stdout path");
+					throw sm::runtime_error("parser: invalid stdout path");
 
-				_profile->_stdout.assign(std::move(_buffer));
-
+				_profile->_stdout.assign(std::move(_values.front()));
 			}
 
 			auto _stderr(void) -> void {
 
-				auto parent = std::filesystem::path{_buffer.data()}.parent_path();
+				auto parent = std::filesystem::path{_values[0].data()}.parent_path();
 				if (is_dir(parent.c_str()) == false)
 					throw sm::runtime_error("invalid stderr path");
 
-				_profile->_stderr.assign(std::move(_buffer));
+				_profile->_stderr.assign(std::move(_values[0]));
 			}
 
 			auto _env(void) -> void {
 
-				//for (auto& value : _values) {
-				//	std::cout << value << std::endl;
-				//}
-
-				_profile->_env.push(_buffer.data());
-				_values.clear();
+				for (auto& value : _values) {
+					_profile->_env.push(value.data());
+				}
 			}
 
 

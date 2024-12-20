@@ -85,6 +85,7 @@ namespace sm {
 				_functions["status" ] = &self::_status;
 				_functions["help" ]   = &self::_not_implemented;
 				_functions["exit" ]   = &self::_exit;
+				_functions["quit" ]   = &self::_exit;
 				_functions["clear"]   = &self::_clear;
 				_functions["reload"]  = &self::_not_implemented;
 				_functions["info"  ]  = &self::_info;

@@ -15,6 +15,7 @@ auto sm::program_manager::size(void) const noexcept -> std::size_t {
 /* add profile */
 auto sm::program_manager::add_profile(sm::shared_ptr<sm::profile>&& profile) -> void {
 
+	profile->info();
 	//program->info();
 
 	// insert program by moving

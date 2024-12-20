@@ -162,6 +162,32 @@ namespace sm {
 			/* const env */
 			auto env(void) const noexcept -> const sm::contiguous_cstr&;
 
+
+			/* info */
+			auto info(void) const -> void {
+
+				std::cout << "\x1b[32m------------------------- " << _id << "\x1b[0m" << "\r\n";;
+				std::cout << "---------- cmd: " << _cmd << "\r\n";;
+				std::cout << "----- numprocs: " << _numprocs << "\r\n";;
+				std::cout << "-------- umask: " << std::oct << _umask << std::dec << "\r\n";;
+				std::cout << "--- workingdir: " << _workingdir << "\r\n";;
+				std::cout << "---- autostart: " << std::boolalpha << _autostart << "\r\n";;
+				std::cout << "-- autorestart: " << _autorestart << "\r\n";;
+				std::cout << std::noboolalpha;
+				std::cout << "---- exitcodes: ";
+				for (const auto& code : _exitcodes)
+					std::cout << code << " ";
+				std::cout << "\r\n";;
+				std::cout << "- startretries: " << _startretries << "\r\n";;
+				std::cout << "---- starttime: " << _starttime << "\r\n";;
+				std::cout << "--- stopsignal: " << _stopsignal << "\r\n";;
+				std::cout << "----- stoptime: " << _stoptime << "\r\n";;
+				std::cout << "------- stdout: " << _stdout << "\r\n";;
+				std::cout << "------- stderr: " << _stderr << "\r\n";;
+				std::cout << "---------- env: " << _env << "\r\n";;
+
+			}
+
 	}; // class profile
 
 } // namespace sm

@@ -68,17 +68,26 @@ auto sm::parser::_add_id(void) -> void {
 auto sm::parser::_add_key(void) -> void {
 	self::_flush();
 	_action = self::_search_key(_buffer);
-	_count = 0U;
 	_buffer.clear();
 }
 
 /* add value */
 auto sm::parser::_add_value(void) -> void {
-	self::_flush();
-	std::cout << std::hex << _buffer << '\r' << std::endl;
-	_values.push_back(_buffer);
+	_values.emplace_back(_it - _count, _count);
+	_count = 0U;
+}
+
+/* call action */
+auto sm::parser::_call_action(void) -> void {
 	(this->*_action)();
+	_values.clear();
 	_buffer.clear();
+}
+
+/* add value and call action */
+auto sm::parser::_add_value_and_call_action(void) -> void {
+	self::_add_value();
+	self::_call_action();
 }
 
 /* flush */

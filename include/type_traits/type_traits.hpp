@@ -126,43 +126,55 @@ namespace sm {
 		using type = unsigned long long;
 	};
 
+
+	// -- R E M O V E  R E F E R E N C E --------------------------------------
+
+	namespace impl {
+
+		template <typename T>
+		struct remove_reference final {
+			using type = T;
+		};
+
+		template <typename T>
+		struct remove_reference<T&> final {
+			using type = T;
+		};
+
+		template <typename T>
+		struct remove_reference<T&&> final {
+			using type = T;
+		};
+	}
+
 	/* remove reference */
 	template <typename T>
-	struct remove_reference {
-		using type = T;
-	};
+	using remove_reference = typename impl::remove_reference<T>::type;
 
-	template <typename T>
-	struct remove_reference<T&> {
-		using type = T;
-	};
 
-	template <typename T>
-	struct remove_reference<T&&> {
-		using type = T;
-	};
 
-	template <typename T>
-	using remove_reference_t = typename remove_reference<T>::type;
-
+	// -- F O R W A R D -------------------------------------------------------
 
 	/* forward */
 	template <typename T>
-	constexpr T&& forward( remove_reference_t<T>& t ) noexcept {
+	constexpr auto forward(sm::remove_reference<T>& t) noexcept -> T&& {
 		return static_cast<T&&>(t);
 	}
 
 	template <typename T>
-	constexpr T&& forward( remove_reference_t<T>&& t ) noexcept {
+	constexpr auto forward(sm::remove_reference<T>&& t) noexcept -> T&& {
 		return static_cast<T&&>(t);
 	}
+
+
+	// -- M O V E -------------------------------------------------------------
 
 	/* move */
 	template <typename T>
-	constexpr remove_reference_t<T>&& move(T&& t) noexcept {
-		return static_cast<remove_reference_t<T>&&>(t);
+	constexpr auto move(T&& t) noexcept -> sm::remove_reference<T>&& {
+		return static_cast<sm::remove_reference<T>&&>(t);
 	}
 
 } // namespace sm
 
-#endif // is_same_hpp
+#endif // type_traits_hpp

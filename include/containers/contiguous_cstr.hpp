@@ -182,6 +182,11 @@ namespace sm {
 				return _data;
 			}
 
+			/* size */
+			auto size(void) const noexcept -> const sm::usize& {
+				return _size;
+			}
+
 
 			// -- public operators --------------------------------------------
 
@@ -242,5 +247,22 @@ namespace sm {
 	}; // class contiguous_cstr
 
 } // namespace sm
+
+
+// -- non-member operators ----------------------------------------------------
+
+/* operator<< */
+inline auto operator<<(std::ostream& os, const sm::contiguous_cstr& cstr) -> std::ostream& {
+
+	if (cstr.data() == nullptr) {
+		os << "cstr is not allocated";
+		return os;
+	}
+
+	for (sm::usize i = 0U; i < cstr.size(); ++i)
+		os << cstr[i] << " ";
+
+	return os;
+}
 
 #endif // contiguous_cstr_hpp

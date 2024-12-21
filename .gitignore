@@ -3,7 +3,6 @@
 
 # ignore executable
 /taskmaster
-/taskcontrol
 
 # ignore object files
 /sources/**/*.o

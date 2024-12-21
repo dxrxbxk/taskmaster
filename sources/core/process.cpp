@@ -170,7 +170,7 @@ auto sm::process::start(sm::taskmaster& tm) -> void {
 
 
 			// set umask
-			throw sm::runtime_error("test", "to", "simulate", "an", "error", "in", "the", "program", "execution");
+			//throw sm::runtime_error("test", "to", "simulate", "an", "error", "in", "the", "program", "execution");
 
 			// close stdin
 			//static_cast<void>(::close(STDIN_FILENO));
@@ -180,6 +180,9 @@ auto sm::process::start(sm::taskmaster& tm) -> void {
 				sm::open(_profile->stdout().data(), O_WRONLY | O_APPEND | O_CREAT, /* mode */ 0644),
 				sm::open(_profile->stdout().data(), O_WRONLY | O_APPEND | O_CREAT, /* mode */ 0644)
 			};
+
+			// print process group id
+			sm::logger::info("process group id: ", ::getpgrp());
 
 			sm::dup2(fds[0U], STDOUT_FILENO);
 			sm::dup2(fds[1U], STDERR_FILENO);

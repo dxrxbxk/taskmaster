@@ -76,6 +76,10 @@ namespace sm {
 	template <typename T>
 	concept is_signed = sm::is_arithmetic<T> && (T(-1) < T(0));
 
+	/* is unsigned */
+	template <typename T>
+	concept is_unsigned = sm::is_arithmetic<T> && !sm::is_signed<T>;
+
 	/* conditional */
 	template <bool B, class T, class F>
 	struct conditional { using type = T; };

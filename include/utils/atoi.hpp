@@ -51,8 +51,6 @@ namespace sm {
 				throw sm::runtime_error{"not a number"};
 
 			// check for multiplication overflow
-			//if (result > limit)
-			//	throw sm::runtime_error{"overflow"};
 			if (valid_mul<T>(result, B::value))
 				throw sm::runtime_error{"overflow mul"};
 
@@ -63,10 +61,9 @@ namespace sm {
 			const auto digit = static_cast<T>(*str - '0');
 
 			// check for addition overflow
-			//if (result > (max - digit))
-			//	throw sm::runtime_error{"overflow"};
 			if (valid_add(result, digit))
 				throw sm::runtime_error{"overflow add"};
+
 			// add digit
 			result += digit;
 		}
@@ -81,53 +78,65 @@ namespace sm {
 		T result = 0;
 
 		if (*str == '-') {
+			// loop over characters after sign
 			while (*++str) {
 
+				// require digit character
 				if ((*str ^ '0') > 9)
 					throw sm::runtime_error{"atoi signed: invalid character"};
 
+				// get min value
 				constexpr auto min = std::numeric_limits<T>::min();
 
-				//if (result < (min / static_cast<T>(U::value)))
-				//	throw sm::runtime_error{"overflow"};
+				// check for multiplication overflow
 				if (valid_mul<T>(result, U::value))
 					throw sm::runtime_error{"overflow mul"};
 
+				// multiply by base
 				result *= U::value;
 
+				// get digit
 				const auto digit = static_cast<T>(*str - '0');
 
-				//if (result < (min + digit))
-				//	throw sm::runtime_error{"overflow"};
+				// check for subtraction overflow
 				if (valid_sub(result, digit))
 					throw sm::runtime_error{"overflow sub"};
 
+				// subtract digit
 				result -= digit;
 			}
 		} else {
+			// skip sign
+			if (*str == '+')
+				++str;
+
 			while (*str) {
 
+				// require digit character
 				if ((*str ^ '0') > 9)
 					throw sm::runtime_error{"atoi signed: invalid character"};
 
+				// get max value
 				constexpr auto max = std::numeric_limits<T>::max();
 
-				//if (result > (max / static_cast<T>(10)))
-				//	throw sm::runtime_error{"overflow"};
+				// check for multiplication overflow
 				if (valid_mul<T>(result, U::value))
 					throw sm::runtime_error{"overflow mul"};
 
-				result *= 10;
+				// multiply by base
+				result *= U::value;
 
+				// get digit
 				const auto digit = static_cast<T>(*str - '0');
 
-				//if (result > (max - digit))
-				//	throw sm::runtime_error{"overflow"};
+				// check for addition overflow
 				if (valid_add(result, digit))
 					throw sm::runtime_error{"overflow add"};
 
+				// add digit
 				result += digit;
 
+				// next character
 				++str;
 			}
 		}

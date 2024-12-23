@@ -139,6 +139,109 @@ constexpr bool valid_mod_impl(T a, T b) noexcept {
 	return b != 0;
 };
 
+template <typename T>
+class integral {
+	private:
+		T _value;
+	public:
+		static_assert(sm::is_integral<T>, "T must be an integral type");
+
+		constexpr integral(T value) noexcept : _value{value} {}
+
+		integral() noexcept : _value{0} {}
+		constexpr integral(const integral<T>& other) noexcept = default;
+		constexpr integral(integral<T>&& other) noexcept = default;
+		constexpr integral<T>& operator=(const integral<T>& other) noexcept = default;
+		constexpr integral<T>& operator=(integral<T>&& other) noexcept = default;
+		~integral() noexcept = default;
+
+		explicit constexpr operator T() const noexcept {
+			return _value;
+		}
+
+		T& value() noexcept {
+			return _value;
+		}
+
+		const T& value() const noexcept {
+			return _value;
+		}
+
+		integral<T>& operator=(const T& value) noexcept {
+			_value = value;
+			return *this;
+		}
+
+		constexpr integral<T> operator+(const integral<T> &other) const {
+			if (valid_add(_value, other._value)) {
+				throw sm::runtime_error{"overflow add"};
+			}
+
+			return integral<T>{_value + other._value};
+		}
+
+		constexpr integral<T> operator-(const integral<T> &other) const {
+			if (valid_sub(_value, other._value)) {
+				throw sm::runtime_error{"overflow sub"};
+			}
+
+			return integral<T>{_value - other._value};
+		}
+
+		constexpr integral<T> operator*(const integral<T> &other) const {
+			if (valid_mul(_value, other._value)) {
+				throw sm::runtime_error{"overflow mul"};
+			}
+
+			return integral<T>{_value * other._value};
+		}
+
+		constexpr integral<T> operator/(const integral<T> &other) const {
+			if (valid_div(_value, other._value)) {
+				throw sm::runtime_error{"overflow div"};
+			}
+
+			return integral<T>{_value / other._value};
+		}
+
+		constexpr integral<T> operator%(const integral<T> &other) const {
+			if (valid_mod(_value, other._value)) {
+				throw sm::runtime_error{"overflow mod"};
+			}
+
+			return integral<T>{_value % other._value};
+		}
+
+		constexpr integral<T> operator*= (const integral<T> &other) {
+			return *this = *this * other;
+		}
+
+		constexpr integral<T> operator+= (const integral<T> &other) {
+			return *this = *this + other;
+		}
+
+		constexpr integral<T> operator-= (const integral<T> &other) {
+			return *this = *this - other;
+		}
+
+		constexpr integral<T> operator/= (const integral<T> &other) {
+			return *this = *this / other;
+		}
+
+		constexpr integral<T> operator%= (const integral<T> &other) {
+			return *this = *this % other;
+		}
+
+		constexpr integral<T> operator++() {
+			return *this += integral<T>{1};
+		}
+
+		constexpr integral<T> operator--() {
+			return *this -= integral<T>{1};
+		}
+
+};
+
 } // namespace sm
 
 #endif // OVERFLOW_HPP

@@ -1,6 +1,7 @@
 #ifndef cconfig_hpp
 #define cconfig_hpp
 
+#include "inotify.hpp"
 #include <string>
 
 
@@ -17,7 +18,7 @@ namespace sm {
 
 	// -- C O N F I G ---------------------------------------------------------
 
-	class config final {
+	class config final : public sm::notifiable {
 
 		private:
 
@@ -31,6 +32,12 @@ namespace sm {
 
 			/* path */
 			std::string _path;
+
+
+			// -- private static methods --------------------------------------
+
+			/* parse */
+			static auto _parse(const sm::unique_fd&, sm::program_manager&) -> void;
 
 
 		public:
@@ -78,6 +85,15 @@ namespace sm {
 
 			/* move path */
 			auto path(std::string&&) noexcept -> void;
+
+
+			// -- public overrides --------------------------------------------
+
+			/* path */
+			auto path(void) const noexcept -> const char* override;
+
+			/* on event */
+			auto on_event(const ::uint32_t&, sm::taskmaster&) -> void override;
 
 	}; // class config
 

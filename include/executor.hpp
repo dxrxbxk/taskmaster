@@ -71,6 +71,9 @@ namespace sm {
 			/* not implemented */
 			auto _not_implemented(sm::taskmaster&,  const argv_type&) -> void;
 
+			/* ls */
+			auto _ls(sm::taskmaster&,  const argv_type&) -> void;
+
 		public:
 
 			// -- public lifecycle --------------------------------------------
@@ -89,8 +92,9 @@ namespace sm {
 				_functions["clear"]   = &self::_clear;
 				_functions["reload"]  = &self::_not_implemented;
 				_functions["info"  ]  = &self::_info;
+				_functions["ls"    ]  = &self::_ls;
 
-				_functions["fg"   ] = &self::_not_implemented;
+				_functions["fg"   ] = &self::_fg;
 			}
 
 

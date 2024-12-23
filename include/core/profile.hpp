@@ -93,8 +93,8 @@ namespace sm {
 			/* deleted copy constructor */
 			profile(const profile&) = delete;
 
-			/* deleted move constructor */
-			profile(profile&&) = delete;
+			/* move constructor */
+			profile(profile&&) noexcept = default;
 
 			/* destructor */
 			~profile(void) noexcept = default;
@@ -105,8 +105,8 @@ namespace sm {
 			/* deleted copy assignment operator */
 			auto operator=(const profile&) -> profile& = delete;
 
-			/* deleted move assignment operator */
-			auto operator=(profile&&) -> profile& = delete;
+			/* move assignment operator */
+			auto operator=(profile&&) noexcept -> profile& = default;
 
 
 			// -- public accessors --------------------------------------------

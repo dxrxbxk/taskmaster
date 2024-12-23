@@ -32,6 +32,9 @@ namespace sm {
 			/* processes */
 			std::vector<sm::process> _processes;
 
+			/* group id */
+			::pid_t _gid;
+
 
 		public:
 
@@ -46,8 +49,8 @@ namespace sm {
 			/* deleted copy constructor */
 			program2(const self&) = delete;
 
-			/* deleted move constructor */
-			program2(self&&) = delete;
+			/* move constructor */
+			program2(self&&) noexcept = default;
 
 			/* destructor */
 			~program2(void) noexcept;
@@ -58,8 +61,8 @@ namespace sm {
 			/* deleted copy assignment operator */
 			auto operator=(const self&) -> self& = delete;
 
-			/* deleted move assignment operator */
-			auto operator=(self&&) -> self& = delete;
+			/* move assignment operator */
+			auto operator=(self&&) noexcept -> self& = default;
 
 
 			// -- public accessors --------------------------------------------
@@ -69,6 +72,15 @@ namespace sm {
 
 			/* processes */
 			auto processes(void) noexcept -> std::vector<sm::process>&;
+
+			/* group id */
+			auto group_id(void) const noexcept -> const ::pid_t&;
+
+
+			// -- public modifiers --------------------------------------------
+
+			/* group id */
+			auto group_id(const ::pid_t&) noexcept -> void;
 
 	}; // class program
 

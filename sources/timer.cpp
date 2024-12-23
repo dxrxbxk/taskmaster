@@ -97,3 +97,4 @@ auto sm::timer::on_event(const sm::event& events, sm::taskmaster& tm) -> void {
 	// call method
 	(_program->*_method)(tm);
 }
+

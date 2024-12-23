@@ -4,6 +4,7 @@
 #include "signal.hpp"
 
 #include "time/timer.hpp"
+#include "pid.hpp"
 
 
 
@@ -40,10 +41,13 @@ sm::taskmaster::taskmaster(const sm::options& opts)
   _config{},
   _running{true},
   _monitor{},
+  _inotify{},
   _programs{},
   _executor{},
   _readline{} {
 
+	// initialize pid
+	static_cast<void>(sm::pid::get());
 
 	// set config from options
 	if (opts.has_config() == true)
@@ -58,8 +62,14 @@ sm::taskmaster::taskmaster(const sm::options& opts)
 	// subscribe to readline
 	_monitor.subscribe(_readline, sm::event{EPOLLIN});
 
-	// become group leader
-	::setpgid(0, 0);
+	// subscribe to inotify
+	_monitor.subscribe(_inotify, sm::event{EPOLLIN});
+
+
+	// watch config file
+	_inotify.watch(_config, IN_MODIFY
+						  | IN_DELETE_SELF
+						  | IN_MOVE_SELF);
 
 
 	sm::logger::info("taskmaster: starting with pid: ", ::getpid());
@@ -102,6 +112,11 @@ auto sm::taskmaster::executor(void) noexcept -> sm::executor& {
 /* readline */
 auto sm::taskmaster::readline(void) const noexcept -> const sm::readline& {
 	return _readline;
+}
+
+/* inotify */
+auto sm::taskmaster::inotify(void) noexcept -> sm::inotify& {
+	return _inotify;
 }
 
 /* is running */

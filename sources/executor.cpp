@@ -94,7 +94,7 @@ auto sm::executor::_start(sm::taskmaster& tm, const argv_type& argv) -> void {
 
 	// start all processes
 	for (auto& proc : procs)
-		proc.start(tm);
+		proc.start(prog, tm.monitor());
 }
 
 /* help */
@@ -115,6 +115,20 @@ auto sm::executor::_exit(sm::taskmaster& tm, const argv_type& argv) -> void {
 	tm.stop();
 }
 
+#include <fcntl.h>
+
+/* ls */
+auto sm::executor::_ls(sm::taskmaster& tm, const argv_type& argv) -> void {
+
+	if (argv.size() != 1U) {
+		sm::logger::warn("usage: ls");
+		return;
+	}
+
+	// get the programs
+	auto& programs = tm.programs();
+}
+
 /* fg */
 auto sm::executor::_fg(sm::taskmaster& tm, const argv_type& argv) -> void {
 
@@ -122,9 +136,7 @@ auto sm::executor::_fg(sm::taskmaster& tm, const argv_type& argv) -> void {
 		sm::logger::warn("usage: fg <program>");
 		return;
 	}
-	sm::logger::warn("not implemented yet");
 
-	/*
 	if (not tm.programs().has_program(argv[1])) {
 		sm::logger::warn("program not found");
 		return;
@@ -132,10 +144,10 @@ auto sm::executor::_fg(sm::taskmaster& tm, const argv_type& argv) -> void {
 
 	auto& program = tm.programs().get_program(argv[1]);
 
+	// get process
+	auto& process = program.processes().front();
 
-	auto pid = program.pid();
-
-	if (pid == 0) {
+	if (process.is_running() == false) {
 		sm::logger::warn("program not running");
 		return;
 	}
@@ -147,21 +159,19 @@ auto sm::executor::_fg(sm::taskmaster& tm, const argv_type& argv) -> void {
 
 	// set the program to the foreground
 
-
-	tcsetpgrp(STDIN_FILENO, pid);
+	//tcsetpgrp(STDIN_FILENO, pid);
 
 	// wait for the program to finish
-	int status;
-	waitpid(pid, &status, WUNTRACED);
-
-	tcsetpgrp(STDIN_FILENO, getpgrp());
+	//int status;
+	//waitpid(pid, &status, WUNTRACED);
+	//
+	//tcsetpgrp(STDIN_FILENO, getpgrp());
 
 	// set the program back to the taskmaster
 
 
 	// not implemented yet...
 	sm::logger::info("fg command");
-	*/
 }
 
 /* clear */

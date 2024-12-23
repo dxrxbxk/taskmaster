@@ -12,6 +12,8 @@
 #include "system/open.hpp"
 #include "system/syscall.hpp"
 
+#include "pid.hpp"
+
 #include <sys/syscall.h>
 
 #include <sys/wait.h>
@@ -50,6 +52,28 @@ sm::process::~process(void) noexcept {
 	// check if process is running
 	if (_pid == 0)
 		return;
+
+	// check if we are in child process
+	if (sm::pid::get() != ::getpid())
+		return;
+
+	// send signal
+	int ret = ::kill(_pid, _profile->stopsignal());
+
+	if (ret == -1)
+		return;
+
+	// sleep 20ms
+	::usleep(10'000U);
+
+	// non-blocking wait
+	::siginfo_t info;
+	ret = ::waitid(P_PID, static_cast<__id_t>(_pid), &info, WEXITED | WNOHANG);
+
+	if (ret == -1 || info.si_code == CLD_EXITED || info.si_code == CLD_KILLED) {
+		sm::logger::warn("process: exited or signaled");
+		return;
+	}
 
 	// send signal
 	static_cast<void>(::kill(_pid, SIGKILL));
@@ -125,7 +149,7 @@ auto sm::process::on_event(const sm::event& events, sm::taskmaster& tm) -> void 
 // -- public methods ----------------------------------------------------------
 
 /* start */
-auto sm::process::start(sm::taskmaster& tm) -> void {
+auto sm::process::start(sm::program2& prog, sm::monitor& monitor) -> void {
 
 	if (_state == S_STARTING) {
 		sm::logger::warn("program already starting");
@@ -151,6 +175,7 @@ auto sm::process::start(sm::taskmaster& tm) -> void {
 	// create pipe
 	sm::pipe_exec pipe;
 
+
 	// fork process
 	_pid = sm::fork();
 
@@ -158,6 +183,9 @@ auto sm::process::start(sm::taskmaster& tm) -> void {
 	if (_pid == 0) {
 
 		try {
+
+			// create new group id
+			::setpgid(0, 0);
 
 			auto& cmd = _profile->cmd();
 			auto& env = _profile->env();
@@ -181,12 +209,8 @@ auto sm::process::start(sm::taskmaster& tm) -> void {
 				sm::open(_profile->stdout().data(), O_WRONLY | O_APPEND | O_CREAT, /* mode */ 0644)
 			};
 
-			// print process group id
-			sm::logger::info("process group id: ", ::getpgrp());
-
 			sm::dup2(fds[0U], STDOUT_FILENO);
 			sm::dup2(fds[1U], STDERR_FILENO);
-
 
 			// execute program
 			sm::execve(cmd[0U], cmd.data(), env.data());
@@ -219,8 +243,8 @@ auto sm::process::start(sm::taskmaster& tm) -> void {
 	}
 	else {
 
-		// get monitor
-		auto& monitor = tm.monitor();
+		if (prog.group_id() == 0)
+			prog.group_id(_pid);
 
 		// launch start timer
 		_starttimer = sm::timer{*this,
@@ -230,9 +254,8 @@ auto sm::process::start(sm::taskmaster& tm) -> void {
 		monitor.subscribe(_starttimer, sm::event{EPOLLIN});
 
 		_state = S_STARTING;
-		//_is_starting = true;
 
-		sm::logger::info(std::string_view{_profile->cmd()[0U]});
+		sm::logger::info(std::string_view{_profile->cmd()[0U]}, " launched pid: ", _pid, " group: ", ::getpgid(_pid));
 
 		_pidfd = static_cast<int>(sm::syscall(SYS_pidfd_open, _pid, 0));
 

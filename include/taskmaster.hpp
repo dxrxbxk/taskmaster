@@ -6,6 +6,7 @@
 #include "config/config.hpp"
 #include "executor.hpp"
 #include "readline.hpp"
+#include "inotify.hpp"
 
 
 // -- S M  N A M E S P A C E --------------------------------------------------
@@ -42,6 +43,9 @@ namespace sm {
 
 			/* dispatcher */
 			sm::monitor _monitor;
+
+			/* inotify */
+			sm::inotify _inotify;
 
 			/* program manager */
 			sm::program_manager _programs;
@@ -113,6 +117,9 @@ namespace sm {
 
 			/* readline */
 			auto readline(void) const noexcept -> const sm::readline&;
+
+			/* inotify */
+			auto inotify(void) noexcept -> sm::inotify&;
 
 			/* is running */
 			auto is_running(void) const noexcept -> bool;

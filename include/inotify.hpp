@@ -5,6 +5,12 @@
 #include "resources/unique_fd.hpp"
 #include "diagnostics/exception.hpp"
 #include <sys/inotify.h>
+#include <unistd.h>
+#include <unordered_map>
+
+#include "time/timer.hpp"
+
+#include <iostream>
 
 
 // -- S M  N A M E S P A C E --------------------------------------------------
@@ -12,9 +18,51 @@
 namespace sm {
 
 
+	// -- N O T I F I A B L E -------------------------------------------------
+
+	class notifiable {
+
+		public:
+
+			// -- public lifecycle --------------------------------------------
+
+			/* default constructor */
+			notifiable(void) noexcept = default;
+
+			/* copy constructor */
+			notifiable(const notifiable&) noexcept = default;
+
+			/* move constructor */
+			notifiable(notifiable&&) noexcept = default;
+
+			/* destructor */
+			virtual ~notifiable(void) noexcept = default;
+
+
+			// -- public assignment operators ---------------------------------
+
+			/* copy assignment operator */
+			auto operator=(const notifiable&) noexcept -> notifiable& = default;
+
+			/* move assignment operator */
+			auto operator=(notifiable&&) noexcept -> notifiable& = default;
+
+
+			// -- public interface --------------------------------------------
+
+			/* path */
+			virtual auto path(void) const noexcept -> const char* = 0;
+
+			/* on event */
+			virtual auto on_event(const ::uint32_t&, sm::taskmaster&) -> void = 0;
+
+	}; // class notifiable
+
+
+
 	// -- I N O T I F Y -------------------------------------------------------
 
-	class inotify final : public sm::monitor {
+	class inotify final : public sm::listener {
 
 
 		private:
@@ -29,6 +77,15 @@ namespace sm {
 
 			/* file descriptor */
 			sm::unique_fd _fd;
+
+			/* map */
+			std::unordered_map<int, sm::notifiable*> _map;
+
+			/* events map */
+			std::unordered_map<sm::notifiable*, ::uint32_t> _events;
+
+			/* timer */
+			sm::timer2<self> _timer;
 
 
 			// -- private static methods --------------------------------------
@@ -61,7 +118,15 @@ namespace sm {
 			inotify(self&&) noexcept = default;
 
 			/* destructor */
-			~inotify(void) noexcept = default;
+			~inotify(void) noexcept {
+
+				// get end iterator
+				const auto end = _map.end();
+
+				// remove watches
+				for (auto it = _map.begin(); it != end; ++it)
+					static_cast<void>(::inotify_rm_watch(_fd, it->first));
+			}
 
 
 			// -- public assignment operators ---------------------------------
@@ -75,16 +140,18 @@ namespace sm {
 
 			// -- public methods ----------------------------------------------
 
-			auto watch(const char* path, const ::uint32_t& mask) -> sm::unique_fd {
+			/* watch */
+			auto watch(sm::notifiable& notifiable, const ::uint32_t& mask) -> void {
 
 				// add watch
-				sm::unique_fd wd = ::inotify_add_watch(_fd, path, mask);
+				const int wd = ::inotify_add_watch(_fd, notifiable.path(), mask);
 
 				// check error
 				if (wd == -1)
 					throw sm::system_error("inotify_add_watch");
 
-				return wd;
+				// add to map
+				_map[wd] = &notifiable;
 			}
 
 
@@ -96,70 +163,12 @@ namespace sm {
 			}
 
 			/* events */
-			auto events(void) -> void override {
+			auto on_event(const sm::event&, sm::taskmaster&) -> void override;
 
-				// buffer
-				char buffer[4096U];
 
-				// read events
-				const auto bytes = ::read(_fd, buffer, 4096U);
-
-				// check error
-				if (bytes == -1)
-					throw sm::system_error("read");
-
-				// loop over events
-				for (unsigned i = 0U; i < bytes; ) {
-
-					// event
-					const auto* event = reinterpret_cast<struct ::inotify_event*>(buffer + i);
-
-					// next event
-					i += sizeof(struct ::inotify_event) + event->len;
-
-					// check mask
-					if (event->mask & IN_CREATE)
-						printf("file created\n");
-
-					if (event->mask & IN_DELETE)
-						printf("file deleted\n");
-				}
-			}
+			auto handle_events(sm::taskmaster&) -> void;
 
 	}; // class inotify
-
-
-				// buffer
-			//	char buffer[4096];
-			//
-			//	// read events
-			//	const auto bytes = ::read(_fd, buffer, 4096);
-			//
-			//	// check error
-			//	if (bytes == -1) {
-			//		perror("read");
-			//		return;
-			//	}
-			//
-			//	// loop over events
-			//	for (unsigned i = 0U; i < bytes; ) {
-			//
-			//		// event
-			//		const auto* event = reinterpret_cast<struct ::inotify_event*>(buffer + i);
-			//
-			//		// next event
-			//		i += sizeof(struct ::inotify_event) + event->len;
-			//
-			//		// check mask
-			//		if (event->mask & IN_CREATE)
-			//			printf("file created\n");
-			//
-			//		if (event->mask & IN_DELETE)
-			//			printf("file deleted\n");
-			//	}
-			//
-			//}
-			//
 
 } // namespace sm
 

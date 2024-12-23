@@ -16,6 +16,9 @@ namespace sm {
 	/* profile */
 	class profile;
 
+	/* program */
+	class program2;
+
 
 	// -- P R O C E S S -------------------------------------------------------
 
@@ -127,7 +130,7 @@ namespace sm {
 			// -- public methods ----------------------------------------------
 
 			/* start */
-			auto start(sm::taskmaster&) -> void;
+			auto start(sm::program2&, sm::monitor&) -> void;
 
 			/* stop */
 			auto stop(sm::taskmaster&) -> void;

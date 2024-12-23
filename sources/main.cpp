@@ -7,8 +7,26 @@
 //   █ ▐▛▀▜▌ ▝▀▚▖▐▛▚▖ ▐▌  ▐▌▐▛▀▜▌ ▝▀▚▖  █  ▐▛▀▀▘▐▛▀▚▖
 //   █ ▐▌ ▐▌▗▄▄▞▘▐▌ ▐▌▐▌  ▐▌▐▌ ▐▌▗▄▄▞▘  █  ▐▙▄▄▖▐▌ ▐▌
 
+#include <csignal>
 
 auto main(int ac, char** av) -> int {
+
+	// ignore signals
+	//::signal(SIGTERM, SIG_IGN);
+	//
+	//while (true) {
+	//	std::cout << "Hello, World!" << std::endl;
+	//}
+	//
+	//return 0;
+
+
+	// check if standard input / output is a terminal
+	if (!isatty(STDIN_FILENO) || !isatty(STDOUT_FILENO)) {
+		sm::logger::error("Standard input/output is not a terminal");
+		return EXIT_FAILURE;
+	}
+
 
 	try {
 

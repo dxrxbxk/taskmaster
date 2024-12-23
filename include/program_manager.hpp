@@ -46,8 +46,8 @@ namespace sm {
 			/* deleted copy constructor */
 			program_manager(const self&) = delete;
 
-			/* deleted move constructor */
-			program_manager(self&&) = delete;
+			/* move constructor */
+			program_manager(self&&) noexcept = default;
 
 			/* destructor */
 			~program_manager(void) noexcept = default;
@@ -58,8 +58,8 @@ namespace sm {
 			/* deleted copy assignment operator */
 			auto operator=(const self&) -> self& = delete;
 
-			/* deleted move assignment operator */
-			auto operator=(self&&) -> self& = delete;
+			/* move assignment operator */
+			auto operator=(self&&) noexcept -> self& = default;
 
 
 			// -- public modifiers --------------------------------------------

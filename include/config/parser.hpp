@@ -810,11 +810,11 @@ namespace sm {
 
 			auto _numprocs(void) -> void {
 
-				//if (_buffer.size() == 0U)
-				//	throw sm::runtime_error("empty numprocs");
+				if (_values.size() == 0U)
+					throw sm::runtime_error("empty numprocs");
 
-				//if (_values.size() != 1U)
-				//	throw sm::runtime_error("invalid numprocs");
+				if (_values.size() != 1U)
+					throw sm::runtime_error("invalid numprocs");
 
 				auto numprocs = sm::atoi<unsigned>(_values[0].data());
 
@@ -826,8 +826,8 @@ namespace sm {
 
 			auto _umask(void) -> void {
 
-				//if (_values.size() != 1U)
-				//	throw sm::runtime_error("invalid umask");
+				if (_values.size() != 1U)
+					throw sm::runtime_error("invalid umask");
 
 				// check if value is in valid range
 				auto umask = sm::atoi<::mode_t, sm::oct>(_buffer.data());
@@ -865,7 +865,15 @@ namespace sm {
 				if (_values.size() != 1U)
 					throw sm::runtime_error("parser: too many arguments for autorestart");
 
-				_profile->_autorestart = sm::atoi<bool>(_values.front().data());
+				if (_values.front() == "always")
+					_profile->_autorestart = sm::profile::start_type::always;
+				else if (_values.front() == "never")
+					_profile->_autorestart = sm::profile::start_type::never;
+				else if (_values.front() == "unexpected")
+					_profile->_autorestart = sm::profile::start_type::unexpected;
+				else
+					throw sm::runtime_error("parser: invalid autorestart");
+
 			}
 
 			auto _exitcodes(void) -> void {

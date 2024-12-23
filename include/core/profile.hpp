@@ -23,6 +23,14 @@ namespace sm {
 		/* parser as friend */
 		friend class parser;
 
+		public:
+
+			enum class start_type {
+				never,
+				always,
+				unexpected,
+			};
+
 
 		private:
 
@@ -50,7 +58,7 @@ namespace sm {
 			bool _autostart;
 
 			/* auto restart */
-			unsigned _autorestart;
+			start_type _autorestart;
 
 			/* exit codes */
 			std::vector<int> _exitcodes;
@@ -130,7 +138,7 @@ namespace sm {
 			auto autostart(void) const noexcept -> const bool&;
 
 			/* autorestart */
-			auto autorestart(void) const noexcept -> const unsigned&;
+			auto autorestart(void) const noexcept -> start_type;
 
 			/* exitcodes */
 			auto exitcodes(void) const noexcept -> const std::vector<int>&;
@@ -172,7 +180,7 @@ namespace sm {
 				std::cout << "-------- umask: " << std::oct << _umask << std::dec << "\r\n";;
 				std::cout << "--- workingdir: " << _workingdir << "\r\n";;
 				std::cout << "---- autostart: " << std::boolalpha << _autostart << "\r\n";;
-				std::cout << "-- autorestart: " << _autorestart << "\r\n";;
+				std::cout << "-- autorestart: " << (int)_autorestart << "\r\n";;
 				std::cout << std::noboolalpha;
 				std::cout << "---- exitcodes: ";
 				for (const auto& code : _exitcodes)

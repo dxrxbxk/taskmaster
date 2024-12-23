@@ -59,8 +59,8 @@ auto sm::profile::autostart(void) const noexcept -> const bool& {
 }
 
 /* autorestart */
-auto sm::profile::autorestart(void) const noexcept -> const unsigned& {
-	return _autorestart;
+auto sm::profile::autorestart(void) const noexcept -> sm::profile::start_type {
+	return  _autorestart;
 }
 
 /* exitcodes */

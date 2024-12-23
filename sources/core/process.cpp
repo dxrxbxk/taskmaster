@@ -196,7 +196,6 @@ auto sm::process::start(sm::program2& prog, sm::monitor& monitor) -> void {
 			// chdir
 			sm::chdir(_profile->workingdir().data());
 
-
 			// set umask
 			//throw sm::runtime_error("test", "to", "simulate", "an", "error", "in", "the", "program", "execution");
 
@@ -302,6 +301,7 @@ auto sm::process::stop(sm::taskmaster& tm) -> void {
 
 /* restart */
 auto sm::process::restart(sm::taskmaster& tm) -> void {
+
 }
 
 /* disconnect */

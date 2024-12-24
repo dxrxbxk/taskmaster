@@ -38,10 +38,32 @@ auto sm::program2::group_id(void) const noexcept -> const ::pid_t& {
 	return _gid;
 }
 
+/* status */
+auto sm::program2::status(void) const -> void {
+
+	// loop over processes
+	for (auto& process : _processes) {
+
+		// get process status
+		process.status();
+	}
+}
+
 
 // -- public modifiers --------------------------------------------------------
 
 /* group id */
 auto sm::program2::group_id(const ::pid_t& gid) noexcept -> void {
 	_gid = gid;
+}
+
+/* autostart */
+auto sm::program2::autostart(sm::monitor& monitor) -> void {
+
+	// start processes
+	for (auto& process : _processes) {
+
+		if (_profile->autostart())
+			process.start(*this, monitor);
+	}
 }

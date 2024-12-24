@@ -21,6 +21,17 @@ auto sm::program_manager::add_profile(sm::shared_ptr<sm::profile>&& profile) -> 
 	_programs.emplace(profile->id(), std::move(profile));
 }
 
+/* autostart */
+auto sm::program_manager::autostart(sm::monitor& monitor) -> void {
+
+	// loop over programs
+	for (auto& [id, program] : _programs) {
+
+		// execute program
+		program.autostart(monitor);
+	}
+}
+
 
 // -- public methods ----------------------------------------------------------
 

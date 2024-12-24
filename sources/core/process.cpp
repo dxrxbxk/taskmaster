@@ -32,6 +32,7 @@ sm::process::process(const sm::shared_ptr<sm::profile>& profile)
   _pidfd{},
   _starttimer{},
   _stoptimer{} {
+
 }
 
 /* move constructor */

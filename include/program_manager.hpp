@@ -67,6 +67,9 @@ namespace sm {
 			/* add profile */
 			auto add_profile(sm::shared_ptr<sm::profile>&&) -> void;
 
+			/* autostart */
+			auto autostart(sm::monitor&) -> void;
+
 
 			// -- public accessors --------------------------------------------
 
@@ -84,6 +87,12 @@ namespace sm {
 				auto it = _programs.find(id);
 
 				return it->second;
+			}
+
+			/* status */
+			auto status(void) const -> void {
+				for (const auto& [id, program] : _programs)
+					program.status();
 			}
 
 

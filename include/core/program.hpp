@@ -76,11 +76,17 @@ namespace sm {
 			/* group id */
 			auto group_id(void) const noexcept -> const ::pid_t&;
 
+			/* status */
+			auto status(void) const -> void;
+
 
 			// -- public modifiers --------------------------------------------
 
 			/* group id */
 			auto group_id(const ::pid_t&) noexcept -> void;
+
+			/* autostart */
+			auto autostart(sm::monitor&) -> void;
 
 	}; // class program
 

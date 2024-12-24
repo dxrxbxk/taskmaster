@@ -48,8 +48,13 @@ auto sm::executor::_info(sm::taskmaster& tm, const argv_type& argv) -> void {
 /* status */
 auto sm::executor::_status(sm::taskmaster& tm, const argv_type& argv) -> void {
 
-	if (argv.size() != 2U) {
+	if (argv.size() > 2U) {
 		sm::logger::warn("usage: status <program>");
+		return;
+	}
+
+	if (argv.size() == 1U) {
+		tm.programs().status();
 		return;
 	}
 

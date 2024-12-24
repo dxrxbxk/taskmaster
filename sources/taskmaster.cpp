@@ -73,6 +73,9 @@ sm::taskmaster::taskmaster(const sm::options& opts)
 
 
 	sm::logger::info("taskmaster: starting with pid: ", ::getpid());
+
+	// run auto-start programs
+	_programs.autostart(_monitor);
 }
 
 /* destructor */

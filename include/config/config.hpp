@@ -86,6 +86,9 @@ namespace sm {
 			/* move path */
 			auto path(std::string&&) noexcept -> void;
 
+			/* reload */
+			auto reload(sm::taskmaster&) -> void;
+
 
 			// -- public overrides --------------------------------------------
 

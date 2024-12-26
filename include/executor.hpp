@@ -74,6 +74,9 @@ namespace sm {
 			/* ls */
 			auto _ls(sm::taskmaster&,  const argv_type&) -> void;
 
+			/* restart */
+			auto _restart(sm::taskmaster&,  const argv_type&) -> void;
+
 		public:
 
 			// -- public lifecycle --------------------------------------------
@@ -84,7 +87,7 @@ namespace sm {
 
 				_functions["start"]   = &self::_start;
 				_functions["stop" ]   = &self::_stop;
-				_functions["restart"] = &self::_not_implemented;
+				_functions["restart"] = &self::_restart;
 				_functions["status" ] = &self::_status;
 				_functions["help" ]   = &self::_not_implemented;
 				_functions["exit" ]   = &self::_exit;
@@ -93,7 +96,6 @@ namespace sm {
 				_functions["reload"]  = &self::_not_implemented;
 				_functions["info"  ]  = &self::_info;
 				_functions["ls"    ]  = &self::_ls;
-
 				_functions["fg"   ] = &self::_fg;
 			}
 

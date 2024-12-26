@@ -156,6 +156,7 @@ auto sm::signal::on_event(const sm::event& events, sm::taskmaster& tm) -> void {
 			break;
 
 		case SIGHUP:
+			sm::logger::signal("SIGHUP");
 			tm.reload();
 			break;
 

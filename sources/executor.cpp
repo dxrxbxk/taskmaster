@@ -99,13 +99,39 @@ auto sm::executor::_start(sm::taskmaster& tm, const argv_type& argv) -> void {
 
 	// start all processes
 	for (auto& proc : procs)
-		proc.start(prog, tm.monitor());
+		proc.start(tm.monitor());
 }
 
 /* help */
 auto sm::executor::_help(sm::taskmaster& tm, const argv_type& argv) -> void {
 
 	sm::logger::info("help command");
+}
+
+/* restart */
+
+auto sm::executor::_restart(sm::taskmaster& tm, const argv_type& argv) -> void {
+
+	if (argv.size() != 2U) {
+		sm::logger::warn("usage: restart <program>");
+		return;
+	}
+
+	// check if program exists
+	if (not tm.programs().has_program(argv[1])) {
+		sm::logger::warn("program not found");
+		return;
+	}
+
+	// get the program
+	auto& prog = tm.programs().get_program(argv[1U]);
+
+	// get processes
+	auto& procs = prog.processes();
+
+	// restart all processes
+	for (auto& proc : procs)
+		proc.restart(tm);
 }
 
 /* exit */

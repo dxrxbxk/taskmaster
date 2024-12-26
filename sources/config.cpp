@@ -15,8 +15,8 @@
 
 /* default constructor */
 sm::config::config(void)
-//: _path{"/home/richtofen/Code/taskmaster/tools/taskmaster.conf"} {
-: _path{"/root/data/taskmaster/tools/taskmaster.conf"} {
+: _path{"/home/richtofen/Code/taskmaster/tools/taskmaster.conf"} {
+//: _path{"/root/data/taskmaster/tools/taskmaster.conf"} {
 
 
 	/*
@@ -103,6 +103,24 @@ auto sm::config::path(std::string&& path) noexcept -> void {
 	_path.assign(std::move(path));
 }
 
+/* reload */
+auto sm::config::reload(sm::taskmaster& tm) -> void {
+
+	sm::logger::info("reloading config file...");
+
+	sm::program_manager pm;
+	sm::unique_fd file = sm::open(_path.data(), O_RDONLY);
+
+	self::_parse(file, pm);
+
+
+	tm.programs() = std::move(pm);
+	sm::logger::info("config file reloaded");
+	tm.readline().prompt();
+
+	//tm.programs().autostart(tm.monitor());
+}
+
 
 // -- public overrides --------------------------------------------------------
 
@@ -115,7 +133,7 @@ auto sm::config::path(void) const noexcept -> const char* {
 auto sm::config::on_event(const ::uint32_t& ev, sm::taskmaster& tm) -> void {
 
 
-	if (ev & IN_DELETE_SELF) {
+	if (ev & (IN_DELETE_SELF | IN_MOVE_SELF)) {
 
 		// check if file path is still valid
 		if (::access(_path.data(), F_OK) == -1) {
@@ -123,15 +141,13 @@ auto sm::config::on_event(const ::uint32_t& ev, sm::taskmaster& tm) -> void {
 			tm.readline().prompt();
 			return;
 		}
-
-		tm.inotify().watch(*this, IN_MODIFY | IN_DELETE_SELF | IN_MOVE_SELF);
 	}
 
-	else if (ev & IN_MOVE_SELF) {
-		sm::logger::warn("config file moved");
-		tm.readline().prompt();
-		return;
-	}
+	//else if (ev & IN_MOVE_SELF) {
+	//	sm::logger::warn("config file moved");
+	//	tm.readline().prompt();
+	//	return;
+	//}
 	else if (ev & IN_MODIFY) {
 		; // do nothing
 	}
@@ -139,17 +155,9 @@ auto sm::config::on_event(const ::uint32_t& ev, sm::taskmaster& tm) -> void {
 		throw sm::runtime_error{"unexpected event"};
 	}
 
+	tm.reload();
 
-	sm::logger::warn("re-parsing config file");
-	sm::program_manager pm;
-	sm::unique_fd file = sm::open(_path.data(), O_RDONLY);
-
-	self::_parse(file, pm);
-
-
-	tm.programs() = std::move(pm);
-	sm::logger::info("config file reloaded");
-	tm.readline().prompt();
+	tm.inotify().watch(*this, IN_MODIFY | IN_DELETE_SELF | IN_MOVE_SELF | IN_ONESHOT);
 }
 
 

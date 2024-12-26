@@ -69,7 +69,8 @@ sm::taskmaster::taskmaster(const sm::options& opts)
 	// watch config file
 	_inotify.watch(_config, IN_MODIFY
 						  | IN_DELETE_SELF
-						  | IN_MOVE_SELF);
+						  | IN_MOVE_SELF
+						  | IN_ONESHOT);
 
 
 	sm::logger::info("taskmaster: starting with pid: ", ::getpid());
@@ -138,5 +139,7 @@ auto sm::taskmaster::stop(void) noexcept -> void {
 /* reload */
 auto sm::taskmaster::reload(void) -> void {
 
-	sm::logger::warn("taskmaster: reloading not implemented yet");
+	_config.reload(*this);
+
+	_programs.autostart(_monitor);
 }

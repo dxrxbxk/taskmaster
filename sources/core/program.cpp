@@ -64,6 +64,6 @@ auto sm::program2::autostart(sm::monitor& monitor) -> void {
 	for (auto& process : _processes) {
 
 		if (_profile->autostart())
-			process.start(*this, monitor);
+			process.start(monitor);
 	}
 }

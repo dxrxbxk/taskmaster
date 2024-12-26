@@ -31,7 +31,8 @@ sm::process::process(const sm::shared_ptr<sm::profile>& profile)
   _pid{0},
   _pidfd{},
   _starttimer{},
-  _stoptimer{} {
+  _stoptimer{},
+  _is_restarting{false} {
 
 }
 
@@ -40,7 +41,10 @@ sm::process::process(self&& other) noexcept
 : _profile{std::move(other._profile)},
   _state{other._state},
   _pid{other._pid},
-  _pidfd{std::move(other._pidfd)} {
+  _pidfd{std::move(other._pidfd)},
+  _starttimer{std::move(other._starttimer)},
+  _stoptimer{std::move(other._stoptimer)},
+  _is_restarting{other._is_restarting} {
 
 	// invalidate other
 	_state = S_STOPPED;
@@ -54,6 +58,8 @@ sm::process::~process(void) noexcept {
 	if (_pid == 0)
 		return;
 
+	sm::logger::warn("process: destructor called with running process");
+
 	// check if we are in child process
 	if (sm::pid::get() != ::getpid())
 		return;
@@ -65,7 +71,8 @@ sm::process::~process(void) noexcept {
 		return;
 
 	// sleep 20ms
-	::usleep(10'000U);
+	//::usleep(10'000U);
+	sleep(1);
 
 	// non-blocking wait
 	::siginfo_t info;
@@ -144,13 +151,18 @@ auto sm::process::on_event(const sm::event& events, sm::taskmaster& tm) -> void 
 
 	// disconnect
 	self::disconnect(tm);
+
+	if (_is_restarting) {
+		_is_restarting = false;
+		self::start(tm.monitor());
+	}
 }
 
 
 // -- public methods ----------------------------------------------------------
 
 /* start */
-auto sm::process::start(sm::program2& prog, sm::monitor& monitor) -> void {
+auto sm::process::start(sm::monitor& monitor) -> void {
 
 	if (_state == S_STARTING) {
 		sm::logger::warn("program already starting");
@@ -243,9 +255,6 @@ auto sm::process::start(sm::program2& prog, sm::monitor& monitor) -> void {
 	}
 	else {
 
-		if (prog.group_id() == 0)
-			prog.group_id(_pid);
-
 		// launch start timer
 		_starttimer = sm::timer{*this,
 			&sm::process::start_event,
@@ -302,6 +311,9 @@ auto sm::process::stop(sm::taskmaster& tm) -> void {
 
 /* restart */
 auto sm::process::restart(sm::taskmaster& tm) -> void {
+
+	self::stop(tm);
+	_is_restarting = true;
 
 }
 

@@ -88,6 +88,9 @@ namespace sm {
 			/* stop timer */
 			sm::timer _stoptimer;
 
+			/* is retarting */
+			bool _is_restarting;
+
 
 		public:
 
@@ -130,7 +133,7 @@ namespace sm {
 			// -- public methods ----------------------------------------------
 
 			/* start */
-			auto start(sm::program2&, sm::monitor&) -> void;
+			auto start(sm::monitor&) -> void;
 
 			/* stop */
 			auto stop(sm::taskmaster&) -> void;

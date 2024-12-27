@@ -9,6 +9,7 @@
 #include "type_traits/type_traits.hpp"
 
 #include <iostream>
+#include <exception>
 
 
 // -- S M  N A M E S P A C E --------------------------------------------------
@@ -54,6 +55,11 @@ namespace sm {
 			/* copy constructor */
 			contiguous_cstr(const self& other)
 			: _data{nullptr}, _size{0U}, _capacity{other._size} {
+
+				// check if other is empty
+				if (other._data == nullptr)
+					return;
+
 				// allocate
 				_data = sm::calloc<char*>(other._size + 1U);
 
@@ -62,19 +68,20 @@ namespace sm {
 
 					// copy data
 					for (; _size < other._size; ++_size) {
+
 						const auto len = sm::strlen(other._data[_size]);
+
 						_data[_size] = sm::malloc<char>(len + 1U);
+
 						sm::memcpy(_data[_size], other._data[_size], len);
+
 						_data[_size][len] = '\0';
-
-						throw sm::system_error{"malloc"};
-
 					}
 
-				} catch (const sm::exception& e) {
+				} catch (...) {
 
 					self::_free();
-					throw e;
+					throw;
 				}
 
 				// null terminate

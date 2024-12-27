@@ -27,14 +27,16 @@ auto main(int ac, char** av, char **env) -> int {
 	//for (int i = 0; env[i] != nullptr; ++i) {
 	//	std::cout << env[i] << std::endl;
 	//}
+	//
+	//return 0;
 
 
-	auto env2 = sm::environment::copy();
-
-	env2.for_each([](const char* var) {
-		std::cout << var << std::endl;
-	});
-
+	//auto env2 = sm::environment::copy();
+	//
+	//env2.for_each([](const char* var) {
+	//	std::cout << var << std::endl;
+	//});
+	//
 
 
 

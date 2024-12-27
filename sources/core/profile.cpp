@@ -1,5 +1,6 @@
 #include "core/profile.hpp"
 #include "signal.hpp"
+#include "environment.hpp"
 
 
 // -- P R O F I L E -----------------------------------------------------------
@@ -22,7 +23,7 @@ sm::profile::profile(std::string&& id)
   _workingdir{"."},
   _stdout{"/dev/null"},
   _stderr{"/dev/null"},
-  _env{} {
+  _env{sm::environment::copy()} {
 }
 
 

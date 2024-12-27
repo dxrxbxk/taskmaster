@@ -6,6 +6,7 @@
 #include "memory/malloc_guard.hpp"
 #include "string/strlen.hpp"
 #include "types.hpp"
+#include "type_traits/type_traits.hpp"
 
 #include <iostream>
 
@@ -49,8 +50,37 @@ namespace sm {
 			: _data{nullptr}, _size{0U}, _capacity{0U} {
 			}
 
-			/* deleted copy constructor */
-			contiguous_cstr(const self&) = delete;
+
+			/* copy constructor */
+			contiguous_cstr(const self& other)
+			: _data{nullptr}, _size{0U}, _capacity{other._size} {
+				// allocate
+				_data = sm::calloc<char*>(other._size + 1U);
+
+
+				try {
+
+					// copy data
+					for (; _size < other._size; ++_size) {
+						const auto len = sm::strlen(other._data[_size]);
+						_data[_size] = sm::malloc<char>(len + 1U);
+						sm::memcpy(_data[_size], other._data[_size], len);
+						_data[_size][len] = '\0';
+
+						throw sm::system_error{"malloc"};
+
+					}
+
+				} catch (const sm::exception& e) {
+
+					self::_free();
+					throw e;
+				}
+
+				// null terminate
+				_data[other._size] = nullptr;
+
+			}
 
 			/* move constructor */
 			contiguous_cstr(self&& other) noexcept
@@ -218,6 +248,12 @@ namespace sm {
 					std::cout << "not null terminated" << std::endl;
 				else
 					std::cout << "null terminated" << std::endl;
+			}
+
+			template <typename F, typename... Ts>
+			auto for_each(F&& f, Ts&&... args) -> void {
+				for (sm::usize i = 0U; i < _size; ++i)
+					static_cast<void>(f(_data[i], sm::forward<Ts>(args)...));
 			}
 
 

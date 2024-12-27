@@ -36,6 +36,18 @@ namespace sm {
 		return new_ptr;
 	}
 
+	/* calloc */
+	template <typename T>
+	auto calloc(const sm::usize& size = 1U) -> T* {
+
+		T* ptr = static_cast<T*>(::calloc(size, sizeof(T)));
+
+		if (ptr == nullptr)
+			throw sm::system_error{"calloc"};
+
+		return ptr;
+	}
+
 	/* free */
 	template <typename T>
 	auto free(T* ptr) -> void {

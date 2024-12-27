@@ -1,7 +1,7 @@
 #include "taskmaster.hpp"
 #include "options.hpp"
 #include "log/logger.hpp"
-
+#include "environment.hpp"
 // ▗▄▄▄▖▗▄▖  ▗▄▄▖▗▖ ▗▖▗▖  ▗▖ ▗▄▖  ▗▄▄▖▗▄▄▄▖▗▄▄▄▖▗▄▄▖
 //   █ ▐▌ ▐▌▐▌   ▐▌▗▞▘▐▛▚▞▜▌▐▌ ▐▌▐▌     █  ▐▌   ▐▌ ▐▌
 //   █ ▐▛▀▜▌ ▝▀▚▖▐▛▚▖ ▐▌  ▐▌▐▛▀▜▌ ▝▀▚▖  █  ▐▛▀▀▘▐▛▀▚▖
@@ -9,7 +9,7 @@
 
 #include <csignal>
 
-auto main(int ac, char** av) -> int {
+auto main(int ac, char** av, char **env) -> int {
 
 	// ignore signals
 	//::signal(SIGTERM, SIG_IGN);
@@ -20,6 +20,21 @@ auto main(int ac, char** av) -> int {
 	//}
 	//
 	//return 0;
+	//
+	
+	try {
+	//for (int i = 0; env[i] != nullptr; ++i) {
+	//	std::cout << env[i] << std::endl;
+	//}
+
+
+	auto env2 = sm::environment::copy();
+
+	env2.for_each([](const char* var) {
+		std::cout << var << std::endl;
+	});
+
+
 
 
 	// check if standard input / output is a terminal
@@ -29,7 +44,6 @@ auto main(int ac, char** av) -> int {
 	}
 
 
-	try {
 
 		// parse command line options
 		sm::options opts{ac, av};

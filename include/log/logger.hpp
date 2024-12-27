@@ -7,6 +7,8 @@
 #include "string/strlen.hpp"
 
 #include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 
 // -- S M  N A M E S P A C E --------------------------------------------------
@@ -74,12 +76,50 @@ namespace sm {
 
 				_stream.append('\r', ts.data(), ' ', std::string_view{level}, ": ", args..., "\r\n");
 
+
 				// write to stdout
 				static_cast<void>(::write(STDOUT_FILENO,
 										 _stream.data(),
 										 _stream.size()));
-			}
 
+
+				constexpr const char* folder[] {
+					"/var",
+					"/var/log",
+					"/var/log/taskmaster",
+					nullptr
+				};
+
+				for (size_t i = 0U; folder[i] != nullptr ; ++i) {
+
+					struct ::stat st;
+
+					if (::stat(folder[i], &st) == -1) {
+
+						if (errno != ENOENT)
+							return;
+
+						if (::mkdir(folder[i], 0755) == -1)
+							return;
+					} else if (!S_ISDIR(st.st_mode)) {
+						return;
+					}
+				}
+
+
+				const int fd = ::open("/var/log/taskmaster/taskmaster.log",
+						O_WRONLY | O_APPEND | O_CREAT, 0644);
+
+				if (fd == -1)
+					return;
+
+				// write to file
+				static_cast<void>(::write(fd,
+										 _stream.data(),
+										 _stream.size()));
+
+				static_cast<void>(::close(fd));
+			}
 
 		public:
 

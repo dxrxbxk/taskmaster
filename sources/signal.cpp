@@ -158,7 +158,7 @@ auto sm::signal::on_event(const sm::event& events, sm::taskmaster& tm) -> void {
 		case SIGHUP:
 			sm::logger::signal("SIGHUP");
 			tm.reload();
-			break;
+			return;
 
 		case SIGQUIT:
 			sm::logger::signal("SIGQUIT");

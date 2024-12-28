@@ -9,44 +9,24 @@
 
 #include <csignal>
 
-auto main(int ac, char** av, char **env) -> int {
+auto main(int ac, char** av) -> int {
 
-
-	// ignore signals
-	//::signal(SIGTERM, SIG_IGN);
-	//
-	//while (true) {
-	//	std::cout << "Hello, World!" << std::endl;
-	//	sleep(1);
-	//}
-	//
-	//return 0;
-	//
-	
 	try {
-	//for (int i = 0; env[i] != nullptr; ++i) {
-	//	std::cout << env[i] << std::endl;
-	//}
-	//
-	//return 0;
+
+		auto env = sm::environment::copy();
+
+		std::cout << "hash: " << env.hash() << std::endl;
 
 
-	//auto env2 = sm::environment::copy();
-	//
-	//env2.for_each([](const char* var) {
-	//	std::cout << var << std::endl;
-	//});
-	//
+		return 0;
 
-
-
-	// check if standard input / output is a terminal
-	if (!isatty(STDIN_FILENO) || !isatty(STDOUT_FILENO)) {
-		sm::logger::error("Standard input/output is not a terminal");
-		return EXIT_FAILURE;
-	}
-
-
+		// check if standard input / output is a terminal
+		if (!isatty(STDIN_FILENO)
+		 || !isatty(STDOUT_FILENO)
+		 || !isatty(STDERR_FILENO)) {
+			sm::logger::error("Standard input/output is not a terminal");
+			return EXIT_FAILURE;
+		}
 
 		// parse command line options
 		sm::options opts{ac, av};

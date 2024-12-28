@@ -16,7 +16,8 @@
 /* default constructor */
 sm::config::config(void)
 //: _path{"/home/richtofen/Code/taskmaster/tools/taskmaster.conf"} {
-: _path{"/root/data/taskmaster/tools/taskmaster.conf"} {
+//: _path{"/root/data/taskmaster/tools/taskmaster.conf"} {
+: _path{} {
 
 
 	/*
@@ -64,26 +65,17 @@ sm::config::config(std::string&& path) noexcept
 /* parse */
 auto sm::config::parse(sm::program_manager& pm) -> void {
 
-	struct ::stat st;
+	if (_path.empty()) {
 
-	const auto ret = ::stat(_path.data(), &st);
+		// get user name
+		const auto* pw = ::getpwuid(::getuid());
 
-	if (ret == -1) {
+		if (pw == nullptr)
+			throw sm::system_error{"getpwuid"};
 
-		if (errno == ENOENT)
-			throw sm::runtime_error{"config file not found"};
-
-		throw sm::system_error{"stat"};
+		_path.assign(pw->pw_dir);
+		_path.append("/.config/taskmaster/taskmaster.conf");
 	}
-
-	// check if file is regular
-	if (S_ISREG(st.st_mode) == false)
-		throw sm::runtime_error{"config file is not regular file"};
-
-	// check if file is readable
-	if ((st.st_mode & S_IRUSR) == 0)
-		throw sm::runtime_error{"config file is not readable"};
-
 
 	sm::unique_fd file = sm::open(_path.data(), O_RDONLY);
 
@@ -114,11 +106,10 @@ auto sm::config::reload(sm::taskmaster& tm) -> void {
 	self::_parse(file, pm);
 
 
-	tm.programs() = std::move(pm);
+	tm.programs().hot_swap(tm.monitor(), std::move(pm));
+	//tm.programs() = std::move(pm);
 	sm::logger::info("config file reloaded");
 	tm.readline().prompt();
-
-	//tm.programs().autostart(tm.monitor());
 }
 
 
@@ -142,12 +133,6 @@ auto sm::config::on_event(const ::uint32_t& ev, sm::taskmaster& tm) -> void {
 			return;
 		}
 	}
-
-	//else if (ev & IN_MOVE_SELF) {
-	//	sm::logger::warn("config file moved");
-	//	tm.readline().prompt();
-	//	return;
-	//}
 	else if (ev & IN_MODIFY) {
 		; // do nothing
 	}

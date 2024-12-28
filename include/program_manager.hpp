@@ -26,7 +26,7 @@ namespace sm {
 			using self = sm::program_manager;
 
 			using map_prog = std::unordered_map<std::string,
-												sm::program2>;
+												sm::program>;
 
 
 
@@ -82,7 +82,7 @@ namespace sm {
 			}
 
 			/* get program */
-			auto get_program(const std::string& id) -> sm::program2& {
+			auto get_program(const std::string& id) -> sm::program& {
 
 				auto it = _programs.find(id);
 
@@ -107,6 +107,31 @@ namespace sm {
 				//	program.info();
 				//}
 			}
+
+
+
+			/* hot swap */
+			auto hot_swap(sm::monitor& monitor, self&& other) -> void {
+
+				// loop over other programs
+				for (auto& [id, program] : other._programs) {
+
+					auto it = _programs.find(id);
+
+					if (it == _programs.end()) {
+						// add program
+						auto pair = _programs.insert({id, std::move(program)});
+						// launch program
+						pair.first->second.autostart(monitor);
+					}
+					else {
+						// hot swap program
+						it->second.hot_swap(std::move(program));
+					}
+				}
+			}
+
+
 
 	}; // class program_manager
 

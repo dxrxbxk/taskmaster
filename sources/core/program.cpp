@@ -6,40 +6,32 @@
 // -- public lifecycle --------------------------------------------------------
 
 /* id constructor */
-sm::program2::program2(sm::shared_ptr<sm::profile>&& profile)
+sm::program::program(sm::shared_ptr<sm::profile>&& profile)
 : _profile{std::move(profile)},
   _processes{},
-  _gid{0} {
+  _hash{_profile->hash()} {
 
 	// create processes
 	for (auto i = 0U; i < _profile->numprocs(); ++i)
 		_processes.emplace_back(_profile);
 }
 
-/* destructor */
-sm::program2::~program2(void) noexcept {
-}
-
 
 // -- public accessors --------------------------------------------------------
 
 /* profile */
-auto sm::program2::profile(void) noexcept -> sm::profile& {
+auto sm::program::profile(void) noexcept -> sm::profile& {
 	return *_profile;
 }
 
 /* processes */
-auto sm::program2::processes(void) noexcept -> std::vector<sm::process>& {
+auto sm::program::processes(void) noexcept -> std::vector<sm::process>& {
 	return _processes;
 }
 
-/* group id */
-auto sm::program2::group_id(void) const noexcept -> const ::pid_t& {
-	return _gid;
-}
 
 /* status */
-auto sm::program2::status(void) const -> void {
+auto sm::program::status(void) const -> void {
 
 	// loop over processes
 	for (auto& process : _processes) {
@@ -52,13 +44,8 @@ auto sm::program2::status(void) const -> void {
 
 // -- public modifiers --------------------------------------------------------
 
-/* group id */
-auto sm::program2::group_id(const ::pid_t& gid) noexcept -> void {
-	_gid = gid;
-}
-
 /* autostart */
-auto sm::program2::autostart(sm::monitor& monitor) -> void {
+auto sm::program::autostart(sm::monitor& monitor) -> void {
 
 	// start processes
 	for (auto& process : _processes) {
@@ -67,3 +54,38 @@ auto sm::program2::autostart(sm::monitor& monitor) -> void {
 			process.start(monitor);
 	}
 }
+
+
+// -- public methods ----------------------------------------------------------
+
+/* hot swap */
+auto sm::program::hot_swap(self&& other) -> void {
+
+	if (_profile->hash() != other._profile->hash()) {
+		*this = std::move(other);
+		sm::logger::info("program: ", _profile->id(), " hot swapped");
+	}
+
+}
+
+			/*
+			   condition to replace program:
+			   different id
+			   numprocs changed (only)
+
+			   cmd yes
+			   umask yes
+			   stdout yes
+			   stderr yes
+			   env yes
+			   workingdir yes
+
+			   exitcodes ?
+			   autorestart ?
+
+			   startretries nope !
+			   starttime nope !
+			   stopsignal nope !
+			   stoptime nope !
+			*/
+

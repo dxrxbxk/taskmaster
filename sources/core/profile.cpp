@@ -113,3 +113,61 @@ auto sm::profile::env(void) noexcept -> sm::contiguous_cstr& {
 auto sm::profile::env(void) const noexcept -> const sm::contiguous_cstr& {
 	return _env;
 }
+
+
+// -- public methods ----------------------------------------------------------
+
+/* hash */
+auto sm::profile::hash(void) const noexcept -> sm::usize {
+
+	sm::usize hash = 0U;
+
+	// cmd
+	hash += _cmd.hash();
+
+	// numprocs
+	hash = (hash ^ _numprocs) * 16777619U;
+
+	// umask
+	hash = (hash ^ _umask) * 16777619U;
+
+	// autostart
+	hash = (hash ^ _autostart) * 16777619U;
+
+	// autorestart
+	hash = (hash ^ static_cast<unsigned>(_autorestart)) * 16777619U;
+
+	// exitcodes
+	for (const auto& exitcode : _exitcodes)
+		hash = (hash ^ static_cast<unsigned>(exitcode)) * 16777619U;
+
+	// startretries
+	hash = (hash ^ _startretries) * 16777619U;
+
+	// starttime
+	hash = (hash ^ _starttime) * 16777619U;
+
+	// stopsignal
+	hash = (hash ^ static_cast<unsigned>(_stopsignal)) * 16777619U;
+
+	// stoptime
+	hash = (hash ^ _stoptime) * 16777619U;
+
+	// workingdir
+	for (const auto& c : _workingdir)
+		hash = (hash ^ static_cast<unsigned>(c)) * 16777619U;
+
+	// stdout
+	for (const auto& c : _stdout)
+		hash = (hash ^ static_cast<unsigned>(c)) * 16777619U;
+
+	// stderr
+	for (const auto& c : _stderr)
+		hash = (hash ^ static_cast<unsigned>(c)) * 16777619U;
+
+	// env
+	hash += _env.hash();
+
+
+	return hash;
+}

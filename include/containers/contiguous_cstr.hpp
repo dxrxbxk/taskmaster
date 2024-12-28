@@ -264,9 +264,63 @@ namespace sm {
 			}
 
 
+			// -- comparison operators ----------------------------------------
+
+			/* operator== */
+			auto operator==(const self& other) const noexcept -> bool {
+
+				// check size
+				if (_size != other._size)
+					return false;
+
+				// check data
+				for (sm::usize i = 0U; i < _size; ++i) {
+
+					// check data
+					if (strcmp(_data[i], other._data[i]) != 0)
+						return false;
+				}
+
+				// done
+				return true;
+			}
+
+			/* operator!= */
+			auto operator!=(const self& other) const noexcept -> bool {
+				return !self::operator==(other);
+			}
+
+
+			// -- public methods ----------------------------------------------
+
+			/* hash */
+			auto hash(void) const noexcept -> sm::usize {
+
+				sm::usize hash = 0U;
+
+				for (sm::usize i = 0U; i < _size; ++i) {
+					hash = (hash ^ self::_hash(_data[i])) * 16777619U;
+				}
+
+				return hash;
+			}
+
+
 		private:
 
 			// -- private methods ---------------------------------------------
+
+			/* hash */
+			auto _hash(const char* data) const noexcept -> sm::usize {
+
+				sm::usize hash = 5381U;
+
+				for (sm::usize i = 0U; data[i] != '\0'; ++i) {
+					hash = ((hash << 5U) + hash) + static_cast<unsigned char>(data[i]);
+				}
+
+				return hash;
+			}
 
 			/* init */
 			auto _init(void) noexcept -> void {

@@ -13,7 +13,7 @@ namespace sm {
 
 	// -- P R O G R A M -------------------------------------------------------
 
-	class program2 final {
+	class program final {
 
 
 		private:
@@ -21,7 +21,7 @@ namespace sm {
 			// -- private types -----------------------------------------------
 
 			/* self type */
-			using self = sm::program2;
+			using self = sm::program;
 
 
 			// -- private members ---------------------------------------------
@@ -32,8 +32,8 @@ namespace sm {
 			/* processes */
 			std::vector<sm::process> _processes;
 
-			/* group id */
-			::pid_t _gid;
+			/* hash */
+			sm::usize _hash;
 
 
 		public:
@@ -41,19 +41,19 @@ namespace sm {
 			// -- public lifecycle --------------------------------------------
 
 			/* deleted default constructor */
-			program2(void) = delete;
+			program(void) = delete;
 
 			/* profile constructor */
-			program2(sm::shared_ptr<sm::profile>&&);
+			program(sm::shared_ptr<sm::profile>&&);
 
 			/* deleted copy constructor */
-			program2(const self&) = delete;
+			program(const self&) = delete;
 
 			/* move constructor */
-			program2(self&&) noexcept = default;
+			program(self&&) noexcept = default;
 
 			/* destructor */
-			~program2(void) noexcept;
+			~program(void) noexcept = default;
 
 
 			// -- public assignment operators ---------------------------------
@@ -87,6 +87,12 @@ namespace sm {
 
 			/* autostart */
 			auto autostart(sm::monitor&) -> void;
+
+
+			// -- public methods ----------------------------------------------
+
+			/* hot swap */
+			auto hot_swap(self&&) -> void;
 
 	}; // class program
 

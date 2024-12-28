@@ -17,7 +17,7 @@ namespace sm {
 	class profile;
 
 	/* program */
-	class program2;
+	class program;
 
 
 	// -- P R O C E S S -------------------------------------------------------

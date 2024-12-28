@@ -171,6 +171,11 @@ namespace sm {
 			auto env(void) const noexcept -> const sm::contiguous_cstr&;
 
 
+			// -- public methods ----------------------------------------------
+
+			/* hash */
+			auto hash(void) const noexcept -> sm::usize;
+
 			/* info */
 			auto info(void) const -> void {
 

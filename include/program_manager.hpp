@@ -113,6 +113,20 @@ namespace sm {
 			/* hot swap */
 			auto hot_swap(sm::monitor& monitor, self&& other) -> void {
 
+				std::vector<std::string> removed;
+
+				// erase removed ids
+				for (auto& [id, _] : _programs) {
+					if (other._programs.contains(id) == false)
+						removed.push_back(id);
+				}
+
+				// erase removed programs
+				for (const auto& id : removed) {
+					sm::logger::hint("removing program: ", id);
+					_programs.erase(id);
+				}
+
 				// loop over other programs
 				for (auto& [id, program] : other._programs) {
 
@@ -130,6 +144,7 @@ namespace sm {
 						it->second.hot_swap(monitor, std::move(program));
 					}
 				}
+
 			}
 
 

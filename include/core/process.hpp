@@ -91,6 +91,9 @@ namespace sm {
 			/* is retarting */
 			bool _is_restarting;
 
+			/* _restart_try */
+			sm::usize _restart_try;
+
 
 		public:
 

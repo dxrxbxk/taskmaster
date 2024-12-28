@@ -13,12 +13,6 @@ auto main(int ac, char** av) -> int {
 
 	try {
 
-		auto env = sm::environment::copy();
-
-		std::cout << "hash: " << env.hash() << std::endl;
-
-
-		return 0;
 
 		// check if standard input / output is a terminal
 		if (!isatty(STDIN_FILENO)

@@ -32,7 +32,8 @@ sm::process::process(const sm::shared_ptr<sm::profile>& profile)
   _pidfd{},
   _starttimer{},
   _stoptimer{},
-  _is_restarting{false} {
+  _is_restarting{false},
+  _restart_try{0U} {
 
 }
 
@@ -44,7 +45,8 @@ sm::process::process(self&& other) noexcept
   _pidfd{std::move(other._pidfd)},
   _starttimer{std::move(other._starttimer)},
   _stoptimer{std::move(other._stoptimer)},
-  _is_restarting{other._is_restarting} {
+  _is_restarting{other._is_restarting},
+  _restart_try{other._restart_try} {
 
 	// invalidate other
 	_state = S_STOPPED;
@@ -123,7 +125,7 @@ auto sm::process::on_event(const sm::event& events, sm::taskmaster& tm) -> void 
 	switch (info.si_code) {
 
 		case CLD_EXITED:
-			sm::logger::info("process: exited normally");
+			sm::logger::info("process: exited normally [", info.si_status, "]");
 			break;
 
 		case CLD_KILLED:
@@ -149,13 +151,43 @@ auto sm::process::on_event(const sm::event& events, sm::taskmaster& tm) -> void 
 
 	tm.readline().prompt();
 
-	// disconnect
 	self::disconnect(tm);
+
 
 	if (_is_restarting) {
 		_is_restarting = false;
 		self::start(tm.monitor());
+		return;
 	}
+
+	if (_profile->autorestart() == sm::profile::start_type::never) {
+		return;
+	}
+
+	if (_profile->autorestart() == sm::profile::start_type::always) {
+		self::start(tm.monitor());
+		return;
+	}
+
+
+	for (auto exit_code	: _profile->exitcodes()) {
+
+		if (exit_code == info.si_status) {
+			if (_restart_try < _profile->startretries()) {
+				self::start(tm.monitor());
+				++_restart_try;
+			}
+			else {
+				sm::logger::warn("process: reached maximum restarts");
+				_restart_try = 0U;
+				tm.readline().prompt();
+
+			}
+			return;
+		}
+	}
+
+	self::start(tm.monitor());
 }
 
 

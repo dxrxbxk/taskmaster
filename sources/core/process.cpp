@@ -51,6 +51,7 @@ sm::process::process(self&& other) noexcept
 	// invalidate other
 	_state = S_STOPPED;
 	_pid   = 0;
+	_is_restarting = false;
 }
 
 /* destructor */
@@ -60,7 +61,7 @@ sm::process::~process(void) noexcept {
 	if (_pid == 0)
 		return;
 
-	sm::logger::warn("process: destructor called with running process");
+	sm::logger::warn("process: ", _profile->id(), " destructor called with running process");
 
 	// check if we are in child process
 	if (sm::pid::get() != ::getpid())
@@ -73,15 +74,14 @@ sm::process::~process(void) noexcept {
 		return;
 
 	// sleep 20ms
-	//::usleep(10'000U);
-	sleep(1);
+	::usleep(20'000);
 
 	// non-blocking wait
 	::siginfo_t info;
 	ret = ::waitid(P_PID, static_cast<__id_t>(_pid), &info, WEXITED | WNOHANG);
 
 	if (ret == -1 || info.si_code == CLD_EXITED || info.si_code == CLD_KILLED) {
-		sm::logger::warn("process: exited or signaled");
+		sm::logger::warn("process: ", _profile->id(), " exited or signaled");
 		return;
 	}
 
@@ -197,25 +197,13 @@ auto sm::process::on_event(const sm::event& events, sm::taskmaster& tm) -> void 
 auto sm::process::start(sm::monitor& monitor) -> void {
 
 	if (_state == S_STARTING) {
-		sm::logger::warn("program already starting");
+		sm::logger::warn("process: ", _profile->id(), " already starting");
 		return;
 	}
-	else if (_state == S_RUNNING) {
-		sm::logger::warn("program already running");
+	else if (_state == S_RUNNING || _pid != 0) {
+		sm::logger::warn("process: ", _profile->id(), " already running");
 		return;
 	}
-
-	//if (_is_starting) {
-	//	sm::logger::warn("program already starting");
-	//	return;
-	//}
-
-	// check if program is running
-	if (_pid != 0) {
-		sm::logger::warn("program already running");
-		return;
-	}
-
 
 	// create pipe
 	sm::pipe_exec pipe;
@@ -242,10 +230,7 @@ auto sm::process::start(sm::monitor& monitor) -> void {
 			sm::chdir(_profile->workingdir().data());
 
 			// set umask
-			//throw sm::runtime_error("test", "to", "simulate", "an", "error", "in", "the", "program", "execution");
-
-			// close stdin
-			//static_cast<void>(::close(STDIN_FILENO));
+			::umask(_profile->umask());
 
 			// redirect standard descriptors
 			sm::unique_fd fds[] {
@@ -373,7 +358,7 @@ auto sm::process::disconnect(sm::taskmaster& tm) -> void {
 auto sm::process::status(void) const -> void {
 
 	// get command
-	const std::string_view cmd{_profile->cmd()[0U]};
+	const std::string_view cmd{_profile->id()};
 
 	switch (_state) {
 

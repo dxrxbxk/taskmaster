@@ -15,38 +15,7 @@
 
 /* default constructor */
 sm::config::config(void)
-//: _path{"/home/richtofen/Code/taskmaster/tools/taskmaster.conf"} {
-//: _path{"/root/data/taskmaster/tools/taskmaster.conf"} {
 : _path{} {
-
-
-	/*
-	// get uid
-	const auto uid = ::getuid();
-
-	// get home
-	const auto* pw = ::getpwuid(uid);
-	if (pw == nullptr)
-		throw sm::system_error{"getpwuid"};
-
-	std::string path{pw->pw_dir};
-	path.append("/.config/taskmaster/taskmaster.conf");
-
-	struct ::stat st;
-
-	const auto ret = ::stat(path.data(), &st);
-
-	if (ret == 0 && S_ISREG(st.st_mode) && (st.st_mode & S_IRUSR)) {
-		_path.assign(std::move(path));
-		return;
-	}
-
-	if (errno != ENOENT)
-		throw sm::system_error{"stat"};
-
-
-	sm::logger::info("config file: ", path);
-	*/
 }
 
 /* path constructor */
@@ -98,17 +67,20 @@ auto sm::config::path(std::string&& path) noexcept -> void {
 /* reload */
 auto sm::config::reload(sm::taskmaster& tm) -> void {
 
-	sm::logger::info("reloading config file...");
-
+	sm::logger::hint("config file: reloading...");
 	sm::program_manager pm;
-	sm::unique_fd file = sm::open(_path.data(), O_RDONLY);
 
-	self::_parse(file, pm);
+	try {
+		sm::unique_fd file = sm::open(_path.data(), O_RDONLY);
 
+		self::_parse(file, pm);
+	}
+	catch (const sm::exception& e) {
+		sm::logger::error("error while reloading config file: ", std::string_view{e.what()});
+		return;
+	}
 
 	tm.programs().hot_swap(tm.monitor(), std::move(pm));
-	//tm.programs() = std::move(pm);
-	sm::logger::info("config file reloaded");
 	tm.readline().prompt();
 }
 

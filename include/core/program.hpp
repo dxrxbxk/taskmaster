@@ -92,7 +92,7 @@ namespace sm {
 			// -- public methods ----------------------------------------------
 
 			/* hot swap */
-			auto hot_swap(self&&) -> void;
+			auto hot_swap(sm::monitor&, self&&) -> void;
 
 	}; // class program
 

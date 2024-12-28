@@ -59,13 +59,14 @@ auto sm::program::autostart(sm::monitor& monitor) -> void {
 // -- public methods ----------------------------------------------------------
 
 /* hot swap */
-auto sm::program::hot_swap(self&& other) -> void {
+auto sm::program::hot_swap(sm::monitor& monitor, self&& other) -> void {
 
 	if (_profile->hash() != other._profile->hash()) {
 		*this = std::move(other);
-		sm::logger::info("program: ", _profile->id(), " hot swapped");
-	}
+		sm::logger::hint("program: ", _profile->id(), " hot swapped");
 
+		self::autostart(monitor);
+	}
 }
 
 			/*

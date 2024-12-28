@@ -140,6 +140,5 @@ auto sm::taskmaster::stop(void) noexcept -> void {
 auto sm::taskmaster::reload(void) -> void {
 
 	_config.reload(*this);
-
-	_programs.autostart(_monitor);
+	//_programs.autostart(_monitor);
 }

@@ -155,6 +155,12 @@ namespace sm {
 				self::_shared()._log("\x1b[35mSIGN\x1b[0m", args...);
 			}
 
+			/* hint */
+			template <typename... Ts>
+			static auto hint(const Ts&... args) -> void {
+				self::_shared()._log("\x1b[36mHINT\x1b[0m", args...);
+			}
+
 	}; // class logger
 
 } // namespace sm

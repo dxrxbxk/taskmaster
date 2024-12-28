@@ -118,15 +118,16 @@ namespace sm {
 
 					auto it = _programs.find(id);
 
+					// new program
 					if (it == _programs.end()) {
 						// add program
 						auto pair = _programs.insert({id, std::move(program)});
 						// launch program
 						pair.first->second.autostart(monitor);
 					}
+					// hot swap program
 					else {
-						// hot swap program
-						it->second.hot_swap(std::move(program));
+						it->second.hot_swap(monitor, std::move(program));
 					}
 				}
 			}

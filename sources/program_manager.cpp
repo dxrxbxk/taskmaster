@@ -45,3 +45,40 @@ auto sm::program_manager::start_all(sm::taskmaster& tm) -> void {
 		//program->start(tm);
 	}
 }
+
+/* hot swap */
+auto sm::program_manager::hot_swap(sm::monitor& monitor, self&& other) -> void {
+
+
+	std::vector<std::string> removed;
+
+	// erase removed ids
+	for (auto& [id, _] : _programs) {
+		if (other._programs.contains(id) == false)
+			removed.push_back(id);
+	}
+
+	// erase removed programs
+	for (const auto& id : removed) {
+		sm::logger::hint("removing program: ", id);
+		_programs.erase(id);
+	}
+
+	// loop over other programs
+	for (auto& [id, program] : other._programs) {
+
+		auto it = _programs.find(id);
+
+		// new program
+		if (it == _programs.end()) {
+			// add program
+			auto pair = _programs.insert({id, std::move(program)});
+			// launch program
+			pair.first->second.autostart(monitor);
+		}
+		// hot swap program
+		else {
+			it->second.hot_swap(monitor, std::move(program));
+		}
+	}
+}
